@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Netflix Zeno: Netflix's In-Memory Data Distribution Framework" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Netflix Zeno</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Netflix/zeno">View on GitHub</a>
+
+          <h1 id="project_title">Netflix Zeno</h1>
+          <h2 id="project_tagline">Netflix’s In-Memory Data Distribution Framework</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/Netflix/zeno/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/Netflix/zeno/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+<p>Some applications have data sets with extremely low latency tolerance. For Netflix, this applies to metadata about our movies and TV shows. We store this data directly in RAM on the servers responsible for powering the Netflix experience.</p>
+
+<p>Netflix leans heavily on Zeno to manage, transport, and keep updated these gigabytes of constantly-changing data replicated across thousands of servers. Zeno:</p>
+
+<ul>
+<li>Creates compact serialized representations of a set of Java Objects.</li>
+<li>Automatically detects and removes duplication in a data set.</li>
+<li>Automatically produces a minimal set of changes required to keep data up-to-date.</li>
+<li>Is efficient about resource impact when deserializing data.</li>
+<li>Provides powerful tools to debug data sets.</li>
+<li>Defines a pattern for separation between data model and data operations, increasing the agility of development teams.</li>
+</ul>
+
+<h3>Artifacts</h3>
+
+<p>The Zeno binaries are published to Maven Central.</p>
+
+<pre><code>	&lt;dependency&gt;
+		&lt;groupId&gt;com.netflix.zeno&lt;/groupId&gt;
+		&lt;artifactId&gt;netflix-zeno&lt;/artifactId&gt;
+		&lt;version&gt;1.3&lt;/version&gt;
+	&lt;/dependency&gt;</code></pre>
+
+<h3>Documentation</h3>
+
+<p>Detailed documentation of Zeno's features and usage can be found on the <a href="https://github.com/Netflix/zeno/wiki">wiki</a>.</p>
+
+<p>Javadocs are available <a href="http://netflix.github.io/zeno/javadoc">here</a>.</p>
+
+<h3>Build</h3>
+
+Zeno is built via Gradle (<a href="http://www.gradle.org">www.gradle.org</a>). To build from the command line:
+
+<pre><code>./gradlew build</code></pre>
+
+<h3>Support</h3>
+
+<p>Support can be obtained through the <a href="https://groups.google.com/group/netflix-zeno">Zeno google group</a></p>
+
+<h3>Authors and Contributors</h3>
+
+<p>Original concept and development by (<a href="http://github.com/dkoszewnik" class="user-mention">@dkoszewnik</a>) Drew Koszewnik.  Additional design and development contributed by members of the Metadata Infrastructure team at Netflix:</p>
+
+<ul>
+<li>Drew Koszewnik</li>
+<li>Puneet Lakhaina</li>
+<li>Timur Valiulin</li>
+<li>Brian Moore</li>
+<li>David Su</li>
+<li>Michael Clark</li>
+<li>Vu Tuan Nguyen</li>
+<li>Rohit Kaul</li>
+<li>Deva Jayaraman</li>
+<li>Lavanya Kanchanapalli</li>
+<li>Apurva Kansara</li>
+</ul>
+</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Zeno is maintained by the Metadata Infrastructure team at <a href="http://netflix.github.io">Netflix</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
+
