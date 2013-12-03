@@ -1,0 +1,17 @@
+com.netflix.zeno.diff
+com.netflix.zeno.diff.history
+com.netflix.zeno.fastblob
+com.netflix.zeno.fastblob.io
+com.netflix.zeno.fastblob.record
+com.netflix.zeno.fastblob.state
+com.netflix.zeno.genericobject
+com.netflix.zeno.hash
+com.netflix.zeno.json
+com.netflix.zeno.serializer
+com.netflix.zeno.serializer.common
+com.netflix.zeno.util
+com.netflix.zeno.util.collections
+com.netflix.zeno.util.collections.algorithms
+com.netflix.zeno.util.collections.builder
+com.netflix.zeno.util.collections.heapfriendly
+com.netflix.zeno.util.collections.impl
