@@ -1,0 +1,32 @@
+// Establish version and status
+ext.githubProjectName = 'zeno'
+group = "com.netflix.zeno"
+
+buildscript {
+    repositories { mavenCentral() }
+    apply from: file('gradle/buildscript.gradle'), to: buildscript 
+}
+
+allprojects {
+    repositories { mavenCentral() }
+}
+
+apply from: file('gradle/convention.gradle')
+apply from: file('gradle/maven.gradle')
+apply from: file('gradle/check.gradle')
+apply from: file('gradle/license.gradle')
+apply from: file('gradle/release.gradle')
+
+//apply plugin: 'war'
+//apply plugin: 'jetty'
+
+dependencies {
+    testCompile 'junit:junit:4.11'
+    compile 'commons-lang:commons-lang:2.4'
+    compile 'commons-io:commons-io:2.4'
+    compile 'commons-codec:commons-codec:1.7'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.2.2'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
+}
+
+ 
