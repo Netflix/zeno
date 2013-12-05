@@ -21,6 +21,16 @@ Zeno binaries are published to Maven Central.
 |-----------|---------------|--------------|
 |com.netflix.zeno|netflix-zeno|1.4|
 
+In a Maven .pom file:
+
+        ...
+        <dependency>
+        	<groupId>com.netflix.zeno</groupId>
+        	<artifactId>netflix-zeno</artifactId>
+        	<version>1.4</version>
+        </dependency>
+        ...
+
 Documentation
 -------------
 Documentation is available on the [wiki](https://github.com/Netflix/zeno/wiki).
