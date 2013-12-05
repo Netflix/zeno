@@ -17,9 +17,9 @@ Artifacts
 ---------
 Zeno binaries are published to Maven Central.
 
-|GroupID/Org|ArtifactID/Name|
-|-----------|---------------|
-|com.netflix.zeno|netflix-zeno|
+|GroupID/Org|ArtifactID/Name|Latest Version|
+|-----------|---------------|--------------|
+|com.netflix.zeno|netflix-zeno|1.4|
 
 Documentation
 -------------
