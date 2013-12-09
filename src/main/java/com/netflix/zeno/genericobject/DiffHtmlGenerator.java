@@ -223,7 +223,7 @@ public class DiffHtmlGenerator {
                 appendFieldValue(builder, fromField.getFieldName(), fromField.getValue(), moreAtFromLevel, true);
             }
         } else {
-            appendEmptyHeirarchyLevel(builder, moreAtFromLevels);
+            appendEmptyHierarchyLevel(builder, moreAtFromLevels);
         }
         builder.append("</td>");
         if(toField != null && toField.getCollectionPosition() != 0)
@@ -238,7 +238,7 @@ public class DiffHtmlGenerator {
                 appendFieldValue(builder, toField.getFieldName(), toField.getValue(), moreAtToLevel, false);
             }
         } else {
-            appendEmptyHeirarchyLevel(builder, moreAtToLevels);
+            appendEmptyHierarchyLevel(builder, moreAtToLevels);
         }
         builder.append("</td>");
         builder.append("</tr>");
@@ -320,7 +320,7 @@ public class DiffHtmlGenerator {
         }
     }
 
-    private void appendEmptyHeirarchyLevel(StringBuilder builder, boolean[] levelGuide) {
+    private void appendEmptyHierarchyLevel(StringBuilder builder, boolean[] levelGuide) {
         for(int i=1;i<=hierarchyLevel;i++) {
             if(levelGuide[i]) {
                 builder.append(" &#x2502;");
