@@ -27,7 +27,7 @@ import java.util.Comparator;
 import java.util.Set;
 
 /**
- * Immutable Binary Seach implementation of the Set interface with hashCode
+ * Immutable Binary Search implementation of the Set interface with hashCode
  * index on the side
  *
  * @author tvaliulin

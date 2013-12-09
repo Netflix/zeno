@@ -77,7 +77,7 @@ public abstract class FrameworkDeserializer <D extends NFDeserializationRecord> 
     }
 
     /**
-     * Deserializing java logn
+     * Deserializing java long
      * @param rec
      * @param fieldName
      * @param value

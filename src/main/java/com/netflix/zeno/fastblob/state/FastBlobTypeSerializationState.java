@@ -30,7 +30,7 @@ import java.io.OutputStream;
 
 /**
  * This class represents the "serialization state" for a single type at some level of the object
- * heirarchy in the serialized data.<p/>
+ * hierarchy in the serialized data.<p/>
  *
  * This class is responsible for maintaining the mappings between serialized representations of
  * its type and ordinals.  It performs this responsibility by using a {@link ByteArrayOrdinalMap}.<p/>

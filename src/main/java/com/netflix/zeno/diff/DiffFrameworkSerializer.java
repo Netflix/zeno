@@ -26,7 +26,7 @@ import java.util.Set;
 
 /**
  *
- * Defines operations required to populate inidividual POJO primitive elements into DiffRecords
+ * Defines operations required to populate individual POJO primitive elements into DiffRecords
  *
  * @author dkoszewnik
  *

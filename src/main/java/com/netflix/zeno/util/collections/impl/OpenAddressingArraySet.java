@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * Open addressing hash set immutable impelemtation of the Set interface
+ * Open addressing hash set immutable implementation of the Set interface
  *
  * @author dkoszevnik
  * @author tvaliulin

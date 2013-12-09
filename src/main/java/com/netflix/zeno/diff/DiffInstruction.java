@@ -29,7 +29,7 @@ import com.netflix.zeno.serializer.SerializerFactory;
  * of the FastBlobStateEngine.  For each type we want included in the diff report, we must
  * specify a {@link TypeDiffInstruction}.  Each TypeDiffInstruction informs how to match
  * up individual elements of that type.  Each pair of Objects will be examined for differences
- * throughout the heirarchy defined by the {@link NFTypeSerializer}s.
+ * throughout the hierarchy defined by the {@link NFTypeSerializer}s.
  *
  * @author dkoszewnik
  *

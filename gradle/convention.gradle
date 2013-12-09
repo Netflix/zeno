@@ -25,7 +25,7 @@ status = version.contains('-SNAPSHOT')?'snapshot':'release'
         extendsFrom configurations.javadoc
     }
 
-    // When outputing to an Ivy repo, we want to use the proper type field
+    // When outputting to an Ivy repo, we want to use the proper type field
     gradle.taskGraph.whenReady {
         def isNotMaven = !it.hasTask(project.uploadMavenCentral)
         if (isNotMaven) {

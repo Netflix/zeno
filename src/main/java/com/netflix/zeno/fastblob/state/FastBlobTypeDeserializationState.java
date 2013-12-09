@@ -30,7 +30,7 @@ import java.util.List;
 
 /**
  * This class represents the "deserialization state" for a single type at some level of the object
- * heirarchy in the FastBlob serialized data.<p/>
+ * hierarchy in the FastBlob serialized data.<p/>
  *
  * This class is responsible for maintaining the mappings between ordinals and deserialized objects.
  * It performs this responsibility by maintaining an ArrayList of objects.  The location of the object
