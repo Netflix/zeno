@@ -25,6 +25,7 @@ import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.util.CollectionUnwrapper;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,10 +46,13 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
 
     private final NFTypeSerializer<T> serializer;
 
+    private TypeDeserializationStateListener<T> stateListener = TypeDeserializationStateListener.noopCallback();
+
     private List<T> objects;
 
     ///the following properties are used for heap-friendly double snapshot refresh
     private List<T> previousObjects;
+    private BitSet copiedPreviousObjects;
     private ObjectIdentityOrdinalMap identityOrdinalMap;
 
     public FastBlobTypeDeserializationState(NFTypeSerializer<T> serializer) {
@@ -64,10 +68,17 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
         T obj = serializer.deserialize(rec);
         ensureCapacity(ordinal + 1);
         objects.set(ordinal, obj);
+        stateListener.addedObject(obj);
     }
 
     public void remove(int ordinal) {
+        T removedObject = objects.get(ordinal);
         objects.set(ordinal, null);
+        stateListener.removedObject(removedObject);
+    }
+
+    public void setListener(TypeDeserializationStateListener<T> listener) {
+        this.stateListener = listener;
     }
 
     /**
@@ -91,6 +102,7 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
         }
 
         previousObjects = objects;
+        copiedPreviousObjects = new BitSet(previousObjects.size());
         objects = new ArrayList<T>(previousObjects.size());
     }
 
@@ -129,6 +141,7 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
         T obj = previousObjects.get(previousOrdinal);
         ensureCapacity(newOrdinal + 1);
         objects.set(newOrdinal, obj);
+        copiedPreviousObjects.set(previousOrdinal);;
     }
 
     /**
@@ -137,6 +150,12 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
      * This method is only intended to be used during heap-friendly double snapshot refresh.
      */
     public void clearPreviousObjects() {
+        for(int i=0;i<previousObjects.size();i++) {
+            T t = previousObjects.get(i);
+            if(t != null && !copiedPreviousObjects.get(i)) {
+                stateListener.removedObject(t);
+            }
+        }
         previousObjects = null;
     }
 

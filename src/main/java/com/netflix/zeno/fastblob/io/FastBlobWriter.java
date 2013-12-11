@@ -24,6 +24,7 @@ import com.netflix.zeno.fastblob.state.ThreadSafeBitSet;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Writes FastBlob images to streams.
@@ -64,6 +65,10 @@ public class FastBlobWriter {
     /**
      * Write a snapshot to the specified stream.
      */
+    public void writeSnapshot(OutputStream os) throws Exception {
+        writeSnapshot(new DataOutputStream(os));
+    }
+
     public void writeSnapshot(DataOutputStream os) throws IOException {
         writeHeader(os);
 
@@ -84,6 +89,10 @@ public class FastBlobWriter {
     /**
      * Write a delta to the specified stream.
      */
+    public void writeDelta(OutputStream os) throws IOException {
+        writeDelta(new DataOutputStream(os));
+    }
+
     public void writeDelta(DataOutputStream os) throws IOException {
         writeHeader(os);
 
@@ -110,6 +119,10 @@ public class FastBlobWriter {
      * new objects in the current state.  A reverse delta removes all new objects in the current state and adds all unused
      * objects from the previous state.
      */
+    public void writeReverseDelta(OutputStream os, String previousVersion) throws IOException {
+        writeReverseDelta(new DataOutputStream(os), previousVersion);
+    }
+
     public void writeReverseDelta(DataOutputStream os, String previousVersion) throws IOException {
         writeHeader(os, previousVersion);
 

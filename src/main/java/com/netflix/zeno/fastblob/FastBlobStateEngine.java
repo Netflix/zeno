@@ -21,6 +21,7 @@ import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.fastblob.state.ByteArrayOrdinalMap;
 import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
 import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
+import com.netflix.zeno.fastblob.state.TypeDeserializationStateListener;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
 import com.netflix.zeno.serializer.SerializerFactory;
@@ -41,10 +42,10 @@ import java.util.Set;
 /**
  * This is the SerializationFramework for the second-generation blob.<p/>
  *
- * The blob is a serialized representation of all data conforming to an object model (defined by a {@link SerializerFactory}) 
+ * The blob is a serialized representation of all data conforming to an object model (defined by a {@link SerializerFactory})
  * in a single binary file.<p/>
- * 
- * This class is the main interface for both serialization, as well as deserialization, of FastBlob data.  For detailed 
+ *
+ * This class is the main interface for both serialization, as well as deserialization, of FastBlob data.  For detailed
  * usage of the FastBlobStateEngine, please see <a href="https://github.com/Netflix/zeno/wiki">the Zeno documentation</a><p/>
  *
  * This class holds references to the "TypeSerializationStates", which are responsible for assigning and maintaining the mappings between
@@ -67,7 +68,7 @@ import java.util.Set;
  * Initially the object will be in state (1).<br/>
  * From state (1), if prepareForWrite() is called, it will be transitioned to state (2).<br/>
  * From state (2), calling prepareForNextCycle() will transition back to state (1).<br/>
- * 
+ *
  * @see https://github.com/Netflix/zeno/wiki
  *
  * @author dkoszewnik
@@ -145,8 +146,6 @@ public class FastBlobStateEngine extends SerializationFramework {
         add(type, obj, addToAllImagesFlags);
     }
 
-
-
     /**
      * Add an object to this state engine.  The images to which this object should be added are specified with the addToImageFlags[] array of booleans.<p/>
      *
@@ -157,8 +156,24 @@ public class FastBlobStateEngine extends SerializationFramework {
      *
      */
     public void add(String type, Object obj, boolean addToImageFlags[]) {
-        getTypeSerializationState(type).add(obj, addToImageFlags);
+        FastBlobTypeSerializationState<Object> typeSerializationState = getTypeSerializationState(type);
+        if(typeSerializationState == null) {
+            throw new RuntimeException("Unable to find type.  Ensure there exists an NFTypeSerializer with the name: "  + type);
+        }
+        typeSerializationState.add(obj, addToImageFlags);
     }
+
+    public <T> void setTypeDeserializationStateListener(String type, TypeDeserializationStateListener<T> listener) {
+        FastBlobTypeDeserializationState<T> typeState = getTypeDeserializationState(type);
+        if(typeState == null) {
+            throw new RuntimeException("Unable to find type.  Ensure there exists an NFTypeSerializer with the name: "  + type);
+        }
+
+        typeState.setListener(listener);
+    }
+
+
+
 
     /**
      * @return the FastBlobSerializationStates in the order in which they should appear in the FastBlob stream.<p/>
