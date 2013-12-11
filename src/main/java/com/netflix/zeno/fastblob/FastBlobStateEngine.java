@@ -163,6 +163,9 @@ public class FastBlobStateEngine extends SerializationFramework {
         typeSerializationState.add(obj, addToImageFlags);
     }
 
+    /**
+     * Add a {@link TypeDeserializationStateListener} to the specified type
+     */
     public <T> void setTypeDeserializationStateListener(String type, TypeDeserializationStateListener<T> listener) {
         FastBlobTypeDeserializationState<T> typeState = getTypeDeserializationState(type);
         if(typeState == null) {

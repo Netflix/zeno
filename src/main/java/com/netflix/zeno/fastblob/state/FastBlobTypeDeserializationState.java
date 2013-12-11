@@ -150,6 +150,7 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
      * This method is only intended to be used during heap-friendly double snapshot refresh.
      */
     public void clearPreviousObjects() {
+        /// each previous object which was *not* copied was removed
         for(int i=0;i<previousObjects.size();i++) {
             T t = previousObjects.get(i);
             if(t != null && !copiedPreviousObjects.get(i)) {
@@ -157,6 +158,7 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
             }
         }
         previousObjects = null;
+        copiedPreviousObjects = null;
     }
 
     /**
