@@ -17,7 +17,6 @@
  */
 package com.netflix.zeno.json;
 
-import com.netflix.zeno.json.JsonSerializationFramework;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializerFactory;
 import com.netflix.zeno.testpojos.TypeA;
@@ -32,10 +31,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import junit.framework.Assert;
 
 public class JsonSerializationTest {
 

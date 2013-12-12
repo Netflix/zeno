@@ -19,8 +19,6 @@ package com.netflix.zeno.fastblob.state;
 
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.fastblob.state.ByteArrayOrdinalMap;
-import com.netflix.zeno.fastblob.state.ThreadSafeBitSet;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,9 +32,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Assert;
 import org.junit.Test;
-
-import junit.framework.Assert;
 
 public class ByteArrayOrdinalMapTest {
 
