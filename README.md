@@ -19,7 +19,7 @@ Zeno binaries are published to Maven Central.
 
 |GroupID/Org|ArtifactID/Name|Latest Version|
 |-----------|---------------|--------------|
-|com.netflix.zeno|netflix-zeno|1.4|
+|com.netflix.zeno|netflix-zeno|1.5|
 
 In a Maven .pom file:
 
@@ -27,7 +27,7 @@ In a Maven .pom file:
         <dependency>
         	<groupId>com.netflix.zeno</groupId>
         	<artifactId>netflix-zeno</artifactId>
-        	<version>1.4</version>
+        	<version>1.5</version>
         </dependency>
         ...
 
