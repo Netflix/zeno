@@ -28,7 +28,7 @@ import java.util.Set;
 
 /**
  *
- * The HeapFriendlyDerivableKeyHashMap is an open-addressed, linear probing hash table.  It uses two segmented arrays, one to hold the keys
+ * The HeapFriendlyHashMap is an open-addressed, linear probing hash table.  It uses two segmented arrays, one to hold the keys
  * and one to hold the values.
  *
  * @author dkoszewnik
