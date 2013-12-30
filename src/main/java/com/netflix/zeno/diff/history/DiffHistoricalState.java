@@ -58,7 +58,7 @@ public class DiffHistoricalState {
     }
 
     /**
-     * Create a historical state by determining the differences between the "from" and "to" states for this type.
+     * Create a historical state by determining the differences between the "from" and "to" states for this type.<p/>
      * 
      * The key which was chosen for this type may not be unique, in which case both Maps will contain a List of items for each key.
      * 
@@ -125,11 +125,13 @@ public class DiffHistoricalState {
     }
     
     /**
-     * Equality is different depending on whether or not we are keying by a unique key.
+     * Equality is different depending on whether or not we are keying by a unique key.<p/>
      * 
-     * If the key is unique, then we simply compare equality with ==.  If the key is not unique,
-     * then we have grouped these elements by the key (in Lists).  In this case, we check equality of
-     * each element with ==.
+     * <ul>
+     * <li>If the key is unique, then we simply compare equality with ==.</li>
+     * <li>If the key is not unique, then we have grouped these elements by the key (in Lists).  
+     * In this case, we check equality of each element with ==.</li>
+     * </ul>
      * 
      */
     @SuppressWarnings("unchecked")

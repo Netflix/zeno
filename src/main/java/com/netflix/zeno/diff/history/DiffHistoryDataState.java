@@ -31,7 +31,7 @@ import com.netflix.zeno.util.collections.impl.OpenAddressingHashMap;
 
 /**
  * A complete historical representation of the objects available in a
- * FastBlobStateEngine at some point in time.
+ * FastBlobStateEngine at some point in time.<p/>
  * 
  * This representation contains all of the objects of each type specified in a
  * set of TypeDiffInstructions, keyed by the keys specified in thos

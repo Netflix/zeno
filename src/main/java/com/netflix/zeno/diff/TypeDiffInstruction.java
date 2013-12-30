@@ -19,21 +19,25 @@ package com.netflix.zeno.diff;
 
 /**
  * The TypeDiffInstruction should be overridden to describe how find matching
- * pairs of Objects of a given type.
+ * pairs of Objects of a given type.<p/>
  * 
  * From each Object of this type, a primary key must be constructed/extracted.
  * This key must meaningfully override hashCode() and equals(), and should be
- * unique for a given type in the FastBlobStateEngine.
+ * unique for a given type in the FastBlobStateEngine.<p/>
  * 
  * The TypeDiffInstruction will automatically find pairs of Objects based on
  * these primary keys, and each pair of Objects will be traversed to find the
- * diff.
+ * diff.<p/>
  * 
- * (from {@link DiffRecord}) Conceptually, The diff of two Objects is calculated
- * by the following process: 1) reduce all properties in each Object to sets of
- * key/value pairs. 2) pull out matching pairs of key/value pairs from both
- * Objects. 3) When there are no more matches left, the diff score between the
- * two Objects is sum of the remaining key/value pairs for both Objects.
+ * (from {@link DiffRecord})<br/> 
+ * Conceptually, The diff of two Objects is calculated by the following process: 
+ * 
+ * <ol>
+ * <li>reduce all properties in each Object to sets of key/value pairs.</li>
+ * <li>pull out matching pairs of key/value pairs from both Objects.</li>
+ * <li>when there are no more matches left, the diff score between the 
+ * two Objects is sum of the remaining key/value pairs for both Objects.</li>
+ * </ol>
  * 
  * @author dkoszewnik
  * 

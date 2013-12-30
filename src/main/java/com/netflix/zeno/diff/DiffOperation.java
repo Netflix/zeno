@@ -44,6 +44,8 @@ public class DiffOperation {
     /**
      * Perform a diff between two data states.
      * 
+     * Note:  For now, this operation will ignore type instructions for non-unique keys.
+     * 
      * @param fromState - The "from" state engine, populated with one of the deserialized data states to compare
      * @param toState - the "to" state engine, populated with the other deserialized data state to compare.
      * @param factory - The SerializerFactory describing the data model to use.
@@ -63,19 +65,22 @@ public class DiffOperation {
             EnsureSuccessSimultaneousExecutor executor = new EnsureSuccessSimultaneousExecutor(2.0d, "zeno-diff");
 
             for (final TypeDiffInstruction<?> instruction : this.instruction.getTypeInstructions()) {
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        Iterable<?> fromDeserializationState = fromState.getTypeDeserializationState(instruction.getSerializerName());
-                        Iterable<?> toDeserializationState = toState.getTypeDeserializationState(instruction.getSerializerName());
-
-                        TypeDiff<Object> typeDiff = performDiff(framework, instruction, fromDeserializationState, toDeserializationState);
-
-                        synchronized (diffs) {
-                            diffs.add(typeDiff);
+                /// for now, the DiffOperation ignores non-unique keys.
+                if(instruction.isUniqueKey()) {
+                    executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            Iterable<?> fromDeserializationState = fromState.getTypeDeserializationState(instruction.getSerializerName());
+                            Iterable<?> toDeserializationState = toState.getTypeDeserializationState(instruction.getSerializerName());
+    
+                            TypeDiff<Object> typeDiff = performDiff(framework, instruction, fromDeserializationState, toDeserializationState);
+    
+                            synchronized (diffs) {
+                                diffs.add(typeDiff);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
 
             executor.awaitSuccessfulCompletion();
