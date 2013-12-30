@@ -17,9 +17,11 @@
  */
 package com.netflix.zeno.diff.history;
 
+import com.netflix.zeno.diff.TypeDiffInstruction;
 import com.netflix.zeno.util.collections.impl.OpenAddressingArraySet;
 import com.netflix.zeno.util.collections.impl.OpenAddressingHashMap;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,12 +50,20 @@ public class DiffHistoricalState {
         return (DiffHistoricalTypeState<K, V>)typeStates.get(objectType);
     }
 
-    public <K, V> void addTypeState(String typeName, Map<K, V> from, Map<K, V> to) {
-        typeStates.put(typeName, createTypeState(from, to));
+    public <K, V> void addTypeState(TypeDiffInstruction<?> typeInstruction, Map<K, V> from, Map<K, V> to) {
+        String typeIdentifier = typeInstruction.getTypeIdentifier();
+        boolean isGroupOfObjects = !typeInstruction.isUniqueKey();
+        
+        typeStates.put(typeIdentifier, createTypeState(from, to, isGroupOfObjects));
     }
 
-
-    private <K, V> DiffHistoricalTypeState<K, V> createTypeState(Map<K, V> from, Map<K, V> to) {
+    /**
+     * Create a historical state by determining the differences between the "from" and "to" states for this type.
+     * 
+     * The key which was chosen for this type may not be unique, in which case both Maps will contain a List of items for each key.
+     * 
+     */
+    private <K, V> DiffHistoricalTypeState<K, V> createTypeState(Map<K, V> from, Map<K, V> to, boolean isGroupOfObjects) {
         int newCounter = 0;
         int diffCounter = 0;
         int deleteCounter = 0;
@@ -66,7 +76,7 @@ public class DiffHistoricalState {
             } else {
                 V fromValue = from.get(key);
 
-                if(fromValue != toValue) {
+                if(!checkEquality(toValue, fromValue, isGroupOfObjects)) {
                     diffCounter++;
                 }
             }
@@ -95,7 +105,7 @@ public class DiffHistoricalState {
             if(toValue == null) {
                 deleteMap.builderPut(deleteCounter++, key, fromValue);
             } else {
-                if(fromValue != toValue) {
+                if(!checkEquality(toValue, fromValue, isGroupOfObjects)) {
                     diffMap.builderPut(diffCounter++, key, fromValue);
                 }
             }
@@ -112,6 +122,37 @@ public class DiffHistoricalState {
         deleteMap.builderFinish();
 
         return new DiffHistoricalTypeState<K, V>(newSet, diffMap, deleteMap);
+    }
+    
+    /**
+     * Equality is different depending on whether or not we are keying by a unique key.
+     * 
+     * If the key is unique, then we simply compare equality with ==.  If the key is not unique,
+     * then we have grouped these elements by the key (in Lists).  In this case, we check equality of
+     * each element with ==.
+     * 
+     */
+    @SuppressWarnings("unchecked")
+    private boolean checkEquality(Object o1, Object o2, boolean isGroupOfObjects) {
+        if(isGroupOfObjects) {
+            /// equality for a List, in this case, means that for each list, at each element the items are == to one another.
+            /// we know that the element ordering is the same because we iterated over the objects in ordinal order from the type
+            /// state when we built the list in the DiffHistoryDataState            
+            List<Object> l1 = (List<Object>)o1;
+            List<Object> l2 = (List<Object>)o2;
+            
+            if(l1.size() != l2.size())
+                return false;
+            
+            for(int i=0;i<l1.size();i++) {
+                if(l1.get(i) != l2.get(i))
+                    return false;
+            }
+            
+            return true;
+        } else {
+            return o1 == o2;
+        }
     }
 
 }

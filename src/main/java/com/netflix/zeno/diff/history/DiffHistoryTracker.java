@@ -83,13 +83,13 @@ public class DiffHistoryTracker {
 
         SimultaneousExecutor executor = new SimultaneousExecutor();
 
-        for(final String typeName : from.getTypeStateNames()) {
+        for(final TypeDiffInstruction<?> typeInstruction : from.getTypeDiffInstructions()) {
             executor.execute(new Runnable() {
                 public void run() {
-                    Map<Object, Object> fromTypeState = from.getTypeState(typeName);
-                    Map<Object, Object> toTypeState = to.getTypeState(typeName);
+                    Map<Object, Object> fromTypeState = from.getTypeState(typeInstruction.getTypeIdentifier());
+                    Map<Object, Object> toTypeState = to.getTypeState(typeInstruction.getTypeIdentifier());
 
-                    historicalState.addTypeState(typeName, fromTypeState, toTypeState);
+                    historicalState.addTypeState(typeInstruction, fromTypeState, toTypeState);
                 }
             });
         }

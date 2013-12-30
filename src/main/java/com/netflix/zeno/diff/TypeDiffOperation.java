@@ -43,7 +43,7 @@ public class TypeDiffOperation<T> {
 
     @SuppressWarnings("unchecked")
     public TypeDiff<T> performDiff(DiffSerializationFramework framework, Iterable<T> fromState, Iterable<T> toState) {
-        TypeDiff<T> diff = new TypeDiff<T>(instruction.getSerializerName());
+        TypeDiff<T> diff = new TypeDiff<T>(instruction.getTypeIdentifier());
 
         DiffRecord fromRec = new DiffRecord();
         DiffRecord toRec = new DiffRecord();

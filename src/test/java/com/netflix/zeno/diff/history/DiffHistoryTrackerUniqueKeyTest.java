@@ -17,27 +17,19 @@
  */
 package com.netflix.zeno.diff.history;
 
-import com.netflix.zeno.diff.DiffInstruction;
-import com.netflix.zeno.diff.TypeDiffInstruction;
-import com.netflix.zeno.fastblob.FastBlobStateEngine;
-import com.netflix.zeno.fastblob.io.FastBlobReader;
-import com.netflix.zeno.fastblob.io.FastBlobWriter;
-import com.netflix.zeno.serializer.NFTypeSerializer;
-import com.netflix.zeno.serializer.SerializerFactory;
-import com.netflix.zeno.testpojos.TypeA;
-import com.netflix.zeno.testpojos.TypeASerializer;
-
-import java.io.ByteArrayInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DiffHistoryTrackerTest {
+import com.netflix.zeno.diff.DiffInstruction;
+import com.netflix.zeno.diff.TypeDiffInstruction;
+import com.netflix.zeno.fastblob.FastBlobStateEngine;
+import com.netflix.zeno.testpojos.TypeA;
+
+public class DiffHistoryTrackerUniqueKeyTest extends DiffHistoryAbstractTest {
 
     private FastBlobStateEngine stateEngine;
     private DiffHistoryTracker diffHistory;
@@ -95,7 +87,7 @@ public class DiffHistoryTrackerTest {
 
         stateEngine.setLatestVersion(String.valueOf(++versionCounter));
 
-        roundTripObjects();
+        roundTripObjects(stateEngine);
         diffHistory.addState();
     }
 
@@ -114,28 +106,6 @@ public class DiffHistoryTrackerTest {
                     }
                 )
             );
-    }
-
-    private void roundTripObjects() throws IOException {
-       stateEngine.prepareForWrite();
-
-       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-       FastBlobWriter writer = new FastBlobWriter(stateEngine);
-       writer.writeSnapshot(new DataOutputStream(baos));
-
-       FastBlobReader reader = new FastBlobReader(stateEngine);
-       reader.readSnapshot(new ByteArrayInputStream(baos.toByteArray()));
-
-       stateEngine.prepareForNextCycle();
-    }
-
-    public SerializerFactory serializerFactory() {
-        return new SerializerFactory() {
-            public NFTypeSerializer<?>[] createSerializers() {
-                return new NFTypeSerializer<?>[] { new TypeASerializer() };
-            }
-        };
     }
 
 }
