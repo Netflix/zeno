@@ -122,7 +122,7 @@ public class DiffHistoryTracker {
         /// and work backwards through history.
         for(DiffHistoricalState state : historicalStates) {
 
-            DiffHistoricalTypeState<Object, T> historicalState = state.getMap(type);
+            DiffHistoricalTypeState<Object, T> historicalState = state.getTypeState(type);
 
             Map<Object, T> diffObjects = historicalState.getDiffObjects();
             Map<Object, T> deletedObjects = historicalState.getDeletedObjects();
@@ -148,6 +148,13 @@ public class DiffHistoryTracker {
         Collections.reverse(states);
 
         return states;
+    }
+
+    /**
+     * Returns a list of the historical states, starting with the most recent and ending with the oldest.
+     */
+    public List<DiffHistoricalState> getHistoricalStates() {
+        return Collections.unmodifiableList(historicalStates);
     }
 
 }

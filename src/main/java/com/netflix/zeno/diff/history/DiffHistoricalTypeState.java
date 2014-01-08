@@ -57,4 +57,8 @@ public class DiffHistoricalTypeState<K, V> {
         return deletedObjects;
     }
 
+    public int numChanges() {
+        return newObjects.size() + diffObjects.size() + deletedObjects.size();
+    }
+
 }
