@@ -3,12 +3,18 @@ ext.githubProjectName = 'zeno'
 group = "com.netflix.zeno"
 
 buildscript {
-    repositories { mavenCentral() }
+    repositories {
+        mavenLocal()
+        mavenCentral() // maven { url 'http://jcenter.bintray.com' }
+    }
     apply from: file('gradle/buildscript.gradle'), to: buildscript 
 }
 
 allprojects {
-    repositories { mavenCentral() }
+    repositories { 
+        mavenLocal()
+        mavenCentral() // maven { url: 'http://jcenter.bintray.com' }
+    }
 }
 
 apply from: file('gradle/convention.gradle')
@@ -28,5 +34,3 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.2.2'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
 }
-
- 

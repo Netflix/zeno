@@ -23,6 +23,7 @@ import com.netflix.zeno.util.collections.impl.OpenAddressingHashMap;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -45,23 +46,27 @@ public class DiffHistoricalState {
         return version;
     }
 
+    public Set<String> getTypes() {
+        return typeStates.keySet();
+    }
+
     @SuppressWarnings("unchecked")
-    public <K, V> DiffHistoricalTypeState<K, V>getMap(String objectType) {
+    public <K, V> DiffHistoricalTypeState<K, V>getTypeState(String objectType) {
         return (DiffHistoricalTypeState<K, V>)typeStates.get(objectType);
     }
 
     public <K, V> void addTypeState(TypeDiffInstruction<?> typeInstruction, Map<K, V> from, Map<K, V> to) {
         String typeIdentifier = typeInstruction.getTypeIdentifier();
         boolean isGroupOfObjects = !typeInstruction.isUniqueKey();
-        
+
         typeStates.put(typeIdentifier, createTypeState(from, to, isGroupOfObjects));
     }
 
     /**
      * Create a historical state by determining the differences between the "from" and "to" states for this type.<p/>
-     * 
+     *
      * The key which was chosen for this type may not be unique, in which case both Maps will contain a List of items for each key.
-     * 
+     *
      */
     private <K, V> DiffHistoricalTypeState<K, V> createTypeState(Map<K, V> from, Map<K, V> to, boolean isGroupOfObjects) {
         int newCounter = 0;
@@ -123,34 +128,34 @@ public class DiffHistoricalState {
 
         return new DiffHistoricalTypeState<K, V>(newSet, diffMap, deleteMap);
     }
-    
+
     /**
      * Equality is different depending on whether or not we are keying by a unique key.<p/>
-     * 
+     *
      * <ul>
      * <li>If the key is unique, then we simply compare equality with ==.</li>
-     * <li>If the key is not unique, then we have grouped these elements by the key (in Lists).  
+     * <li>If the key is not unique, then we have grouped these elements by the key (in Lists).
      * In this case, we check equality of each element with ==.</li>
      * </ul>
-     * 
+     *
      */
     @SuppressWarnings("unchecked")
     private boolean checkEquality(Object o1, Object o2, boolean isGroupOfObjects) {
         if(isGroupOfObjects) {
             /// equality for a List, in this case, means that for each list, at each element the items are == to one another.
             /// we know that the element ordering is the same because we iterated over the objects in ordinal order from the type
-            /// state when we built the list in the DiffHistoryDataState            
+            /// state when we built the list in the DiffHistoryDataState
             List<Object> l1 = (List<Object>)o1;
             List<Object> l2 = (List<Object>)o2;
-            
+
             if(l1.size() != l2.size())
                 return false;
-            
+
             for(int i=0;i<l1.size();i++) {
                 if(l1.get(i) != l2.get(i))
                     return false;
             }
-            
+
             return true;
         } else {
             return o1 == o2;
