@@ -63,8 +63,8 @@ public class DiffHtmlGenerator {
      * @return
      */
     public String generateDiff(String objectType, Object from, Object to) {
-        GenericObject fromGenericObject = genericObjectFramework.serialize(from, objectType);
-        GenericObject toGenericObject = genericObjectFramework.serialize(to, objectType);
+        GenericObject fromGenericObject = from == null ? null : genericObjectFramework.serialize(from, objectType);
+        GenericObject toGenericObject = to == null ? null : genericObjectFramework.serialize(to, objectType);
 
         return generateDiff(fromGenericObject, toGenericObject);
     }
