@@ -17,13 +17,6 @@
  */
 package com.netflix.zeno.fastblob.restorescenarios;
 
-import com.netflix.zeno.fastblob.FastBlobStateEngine;
-import com.netflix.zeno.fastblob.io.FastBlobReader;
-import com.netflix.zeno.fastblob.io.FastBlobWriter;
-import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
-import com.netflix.zeno.serializer.NFTypeSerializer;
-import com.netflix.zeno.serializer.SerializerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -31,6 +24,13 @@ import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.netflix.zeno.fastblob.FastBlobStateEngine;
+import com.netflix.zeno.fastblob.io.FastBlobReader;
+import com.netflix.zeno.fastblob.io.FastBlobWriter;
+import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
+import com.netflix.zeno.serializer.NFTypeSerializer;
+import com.netflix.zeno.serializer.SerializerFactory;
 
 public class RestoreServerAfterSchemaChangeTest {
 
@@ -70,7 +70,7 @@ public class RestoreServerAfterSchemaChangeTest {
         FastBlobStateEngine stateEngine2 = new FastBlobStateEngine(state2Factory());
 
         /// deserialize the state engine from the previous server (with the old serializers)
-        stateEngine2.deserializeFrom(new ByteArrayInputStream(serializedStateEngine1.toByteArray()));
+        stateEngine2.deserializePreviousStatesFrom(new ByteArrayInputStream(serializedStateEngine1.toByteArray()));
 
         /// add new data to the state engine, with some overlap
         TypeC c1 = new TypeC(1);
@@ -138,6 +138,7 @@ public class RestoreServerAfterSchemaChangeTest {
 
     private SerializerFactory removedTypeBFactory() {
         return new SerializerFactory() {
+            @Override
             public NFTypeSerializer<?>[] createSerializers() {
                 return new NFTypeSerializer<?>[] {
                         new AState2Serializer()
@@ -149,6 +150,7 @@ public class RestoreServerAfterSchemaChangeTest {
 
     private SerializerFactory state2Factory() {
         return new SerializerFactory() {
+            @Override
             public NFTypeSerializer<?>[] createSerializers() {
                 return new NFTypeSerializer<?>[] {
                         new AState2Serializer(),
@@ -160,6 +162,7 @@ public class RestoreServerAfterSchemaChangeTest {
 
     private SerializerFactory state1Factory() {
         return new SerializerFactory() {
+            @Override
             public NFTypeSerializer<?>[] createSerializers() {
                 return new NFTypeSerializer<?>[] {
                         new AState1Serializer(),

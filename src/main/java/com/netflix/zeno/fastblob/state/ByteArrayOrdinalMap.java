@@ -344,6 +344,41 @@ public class ByteArrayOrdinalMap {
     public int getDataSize() {
         return byteData.length();
     }
+    
+    /**
+     * Copy all of the data from this ByteArrayOrdinalMap to the provided FastBlobTypeSerializationState.
+     * 
+     * Image memberships for each ordinal are determined via the provided array of ThreadSafeBitSets.
+     * 
+     * @param copyTo
+     * @param imageMemberships
+     */
+    void copySerializedObjectData(FastBlobTypeSerializationState<?> copyTo, ThreadSafeBitSet imageMemberships[]) {
+        ByteDataBuffer buf = new ByteDataBuffer();
+        boolean imageMembershipsFlags[] = new boolean[imageMemberships.length];
+        
+        for(int i=0;i<pointersAndOrdinals.length();i++) {
+            long pointerAndOrdinal = pointersAndOrdinals.get(i);
+            if(pointerAndOrdinal != EMPTY_BUCKET_VALUE) {
+                int pointer = (int)(pointerAndOrdinal);
+                int ordinal = (int)(pointerAndOrdinal >> 32);
+                
+                for(int imageIndex=0;imageIndex<imageMemberships.length;imageIndex++) {
+                    imageMembershipsFlags[imageIndex] = imageMemberships[imageIndex].get(ordinal);
+                }
+                
+                int sizeOfData = VarInt.readVInt(byteData.getUnderlyingArray(), pointer);
+                pointer += VarInt.sizeOfVInt(sizeOfData);
+                
+                for(int j=0;j<sizeOfData;j++) {
+                    buf.write(byteData.get(pointer++));
+                }
+                
+                copyTo.addData(buf, imageMembershipsFlags);
+                buf.reset();
+            }
+        }
+    }
 
     /**
      * Compare the byte sequence contained in the supplied ByteDataBuffer with the

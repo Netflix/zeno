@@ -17,15 +17,6 @@
  */
 package com.netflix.zeno.fastblob;
 
-import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.fastblob.state.ByteArrayOrdinalMap;
-import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
-import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
-import com.netflix.zeno.fastblob.state.TypeDeserializationStateListener;
-import com.netflix.zeno.serializer.NFTypeSerializer;
-import com.netflix.zeno.serializer.SerializationFramework;
-import com.netflix.zeno.serializer.SerializerFactory;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -38,6 +29,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.netflix.zeno.fastblob.record.VarInt;
+import com.netflix.zeno.fastblob.state.ByteArrayOrdinalMap;
+import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
+import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
+import com.netflix.zeno.fastblob.state.TypeDeserializationStateListener;
+import com.netflix.zeno.serializer.NFTypeSerializer;
+import com.netflix.zeno.serializer.SerializationFramework;
+import com.netflix.zeno.serializer.SerializerFactory;
 
 /**
  * This is the SerializationFramework for the second-generation blob.<p/>
@@ -281,14 +281,18 @@ public class FastBlobStateEngine extends SerializationFramework {
 
         for(FastBlobTypeSerializationState<?> typeState : orderedSerializationStates) {
             dos.writeUTF(typeState.getSchema().getName());
-            typeState.serializeTo(dos);
+            typeState.serializePreviousStateTo(dos);
         }
     }
 
     /**
-     * Reinstantiate a previous StateEngine from the stream.
+     * Reinstantiate a StateEngine from the stream.
      */
-    public void deserializeFrom(InputStream is) throws IOException {
+    public void deserializeStatesFrom(InputStream is) throws IOException {
+        deserializeStatesFrom(is, false);
+    }
+
+    private void deserializeStatesFrom(InputStream is, boolean toPreviousState) throws IOException {
         DataInputStream dis = new DataInputStream(is);
 
         if(dis.readInt() != STATE_ENGINE_SERIALIZATION_FORMAT_VERSION) {
@@ -312,13 +316,37 @@ public class FastBlobStateEngine extends SerializationFramework {
             FastBlobTypeSerializationState<?> typeState = serializationTypeStates.get(typeName);
 
             if(typeState != null) {
-                typeState.deserializeFrom(dis, numConfigs);
+                if(toPreviousState) {
+                    typeState.deserializePreviousStateFrom(dis, numConfigs);
+                }else {
+                    typeState.deserializeFrom(dis, numConfigs);
+                }
             } else {
                 FastBlobTypeSerializationState.discardSerializedTypeSerializationState(dis, numConfigs);
             }
         }
+    }
 
+    /**
+     * Reinstantiate a previous StateEngine from the stream.
+     */
+    public void deserializePreviousStatesFrom(InputStream is) throws IOException {
+        deserializeStatesFrom(is, true);
+    }
 
+    /**
+     * Copy the serialization states into the provided State Engine.<p/>
+     *
+     * This is used during FastBlobStateEngine combination.<p/>
+     *
+     * Thread safety:  This cannot be safely called concurrently with add() operations to *this* state engine.<p/>
+     *
+     * @param otherStateEngine
+     */
+    public void copySerializationStatesTo(FastBlobStateEngine otherStateEngine) {
+        for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
+            serializationState.copyTo(otherStateEngine.getTypeSerializationState(serializationState.serializer.getName()));
+        }
     }
 
     public void prepareForDoubleSnapshotRefresh() {
