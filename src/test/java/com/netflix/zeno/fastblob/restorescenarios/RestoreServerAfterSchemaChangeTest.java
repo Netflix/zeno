@@ -70,7 +70,7 @@ public class RestoreServerAfterSchemaChangeTest {
         FastBlobStateEngine stateEngine2 = new FastBlobStateEngine(state2Factory());
 
         /// deserialize the state engine from the previous server (with the old serializers)
-        stateEngine2.deserializePreviousStatesFrom(new ByteArrayInputStream(serializedStateEngine1.toByteArray()));
+        stateEngine2.deserializeFrom(new ByteArrayInputStream(serializedStateEngine1.toByteArray()));
 
         /// add new data to the state engine, with some overlap
         TypeC c1 = new TypeC(1);

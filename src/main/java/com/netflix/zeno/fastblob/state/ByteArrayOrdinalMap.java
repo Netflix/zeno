@@ -17,16 +17,16 @@
  */
 package com.netflix.zeno.fastblob.state;
 
-import com.netflix.zeno.fastblob.record.ByteDataBuffer;
-import com.netflix.zeno.fastblob.record.SegmentedByteArray;
-import com.netflix.zeno.fastblob.record.SegmentedByteArrayHasher;
-import com.netflix.zeno.fastblob.record.VarInt;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLongArray;
+
+import com.netflix.zeno.fastblob.record.ByteDataBuffer;
+import com.netflix.zeno.fastblob.record.SegmentedByteArray;
+import com.netflix.zeno.fastblob.record.SegmentedByteArrayHasher;
+import com.netflix.zeno.fastblob.record.VarInt;
 
 /**
  *
@@ -344,36 +344,36 @@ public class ByteArrayOrdinalMap {
     public int getDataSize() {
         return byteData.length();
     }
-    
+
     /**
      * Copy all of the data from this ByteArrayOrdinalMap to the provided FastBlobTypeSerializationState.
-     * 
+     *
      * Image memberships for each ordinal are determined via the provided array of ThreadSafeBitSets.
-     * 
+     *
      * @param copyTo
      * @param imageMemberships
      */
     void copySerializedObjectData(FastBlobTypeSerializationState<?> copyTo, ThreadSafeBitSet imageMemberships[]) {
         ByteDataBuffer buf = new ByteDataBuffer();
         boolean imageMembershipsFlags[] = new boolean[imageMemberships.length];
-        
+
         for(int i=0;i<pointersAndOrdinals.length();i++) {
             long pointerAndOrdinal = pointersAndOrdinals.get(i);
             if(pointerAndOrdinal != EMPTY_BUCKET_VALUE) {
                 int pointer = (int)(pointerAndOrdinal);
                 int ordinal = (int)(pointerAndOrdinal >> 32);
-                
+
                 for(int imageIndex=0;imageIndex<imageMemberships.length;imageIndex++) {
                     imageMembershipsFlags[imageIndex] = imageMemberships[imageIndex].get(ordinal);
                 }
-                
+
                 int sizeOfData = VarInt.readVInt(byteData.getUnderlyingArray(), pointer);
                 pointer += VarInt.sizeOfVInt(sizeOfData);
-                
+
                 for(int j=0;j<sizeOfData;j++) {
                     buf.write(byteData.get(pointer++));
                 }
-                
+
                 copyTo.addData(buf, imageMembershipsFlags);
                 buf.reset();
             }
@@ -477,8 +477,13 @@ public class ByteArrayOrdinalMap {
      * @throws IOException
      */
     public void serializeTo(OutputStream os) throws IOException {
+        /// indicate which state this ByteArrayOrdinalMap was in.
+        int isPreparedForWrite = pointersByOrdinal != null ? 1 : 0;
+        os.write(isPreparedForWrite);
+
         /// write the hashed key array size
         VarInt.writeVInt(os, pointersAndOrdinals.length());
+
 
         /// write the keys in sorted ordinal order to the stream
         long keys[] = new long[size];
@@ -518,6 +523,8 @@ public class ByteArrayOrdinalMap {
      * @throws IOException
      */
     public static ByteArrayOrdinalMap deserializeFrom(InputStream is) throws IOException {
+        boolean wasPreparedForWrite = is.read() == 1;
+
         int hashedKeyArraySize = VarInt.readVInt(is);
 
         long keys[] = new long[VarInt.readVInt(is)];
@@ -536,7 +543,12 @@ public class ByteArrayOrdinalMap {
 
         FreeOrdinalTracker freeOrdinalTracker = FreeOrdinalTracker.deserializeFrom(is);
 
-        return new ByteArrayOrdinalMap(keys, byteData, freeOrdinalTracker, hashedKeyArraySize);
+        ByteArrayOrdinalMap deserializedMap = new ByteArrayOrdinalMap(keys, byteData, freeOrdinalTracker, hashedKeyArraySize);
+
+        if(wasPreparedForWrite)
+            deserializedMap.prepareForWrite();
+
+        return deserializedMap;
     }
 
 }

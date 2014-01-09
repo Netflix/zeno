@@ -257,10 +257,10 @@ public class FastBlobStateEngine extends SerializationFramework {
 
     /// arbitrary version number.  Change this when incompatible modifications are made to the state engine
     /// serialization format.
-    private final int STATE_ENGINE_SERIALIZATION_FORMAT_VERSION = 999998;
+    private final int STATE_ENGINE_SERIALIZATION_FORMAT_VERSION = 999997;
 
     /**
-     *  Serialize a previous serialization state from the stream.  This should be called immediately after prepareForNextCycle().
+     *  Serialize a previous serialization state from the stream.  The deserialized state engine will be in exactly the same state as the serialized state engine.
      */
     public void serializeTo(OutputStream os) throws IOException {
         DataOutputStream dos = new DataOutputStream(os);
@@ -281,18 +281,14 @@ public class FastBlobStateEngine extends SerializationFramework {
 
         for(FastBlobTypeSerializationState<?> typeState : orderedSerializationStates) {
             dos.writeUTF(typeState.getSchema().getName());
-            typeState.serializePreviousStateTo(dos);
+            typeState.serializeTo(dos);
         }
     }
 
     /**
      * Reinstantiate a StateEngine from the stream.
      */
-    public void deserializeStatesFrom(InputStream is) throws IOException {
-        deserializeStatesFrom(is, false);
-    }
-
-    private void deserializeStatesFrom(InputStream is, boolean toPreviousState) throws IOException {
+    public void deserializeFrom(InputStream is) throws IOException {
         DataInputStream dis = new DataInputStream(is);
 
         if(dis.readInt() != STATE_ENGINE_SERIALIZATION_FORMAT_VERSION) {
@@ -316,22 +312,11 @@ public class FastBlobStateEngine extends SerializationFramework {
             FastBlobTypeSerializationState<?> typeState = serializationTypeStates.get(typeName);
 
             if(typeState != null) {
-                if(toPreviousState) {
-                    typeState.deserializePreviousStateFrom(dis, numConfigs);
-                }else {
-                    typeState.deserializeFrom(dis, numConfigs);
-                }
+                typeState.deserializeFrom(dis, numConfigs);
             } else {
                 FastBlobTypeSerializationState.discardSerializedTypeSerializationState(dis, numConfigs);
             }
         }
-    }
-
-    /**
-     * Reinstantiate a previous StateEngine from the stream.
-     */
-    public void deserializePreviousStatesFrom(InputStream is) throws IOException {
-        deserializeStatesFrom(is, true);
     }
 
     /**
