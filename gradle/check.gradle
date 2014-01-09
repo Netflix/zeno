@@ -1,18 +1,14 @@
 // Checkstyle
 //apply plugin: 'checkstyle'
-//tasks.withType(Checkstyle) { ignoreFailures = true }
 //checkstyle {
-//    ignoreFailures = true // Waiting on GRADLE-2163
+//    ignoreFailures = true 
 //    configFile = rootProject.file('codequality/checkstyle.xml')
 //}
 
-//import org.gradle.api.plugins.quality.FindBugs
-
 // FindBugs
 //apply plugin: 'findbugs'
-//tasks.withType(FindBugs) { 
-//	reports.html.enabled true 
-//	reports.xml.enabled false
+//findbugs {
+//    ignoreFailures = true
 //}
 
 // PMD
