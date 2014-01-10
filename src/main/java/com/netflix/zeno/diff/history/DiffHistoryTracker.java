@@ -145,8 +145,6 @@ public class DiffHistoryTracker {
             currentItem = previous;
         }
 
-        Collections.reverse(states);
-
         return states;
     }
 

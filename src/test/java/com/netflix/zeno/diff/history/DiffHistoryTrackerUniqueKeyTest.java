@@ -57,16 +57,16 @@ public class DiffHistoryTrackerUniqueKeyTest extends DiffHistoryAbstractTest {
         List<DiffObjectHistoricalTransition<TypeA>> object3History = diffHistory.getObjectHistory("TypeA", Integer.valueOf(3));
         List<DiffObjectHistoricalTransition<TypeA>> object4History = diffHistory.getObjectHistory("TypeA", Integer.valueOf(4));
 
-        assertDiffObjectHistoricalState(object1History, 1, 2, null, null, 3, 3, null);
+        assertDiffObjectHistoricalState(object1History, null, 3, 3, null, null, 2, 1); //1, 2, null, null, 3, 3, null);
         assertDiffObjectHistoricalState(object2History, null, null, 1, 1, 1, null, null);
-        assertDiffObjectHistoricalState(object3History, null, 1, 1, 2, 2, 2, 2);
+        assertDiffObjectHistoricalState(object3History, 2, 2, 2, 2, 1, 1, null);
         assertDiffObjectHistoricalState(object4History, 1, 1, 1, 1, 1, 1, 1);
     }
 
     private void assertDiffObjectHistoricalState(List<DiffObjectHistoricalTransition<TypeA>> list, Integer... expectedHistory) {
         for(int i=0;i<list.size();i++) {
-            Integer expectedFrom = expectedHistory[i];
-            Integer expectedTo = expectedHistory[i+1];
+            Integer expectedFrom = expectedHistory[i+1];
+            Integer expectedTo = expectedHistory[i];
 
             TypeA beforeA = list.get(i).getBefore();
             TypeA afterA = list.get(i).getAfter();
