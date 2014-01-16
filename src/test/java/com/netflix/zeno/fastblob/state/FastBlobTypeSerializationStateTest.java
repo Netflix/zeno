@@ -1,5 +1,11 @@
 package com.netflix.zeno.fastblob.state;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -7,7 +13,7 @@ import org.junit.Test;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.serializer.common.IntegerSerializer;
 
-public class FastBlobTypeSerializationStateCopyTest {
+public class FastBlobTypeSerializationStateTest {
 
     FastBlobTypeSerializationState<Integer> srcState1;
     FastBlobTypeSerializationState<Integer> srcState2;
@@ -58,6 +64,29 @@ public class FastBlobTypeSerializationStateCopyTest {
         assertData(destState, new byte[] { 61, 71, 81, 91 }, false, true);
 
     }
+    
+    @Test
+    public void serializeAndDeserialize() throws Exception{
+        /// initialize data in "from" state
+        addData(srcState1, new byte[] { 1, 2 }, true, true);
+        addData(srcState1, new byte[] { 3, 4, 5 }, true, false);
+        addData(srcState1, new byte[] { 6, 7, 8, 9 }, false, true);
+
+        final File f = File.createTempFile("pre", "suf");
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(f));
+        srcState1.serializeTo(dos);
+        dos.close();
+        
+        DataInputStream dis = new DataInputStream(new FileInputStream(f));
+        destState.deserializeFrom(dis, 2);
+        dis.close();
+
+        /// assert data was copied
+        assertData(destState, new byte[] { 1, 2 }, true, true);
+        assertData(destState, new byte[] { 3, 4, 5 }, true, false);
+        assertData(destState, new byte[] { 6, 7, 8, 9 }, false, true);
+        f.delete();
+    }    
 
     private void prepareAndCopy(FastBlobTypeSerializationState<Integer> srcState, FastBlobTypeSerializationState<Integer> destState) {
         srcState.copyTo(destState);

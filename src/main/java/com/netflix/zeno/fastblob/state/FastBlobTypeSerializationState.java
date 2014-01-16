@@ -279,7 +279,12 @@ public class FastBlobTypeSerializationState<T> {
      * Serialize this FastBlobTypeSerializationState to an OutputStream
      */
     public void serializeTo(DataOutputStream os) throws IOException {
-        previousStateTypeSchema.writeTo(os);
+        boolean isPreviousSchemaExist = previousStateTypeSchema != null;
+        os.writeBoolean(isPreviousSchemaExist);
+        
+        if(isPreviousSchemaExist) {
+            previousStateTypeSchema.writeTo(os);
+        }
 
         ordinalMap.serializeTo(os);
 
@@ -296,7 +301,11 @@ public class FastBlobTypeSerializationState<T> {
      * Deserialize this FastBlobTypeSerializationState from an InputStream
      */
     public void deserializeFrom(DataInputStream is, int numConfigs) throws IOException {
-        previousStateTypeSchema = FastBlobSchema.readFrom(is);
+        boolean isPreviousSchemaExist = is.readBoolean();
+        
+        if(isPreviousSchemaExist) {
+            previousStateTypeSchema = FastBlobSchema.readFrom(is);
+        }
 
         ordinalMap = ByteArrayOrdinalMap.deserializeFrom(is);
 
