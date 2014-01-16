@@ -81,7 +81,7 @@ public class FastBlobTypeSerializationStateTest {
         destState.deserializeFrom(dis, 2);
         dis.close();
 
-        /// assert data was copied
+        /// assert data was deserialized
         assertData(destState, new byte[] { 1, 2 }, true, true);
         assertData(destState, new byte[] { 3, 4, 5 }, true, false);
         assertData(destState, new byte[] { 6, 7, 8, 9 }, false, true);

@@ -279,10 +279,10 @@ public class FastBlobTypeSerializationState<T> {
      * Serialize this FastBlobTypeSerializationState to an OutputStream
      */
     public void serializeTo(DataOutputStream os) throws IOException {
-        boolean isPreviousSchemaExist = previousStateTypeSchema != null;
-        os.writeBoolean(isPreviousSchemaExist);
+        boolean isPreviousSchemaSerialized = previousStateTypeSchema != null;
+        os.writeBoolean(isPreviousSchemaSerialized);
         
-        if(isPreviousSchemaExist) {
+        if(isPreviousSchemaSerialized) {
             previousStateTypeSchema.writeTo(os);
         }
 
@@ -301,9 +301,9 @@ public class FastBlobTypeSerializationState<T> {
      * Deserialize this FastBlobTypeSerializationState from an InputStream
      */
     public void deserializeFrom(DataInputStream is, int numConfigs) throws IOException {
-        boolean isPreviousSchemaExist = is.readBoolean();
+        boolean isPreviousSchemaSerialized = is.readBoolean();
         
-        if(isPreviousSchemaExist) {
+        if(isPreviousSchemaSerialized) {
             previousStateTypeSchema = FastBlobSchema.readFrom(is);
         }
 
