@@ -28,8 +28,8 @@ import java.util.List;
  *
  * Using a set of NFTypeSerializers to define an Object hierarchy allows for the definition of
  * semantically and structurally independent operations over that data.
- * 
- * Check out the <a href="https://github.com/Netflix/zeno/wiki">Zeno documentation</a> section 
+ *
+ * Check out the <a href="https://github.com/Netflix/zeno/wiki">Zeno documentation</a> section
  * <a href="https://github.com/Netflix/zeno/wiki/Defining-an-object-model">defining an object model</a> for details about how
  * to define your data model with NFTypeSerializers.
  *
@@ -176,7 +176,7 @@ public abstract class NFTypeSerializer<T> {
 
     @SuppressWarnings("unchecked")
     protected double deserializePrimitiveDouble(NFDeserializationRecord rec, String fieldName) {
-        return serializationFramework.getFrameworkDeserializer().deserializeDouble(rec, fieldName);
+        return serializationFramework.getFrameworkDeserializer().deserializePrimitiveDouble(rec, fieldName);
     }
 
     @SuppressWarnings("unchecked")
