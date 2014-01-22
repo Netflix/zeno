@@ -54,15 +54,9 @@ public class ByteDataBuffer {
     }
 
     public void copyTo(ByteDataBuffer other) {
-        for(int i=0;i<position;i++) {
-            other.write(buf.get(i));
-        }
-    }
-
-    /*public void copyTo(ByteDataBuffer other) {
         other.buf.copy(buf, 0, other.position, position);
         other.position += position;
-    }*/
+    }
 
     public byte get(int index) {
         return buf.get(index);
