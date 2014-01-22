@@ -76,6 +76,62 @@ public class SegmentedByteArray implements ByteData {
     }
 
     /**
+     * For a SegmentedByteArray, this is a faster copy implementation.
+     *
+     * @param src
+     * @param srcPos
+     * @param destPos
+     * @param length
+     */
+    public void copy(SegmentedByteArray src, int srcPos, int destPos, int length) {
+        int segmentLength = 1 << log2OfSegmentSize;
+        int currentSegment = destPos >>> log2OfSegmentSize;
+        int segmentStartPos = destPos & bitmask;
+        int remainingBytesInSegment = segmentLength - segmentStartPos;
+
+        while(length > 0) {
+            int bytesToCopyFromSegment = Math.min(remainingBytesInSegment, length);
+            ensureCapacity(currentSegment);
+            int copiedBytes = src.get(srcPos, segments[currentSegment], segmentStartPos, bytesToCopyFromSegment);
+
+            srcPos += copiedBytes;
+            length -= copiedBytes;
+            segmentStartPos = 0;
+            remainingBytesInSegment = segmentLength;
+            currentSegment++;
+        }
+
+    }
+
+    /**
+     * copies up to data.length bytes from this SegmentedByteArray into the provided byte array
+     *
+     * @param index
+     * @param data
+     * @return the number of bytes copied
+     */
+    private int get(int srcPos, byte[] data, int destPos, int length) {
+        int segmentSize = 1 << log2OfSegmentSize;
+        int remainingBytesInSegment = segmentSize - (srcPos & bitmask);
+        int dataPosition = destPos;
+
+        while(length > 0) {
+            byte[] segment = segments[srcPos >>> log2OfSegmentSize];
+
+            int bytesToCopyFromSegment = Math.min(remainingBytesInSegment, length);
+
+            System.arraycopy(segment, srcPos & bitmask, data, dataPosition, bytesToCopyFromSegment);
+
+            dataPosition += bytesToCopyFromSegment;
+            srcPos += bytesToCopyFromSegment;
+            remainingBytesInSegment = segmentSize - (srcPos & bitmask);
+            length -= bytesToCopyFromSegment;
+        }
+
+        return dataPosition - destPos;
+    }
+
+    /**
      * Write a portion of this data to an OutputStream.
      */
     public void writeTo(OutputStream os, int startPosition, int len) throws IOException {
