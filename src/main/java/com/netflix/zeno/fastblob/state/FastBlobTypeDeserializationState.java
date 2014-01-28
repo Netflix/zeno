@@ -193,6 +193,20 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
         return count;
     }
 
+    /**
+     * Returns the current maximum ordinal for this type.  Returns -1 if this type has no objects.
+     *
+     * @return
+     */
+    public int maxOrdinal() {
+        int ordinal = objects.size();
+        while(--ordinal >= 0) {
+            if(objects.get(ordinal) != null)
+                return ordinal;
+        }
+        return -1;
+    }
+
     @Override
     public Iterator<T> iterator() {
         return new TypeDeserializationStateIterator<T>(objects);
