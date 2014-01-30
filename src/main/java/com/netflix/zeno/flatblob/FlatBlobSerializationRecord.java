@@ -104,37 +104,6 @@ public class FlatBlobSerializationRecord implements NFSerializationRecord {
     }
 
     /**
-     * Concatenates all fields, in order, to the ByteDataBuffer supplied.  This concatenation is the
-     * verbatim serialized representation in the FlatBlob.
-     *
-     * @param buf
-     * @throws IOException
-     */
-    public void writeDataTo(OutputStream os) throws IOException {
-        for (int i = 0; i < fieldData.length; i++) {
-            FieldType fieldType = schema.getFieldType(i);
-            if (isNonNull[i]) {
-                int length = fieldData[i].length();
-
-                if (fieldType.startsWithVarIntEncodedLength()) {
-                    VarInt.writeVInt(os, length);
-                }
-
-                fieldData[i].getUnderlyingArray().writeTo(os, 0, length);
-            } else {
-                if(fieldType == FieldType.FLOAT) {
-                    writeNullFloat(os);
-                } else if(fieldType == FieldType.DOUBLE) {
-                    writeNullDouble(os);
-                } else {
-                    os.write(0x80);
-                }
-            }
-        }
-    }
-
-
-    /**
      * Returns the number of bytes which will be written when writeDataTo(ByteDataBuffer buf) is called.
      *
      * @param buf
@@ -171,32 +140,5 @@ public class FlatBlobSerializationRecord implements NFSerializationRecord {
         for (int i = 0; i < fieldData.length; i++) {
             isNonNull[i] = false;
         }
-    }
-
-
-    /**
-     * Serialize a special 4-byte long sequence indicating a null Float value.
-     * @throws IOException
-     */
-    private static void writeNullFloat(OutputStream os) throws IOException {
-        os.write(NULL_FLOAT_BITS >>> 24);
-        os.write(NULL_FLOAT_BITS >>> 16);
-        os.write(NULL_FLOAT_BITS >>> 8);
-        os.write(NULL_FLOAT_BITS);
-    }
-
-    /**
-     * Serialize a special 4-byte long sequence indicating a null Float value.
-     * @throws IOException
-     */
-    private static void writeNullDouble(OutputStream os) throws IOException {
-        os.write((int) (NULL_DOUBLE_BITS >>> 56));
-        os.write((int) (NULL_DOUBLE_BITS >>> 48));
-        os.write((int) (NULL_DOUBLE_BITS >>> 40));
-        os.write((int) (NULL_DOUBLE_BITS >>> 32));
-        os.write((int) (NULL_DOUBLE_BITS >>> 24));
-        os.write((int) (NULL_DOUBLE_BITS >>> 16));
-        os.write((int) (NULL_DOUBLE_BITS >>> 8));
-        os.write((int) NULL_DOUBLE_BITS);
     }
 }
