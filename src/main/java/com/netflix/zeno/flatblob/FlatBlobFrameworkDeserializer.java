@@ -564,10 +564,6 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     /**
      * Decode a String as a series of VarInts, one per character.<p/>
      *
-     * @param str
-     * @param out
-     * @return
-     * @throws IOException
      */
     private final ThreadLocal<char[]> chararr = new ThreadLocal<char[]>();
 

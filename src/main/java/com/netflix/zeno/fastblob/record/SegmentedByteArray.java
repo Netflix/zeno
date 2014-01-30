@@ -19,6 +19,7 @@ package com.netflix.zeno.fastblob.record;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 
 /**
@@ -129,6 +130,22 @@ public class SegmentedByteArray implements ByteData {
         }
 
         return dataPosition - destPos;
+    }
+
+    public void readFrom(RandomAccessFile file, long pointer, int length) throws IOException {
+        file.seek(pointer);
+        int segmentSize = 1 << log2OfSegmentSize;
+        int segment = 0;
+        while(length > 0) {
+            ensureCapacity(segment);
+            int bytesToCopy = Math.min(segmentSize, length);
+            int bytesCopied = 0;
+            while(bytesCopied < bytesToCopy){
+                bytesCopied += file.read(segments[segment], bytesCopied, (bytesToCopy - bytesCopied));
+            }
+            segment++;
+            length -= bytesCopied;
+        }
     }
 
     /**
