@@ -129,12 +129,12 @@ public class TypeDeserializationStateListenerTest {
         List<Integer> addedValues = new ArrayList<Integer>();
 
         @Override
-        public void removedObject(TypeF obj) {
+        public void removedObject(TypeF obj, int ordinal) {
             removedValues.add(obj.getValue());
         }
 
         @Override
-        public void addedObject(TypeF obj) {
+        public void addedObject(TypeF obj, int ordinal) {
             addedValues.add(obj.getValue());
         }
 
