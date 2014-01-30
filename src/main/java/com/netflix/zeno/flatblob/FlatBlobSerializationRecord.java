@@ -17,18 +17,12 @@
  */
 package com.netflix.zeno.flatblob;
 
-import static com.netflix.zeno.flatblob.FlatBlobFrameworkSerializer.NULL_DOUBLE_BITS;
-import static com.netflix.zeno.flatblob.FlatBlobFrameworkSerializer.NULL_FLOAT_BITS;
-
 import com.netflix.zeno.fastblob.FastBlobFrameworkSerializer;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.serializer.NFSerializationRecord;
-
-import java.io.IOException;
-import java.io.OutputStream;
 
 public class FlatBlobSerializationRecord implements NFSerializationRecord {
 
