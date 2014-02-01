@@ -22,9 +22,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
 import com.netflix.zeno.serializer.SerializerFactory;
+import com.netflix.zeno.serializer.common.MapSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Map;
 
 /**
  *
@@ -63,7 +65,22 @@ public class JsonSerializationFramework extends SerializationFramework {
         return writer.toString();
     }
 
-
+    public <K, V> String serializeJsonMap(String keyType, String valueType, Map<K, V> map, boolean pretty) {
+        NFTypeSerializer<K> keySerializer = getSerializer(keyType);
+        NFTypeSerializer<V> valueSerializer = getSerializer(valueType);
+        
+        MapSerializer<K, V> mapSerializer = new MapSerializer<K, V>(keyType + "To" + valueType + "Map", keySerializer, valueSerializer);
+        mapSerializer.setSerializationFramework(this);
+        
+        StringWriter writer = new StringWriter();
+        JsonWriteGenericRecord record = new JsonWriteGenericRecord(writer, pretty);
+        
+        record.open();
+        mapSerializer.serialize(map, record);
+        record.close();
+        writer.flush();
+        return writer.toString();
+    }
 
 
     public <T> T deserializeJson(String type, String json) throws IOException {
@@ -74,6 +91,18 @@ public class JsonSerializationFramework extends SerializationFramework {
         T object = serializer.deserialize(readRecord);
 
         return object;
+    }
+    
+    public <K, V> Map<K, V> deserializeJsonMap(String keyType, String valueType, String json) throws IOException {
+        NFTypeSerializer<K> keySerializer = getSerializer(keyType);
+        NFTypeSerializer<V> valueSerializer = getSerializer(valueType);
+        
+        MapSerializer<K, V> mapSerializer = new MapSerializer<K, V>(keyType + "To" + valueType + "Map", keySerializer, valueSerializer);
+        mapSerializer.setSerializationFramework(this);
+        
+        JsonNode node = new ObjectMapper().readTree(json);
+        JsonReadGenericRecord readRecord = new JsonReadGenericRecord(node);
+        return mapSerializer.deserialize(readRecord);
     }
 
 }
