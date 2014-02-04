@@ -42,21 +42,15 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
 
     private final Map<String, FlatBlobTypeCache<?>> typeCaches;
     private final ThreadLocal<Map<String, FlatBlobDeserializationRecord>> deserializationRecords;
-    private final boolean deduplicate;
 
     private MinimizedUnmodifiableCollections minimizedCollections = new MinimizedUnmodifiableCollections(CollectionImplementation.JAVA_UTIL);
-
-    protected FlatBlobFrameworkDeserializer(FlatBlobSerializationFramework framework) {
-        this(framework, true);
-    }
 
     public void setCollectionImplementation(CollectionImplementation impl) {
         minimizedCollections = new MinimizedUnmodifiableCollections(impl);
     }
 
-    protected FlatBlobFrameworkDeserializer(FlatBlobSerializationFramework framework, boolean deduplicate) {
+    protected FlatBlobFrameworkDeserializer(FlatBlobSerializationFramework framework) {
         super(framework);
-        this.deduplicate = deduplicate;
         this.typeCaches = new HashMap<String, FlatBlobTypeCache<?>>();
         this.deserializationRecords = new ThreadLocal<Map<String,FlatBlobDeserializationRecord>>();
 
@@ -277,14 +271,10 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
 
         int ordinal = VarInt.readVInt(underlyingData, position);
 
-        FlatBlobTypeCache<T> typeCache = null;
-
-        if(deduplicate) {
-            typeCache = getTypeCache(typeName);
-            T cached = typeCache.get(ordinal);
-            if(cached != null)
-                return cached;
-        }
+        FlatBlobTypeCache<T> typeCache = getTypeCache(typeName);
+        T cached = typeCache.get(ordinal);
+        if(cached != null)
+            return cached;
 
         position += VarInt.sizeOfVInt(ordinal);
 
@@ -294,12 +284,13 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
 
         FlatBlobDeserializationRecord subRec = getDeserializationRecord(typeName);
         subRec.setByteData(rec.getByteData());
+        subRec.setCacheElements(rec.shouldCacheElements());
         subRec.position(position);
 
         T deserialized = (T) framework.getSerializer(typeName).deserialize(subRec);
 
-        if(deduplicate) {
-            typeCache.set(ordinal, deserialized);
+        if(rec.shouldCacheElements()) {
+            deserialized = typeCache.putIfAbsent(ordinal, deserialized);
         }
 
         return deserialized;
@@ -342,11 +333,12 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
                 } else {
                     FlatBlobDeserializationRecord elementRec = getDeserializationRecord(itemSerializer.getName());
                     elementRec.setByteData(rec.getByteData());
+                    elementRec.setCacheElements(rec.shouldCacheElements());
                     elementRec.position(fieldPosition);
                     T deserialized = itemSerializer.deserialize(elementRec);
 
-                    if(deduplicate) {
-                        typeCache.set(ordinal, deserialized);
+                    if(rec.shouldCacheElements()) {
+                        deserialized = typeCache.putIfAbsent(ordinal, deserialized);
                     }
 
                     listBuilder.builderSet(i, deserialized);
@@ -370,7 +362,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
         int length = VarInt.readVInt(byteData, fieldPosition);
         fieldPosition += VarInt.sizeOfVInt(length);
 
-        int numElements = countFlatBlobElementsInRange(byteData, fieldPosition, length);
+        int numElements = countFlatBlobSetElementsInRange(byteData, fieldPosition, length);
 
         if(numElements == 0)
             return Collections.emptySet();
@@ -383,14 +375,19 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
         int previousOrdinal = 0;
 
         for(int i=0;i<numElements;i++) {
-            if(VarInt.readVNull(byteData, fieldPosition)) {
+            if(VarInt.readVNull(byteData, fieldPosition) && VarInt.readVNull(byteData, fieldPosition + 1)) {
                 setBuilder.builderSet(i, null);
                 fieldPosition += 1;
             } else {
-                int ordinal = VarInt.readVInt(byteData, fieldPosition);
-                fieldPosition += VarInt.sizeOfVInt(ordinal);
-                ordinal += previousOrdinal;
-                previousOrdinal = ordinal;
+                int ordinal = -1;
+                if(VarInt.readVNull(byteData, fieldPosition)) {
+                    fieldPosition++;
+                } else {
+                    ordinal = VarInt.readVInt(byteData, fieldPosition);
+                    fieldPosition += VarInt.sizeOfVInt(ordinal);
+                    ordinal += previousOrdinal;
+                    previousOrdinal = ordinal;
+                }
                 int sizeOfData = VarInt.readVInt(byteData, fieldPosition);
                 fieldPosition += VarInt.sizeOfVInt(sizeOfData);
 
@@ -403,11 +400,12 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
 
                 FlatBlobDeserializationRecord elementRec = getDeserializationRecord(itemSerializer.getName());
                 elementRec.setByteData(rec.getByteData());
+                elementRec.setCacheElements(rec.shouldCacheElements());
                 elementRec.position(fieldPosition);
                 T deserialized = itemSerializer.deserialize(elementRec);
 
-                if(deduplicate) {
-                    typeCache.set(ordinal, deserialized);
+                if(rec.shouldCacheElements()) {
+                    deserialized = typeCache.putIfAbsent(ordinal, deserialized);
                 }
 
                 setBuilder.builderSet(i, deserialized);
@@ -442,7 +440,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
         FlatBlobTypeCache<K> keyCache = getTypeCache(keySerializer.getName());
         FlatBlobTypeCache<V> valueCache = getTypeCache(valueSerializer.getName());
 
-        populateMap(byteData, fieldPosition, numElements, map, keySerializer, keyCache, valueSerializer, valueCache);
+        populateMap(byteData, fieldPosition, numElements, map, keySerializer, keyCache, valueSerializer, valueCache, rec.shouldCacheElements());
 
         return minimizedCollections.minimizeMap(map.builderFinish());
     }
@@ -471,12 +469,12 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
         FlatBlobTypeCache<K> keyCache = getTypeCache(keySerializer.getName());
         FlatBlobTypeCache<V> valueCache = getTypeCache(valueSerializer.getName());
 
-        populateMap(byteData, fieldPosition, numElements, map, keySerializer, keyCache, valueSerializer, valueCache);
+        populateMap(byteData, fieldPosition, numElements, map, keySerializer, keyCache, valueSerializer, valueCache, rec.shouldCacheElements());
 
         return minimizedCollections.minimizeSortedMap( (SortedMap<K, V>) map.builderFinish() );
     }
 
-    private <K, V> void populateMap(ByteData byteData, int fieldPosition, int numElements, MapBuilder<K, V> mapToPopulate, NFTypeSerializer<K> keySerializer, FlatBlobTypeCache<K> keyCache, NFTypeSerializer<V> valueSerializer, FlatBlobTypeCache<V> valueCache) {
+    private <K, V> void populateMap(ByteData byteData, int fieldPosition, int numElements, MapBuilder<K, V> mapToPopulate, NFTypeSerializer<K> keySerializer, FlatBlobTypeCache<K> keyCache, NFTypeSerializer<V> valueSerializer, FlatBlobTypeCache<V> valueCache, boolean shouldCacheElements) {
         int previousValueOrdinal = 0;
 
         for(int i=0;i<numElements;i++) {
@@ -497,10 +495,11 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
                 if(key == null) {
                     FlatBlobDeserializationRecord rec = getDeserializationRecord(keyCache.getName());
                     rec.setByteData(byteData);
+                    rec.setCacheElements(shouldCacheElements);
                     rec.position(fieldPosition);
                     key = keySerializer.deserialize(rec);
-                    if(deduplicate)
-                        keyCache.set(keyOrdinal, key);
+                    if(shouldCacheElements)
+                        key = keyCache.putIfAbsent(keyOrdinal, key);
                 }
 
                 fieldPosition += sizeOfData;
@@ -524,10 +523,11 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
                 if(value == null) {
                     FlatBlobDeserializationRecord rec = getDeserializationRecord(valueCache.getName());
                     rec.setByteData(byteData);
+                    rec.setCacheElements(shouldCacheElements);
                     rec.position(fieldPosition);
                     value = valueSerializer.deserialize(rec);
-                    if(deduplicate)
-                        valueCache.set(valueOrdinal, value);
+                    if(shouldCacheElements)
+                        value = valueCache.putIfAbsent(valueOrdinal, value);
                 }
 
                 fieldPosition += sizeOfData;
@@ -539,6 +539,31 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
             if(!undefinedKeyOrValue)
                 mapToPopulate.builderPut(i, key, value);
         }
+    }
+
+    private int countFlatBlobSetElementsInRange(ByteData byteData, int fieldPosition, int length) {
+        int numElements = 0;
+        int endPosition = length + fieldPosition;
+
+        while(fieldPosition < endPosition) {
+            if(VarInt.readVNull(byteData, fieldPosition) && VarInt.readVNull(byteData, fieldPosition + 1)) {
+                fieldPosition += 2;
+            } else {
+                if(VarInt.readVNull(byteData, fieldPosition)) {
+                    fieldPosition += 1;
+                } else {
+                    int ordinal = VarInt.readVInt(byteData, fieldPosition);
+                    fieldPosition += VarInt.sizeOfVInt(ordinal);
+                }
+
+                int eLen = VarInt.readVInt(byteData, fieldPosition);
+                fieldPosition += VarInt.sizeOfVInt(eLen);
+                fieldPosition += eLen;
+            }
+            numElements++;
+        }
+
+        return numElements;
     }
 
     private int countFlatBlobElementsInRange(ByteData byteData, int fieldPosition, int length) {

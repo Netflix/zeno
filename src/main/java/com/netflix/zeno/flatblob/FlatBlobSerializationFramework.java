@@ -23,8 +23,6 @@ import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.serializer.SerializationFramework;
 import com.netflix.zeno.serializer.SerializerFactory;
 
-import java.io.IOException;
-
 /**
  * The "flat blob" is currently an experiment.  We are challenging the assumption that all Netflix applications require
  * all video metadata in memory at any given time.<p/>
@@ -71,14 +69,10 @@ public class FlatBlobSerializationFramework extends SerializationFramework {
     }
 
     public FlatBlobSerializationFramework(SerializerFactory serializerFactory, FastBlobStateEngine readDeserializedObjectsFrom) {
-        this(serializerFactory, readDeserializedObjectsFrom, true);
-    }
-
-    public FlatBlobSerializationFramework(SerializerFactory serializerFactory, FastBlobStateEngine readDeserializedObjectsFrom, boolean deduplicate) {
         super(serializerFactory);
         this.stateEngine = readDeserializedObjectsFrom;
         this.frameworkSerializer = new FlatBlobFrameworkSerializer(this, stateEngine);
-        this.frameworkDeserializer = new FlatBlobFrameworkDeserializer(this, deduplicate);
+        this.frameworkDeserializer = new FlatBlobFrameworkDeserializer(this);
 
         ///TODO: The data structure created here is used for double snapshot refresh.  If this is used in a real implementation,
         ///then we would require a separate instance of the identity ordinal map, AND we would need to update this every cycle,
@@ -90,7 +84,7 @@ public class FlatBlobSerializationFramework extends SerializationFramework {
         }
     }
 
-    public void serialize(String type, Object obj, ByteDataBuffer os) throws IOException {
+    public void serialize(String type, Object obj, ByteDataBuffer os) {
         FlatBlobSerializationRecord rec = ((FlatBlobFrameworkSerializer)frameworkSerializer).getSerializationRecord(type);
 
         getSerializer(type).serialize(obj, rec);
@@ -98,13 +92,14 @@ public class FlatBlobSerializationFramework extends SerializationFramework {
         rec.writeDataTo(os);
     }
 
-    public <T> T deserialize(String type, ByteData data) {
-        return deserialize(type, data, 0);
+    public <T> T deserialize(String type, ByteData data, boolean cacheElements) {
+        return deserialize(type, data, 0, cacheElements);
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T deserialize(String type, ByteData data, int position) {
+    public <T> T deserialize(String type, ByteData data, int position, boolean cacheElements) {
         FlatBlobDeserializationRecord rec = ((FlatBlobFrameworkDeserializer)frameworkDeserializer).getDeserializationRecord(type);
+        rec.setCacheElements(cacheElements);
         rec.setByteData(data);
         rec.position(position);
 
@@ -114,6 +109,10 @@ public class FlatBlobSerializationFramework extends SerializationFramework {
     public <T> T getCached(String type, int ordinal) {
         FlatBlobTypeCache<T> typeCache = ((FlatBlobFrameworkDeserializer)frameworkDeserializer).getTypeCache(type);
         return typeCache.get(ordinal);
+    }
+
+    <T> FlatBlobTypeCache<T> getTypeCache(String type) {
+        return ((FlatBlobFrameworkDeserializer)frameworkDeserializer).getTypeCache(type);
     }
 
 }

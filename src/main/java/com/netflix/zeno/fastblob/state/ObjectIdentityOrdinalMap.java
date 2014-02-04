@@ -101,5 +101,5 @@ public class ObjectIdentityOrdinalMap {
         hash = hash * 2057;
         hash = hash ^ (hash >>> 16);
         return hash & Integer.MAX_VALUE;
-      }
+    }
 }

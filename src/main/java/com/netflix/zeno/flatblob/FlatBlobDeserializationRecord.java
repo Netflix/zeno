@@ -29,6 +29,7 @@ public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
 
     private final int fieldPointers[];
     private ByteData byteData;
+    private boolean cacheElements;
 
     public FlatBlobDeserializationRecord(FastBlobSchema schema) {
         this.schema = schema;
@@ -37,6 +38,14 @@ public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
 
     public void setByteData(ByteData byteData) {
         this.byteData = byteData;
+    }
+
+    public void setCacheElements(boolean cacheElements) {
+        this.cacheElements = cacheElements;
+    }
+
+    public boolean shouldCacheElements() {
+        return cacheElements;
     }
 
     /**

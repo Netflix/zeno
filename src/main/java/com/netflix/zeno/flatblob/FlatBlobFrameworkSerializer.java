@@ -229,13 +229,21 @@ public class FlatBlobFrameworkSerializer extends FrameworkSerializer<FlatBlobSer
         ByteDataBuffer fieldBuffer = rec.getFieldBuffer(fieldPosition);
 
         int setOrdinals[] = new int[set.size()];
+        Object unidentifiedSetObjects[] = null;
 
         int i = 0;
         for (T obj : set) {
             if(obj == null) {
                 setOrdinals[i++] = -1;
             } else {
-                setOrdinals[i++] = typeDeserializationState.find(obj);
+                setOrdinals[i] = typeDeserializationState.find(obj);
+                if(setOrdinals[i] == -1) {
+                    if(unidentifiedSetObjects == null)
+                        unidentifiedSetObjects = new Object[set.size()];
+                    unidentifiedSetObjects[i] = obj;
+                    setOrdinals[i] = Integer.MIN_VALUE;
+                }
+                i++;
             }
         }
 
@@ -248,13 +256,21 @@ public class FlatBlobFrameworkSerializer extends FrameworkSerializer<FlatBlobSer
         for(i=0;i<setOrdinals.length;i++) {
             if(setOrdinals[i] == -1) {
                 VarInt.writeVNull(fieldBuffer);
+                VarInt.writeVNull(fieldBuffer);
             } else {
-                Object element = typeDeserializationState.get(setOrdinals[i]);
-                framework.getSerializer(typeName).serialize(element, subRecord);
+                if(setOrdinals[i]  == Integer.MIN_VALUE) {
+                    Object element = unidentifiedSetObjects[i];
+                    framework.getSerializer(typeName).serialize(element, subRecord);
+                    VarInt.writeVNull(fieldBuffer);
+                } else {
+                    Object element = typeDeserializationState.get(setOrdinals[i]);
+                    framework.getSerializer(typeName).serialize(element, subRecord);
 
-                VarInt.writeVInt(fieldBuffer, setOrdinals[i] - currentOrdinal);
+                    VarInt.writeVInt(fieldBuffer, setOrdinals[i] - currentOrdinal);
+                    currentOrdinal = setOrdinals[i];
+                }
+
                 VarInt.writeVInt(fieldBuffer, subRecord.sizeOfData());
-                currentOrdinal = setOrdinals[i];
 
                 subRecord.writeDataTo(fieldBuffer);
                 subRecord.reset();
