@@ -17,8 +17,6 @@
  */
 package com.netflix.zeno.fastblob.record;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
 
 /**
  * Writes data to a SegmentedByteArray, tracking the index to which it writes.

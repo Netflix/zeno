@@ -19,6 +19,7 @@ package com.netflix.zeno.json;
 
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializerFactory;
+import com.netflix.zeno.serializer.common.IntegerSerializer;
 import com.netflix.zeno.testpojos.TypeA;
 import com.netflix.zeno.testpojos.TypeASerializer;
 import com.netflix.zeno.testpojos.TypeB;
@@ -94,6 +95,27 @@ public class JsonSerializationTest {
         TypeC deserializedTypeC = jsonFramework.deserializeJson("TypeC", json);
 
         Assert.assertEquals(originalTypeC, deserializedTypeC);
+    }
+    
+    @Test
+    public void roundTripJsonMap() throws IOException {
+        Map<Integer, TypeA> map = new HashMap<Integer, TypeA>();
+        map.put(1, new TypeA(0, 1));
+        map.put(2, new TypeA(2, 3));
+        
+        JsonSerializationFramework jsonFramework = new JsonSerializationFramework(new SerializerFactory() {
+            public NFTypeSerializer<?>[] createSerializers() {
+                return new NFTypeSerializer<?>[] { new TypeASerializer(), new IntegerSerializer() };
+            }
+        });
+        
+        String json = jsonFramework.serializeJsonMap(IntegerSerializer.NAME, "TypeA", map, true);
+        
+        Map<Integer, TypeA> deserializedMap = jsonFramework.deserializeJsonMap(IntegerSerializer.NAME, "TypeA", json);
+        
+        Assert.assertEquals(2, deserializedMap.size());
+        Assert.assertEquals(new TypeA(0, 1), deserializedMap.get(1));
+        Assert.assertEquals(new TypeA(2, 3), deserializedMap.get(2));
     }
 
     private TypeC createTestTypeC() {
