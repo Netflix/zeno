@@ -24,10 +24,12 @@ import com.netflix.zeno.util.SimultaneousExecutor;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A data structure to track the history of changes in a single FastBlobStateEngine.<p/>
@@ -49,6 +51,7 @@ public class DiffHistoryTracker {
     private final int historySizeToKeep;
     private final FastBlobStateEngine stateEngine;
     private final LinkedList<DiffHistoricalState> historicalStates;
+    private final Map<String, Map<String, String>> historicalStateHeaderTags;
     private final TypeDiffInstruction<?> typeDiffInstructions[];
     private DiffHistoryDataState currentDataState;
 
@@ -62,6 +65,7 @@ public class DiffHistoryTracker {
         this.historySizeToKeep = numStatesToKeep;
         this.stateEngine = stateEngine;
         this.historicalStates = new LinkedList<DiffHistoricalState>();
+        this.historicalStateHeaderTags = new ConcurrentHashMap<String, Map<String,String>>();
         this.typeDiffInstructions = diffInstruction.getTypeInstructions();
     }
 
@@ -97,10 +101,12 @@ public class DiffHistoryTracker {
         executor.awaitUninterruptibly();
 
         historicalStates.addFirst(historicalState);
+        historicalStateHeaderTags.put(to.getVersion(), new HashMap<String, String>(stateEngine.getHeaderTags()));
 
         /// trim historical entries beyond desired size.
         if(historicalStates.size() > historySizeToKeep) {
-            historicalStates.removeLast();
+            DiffHistoricalState removedState = historicalStates.removeLast();
+            historicalStateHeaderTags.remove(removedState.getVersion());
         }
     }
 
@@ -153,6 +159,13 @@ public class DiffHistoryTracker {
      */
     public List<DiffHistoricalState> getHistoricalStates() {
         return Collections.unmodifiableList(historicalStates);
+    }
+
+    /**
+     * Returns the header tags which were attached to the given version.
+     */
+    public Map<String, String> getHistoricalStateHeaderTags(String stateVersion) {
+        return historicalStateHeaderTags.get(stateVersion);
     }
 
 }
