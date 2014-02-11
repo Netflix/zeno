@@ -37,4 +37,25 @@ public class SegmentedByteArrayTest {
         }
     }
 
+    @Test
+    public void copyToAnotherSegmentedByteArray() {
+        SegmentedByteArray src = new SegmentedByteArray(3);
+
+        for(int i=0;i<128;i++) {
+            src.set(i, (byte)i);
+        }
+
+        SegmentedByteArray dest = new SegmentedByteArray(3);
+
+        for(int i=0;i<(128-32);i++) {
+            for(int j=0;j<(128-32);j++) {
+                dest.copy(src, i, j, 32);
+
+                for(int k=0;k<32;k++) {
+                    Assert.assertEquals((byte)src.get(i+k), (byte)dest.get(j+k));
+                }
+            }
+        }
+    }
+
 }

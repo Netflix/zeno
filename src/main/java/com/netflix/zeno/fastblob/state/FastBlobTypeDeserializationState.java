@@ -67,17 +67,21 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
         return objects.get(ordinal);
     }
 
+    @SuppressWarnings("deprecation")
     public void add(int ordinal, FastBlobDeserializationRecord rec) {
         T obj = serializer.deserialize(rec);
         ensureCapacity(ordinal + 1);
         objects.set(ordinal, obj);
         stateListener.addedObject(obj);
+        stateListener.addedObject(obj, ordinal);
     }
 
+    @SuppressWarnings("deprecation")
     public void remove(int ordinal) {
         T removedObject = objects.get(ordinal);
         objects.set(ordinal, null);
         stateListener.removedObject(removedObject);
+        stateListener.removedObject(removedObject, ordinal);
     }
 
     public void setListener(TypeDeserializationStateListener<T> listener) {
@@ -177,12 +181,14 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
      *
      * This method is only intended to be used during heap-friendly double snapshot refresh.
      */
+    @SuppressWarnings("deprecation")
     public void clearPreviousObjects() {
         /// each previous object which was *not* copied was removed
         for(int i=0;i<previousObjects.size();i++) {
             T t = previousObjects.get(i);
             if(t != null && !copiedPreviousObjects.get(i)) {
                 stateListener.removedObject(t);
+                stateListener.removedObject(t, i);
             }
         }
         previousObjects = null;
@@ -230,6 +236,20 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
         for(int i=objects.size() - 1;i >= 0;i--) {
             if(objects.get(i) != null)
                 return i;
+        }
+        return -1;
+    }
+
+    /**
+     * Returns the current maximum ordinal for this type.  Returns -1 if this type has no objects.
+     *
+     * @return
+     */
+    public int maxOrdinal() {
+        int ordinal = objects.size();
+        while(--ordinal >= 0) {
+            if(objects.get(ordinal) != null)
+                return ordinal;
         }
         return -1;
     }

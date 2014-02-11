@@ -28,21 +28,41 @@ public abstract class TypeDeserializationStateListener<T> {
 
     /**
      * Called once each time an instance is removed from the TypeDeserializationState
+     *
+     * @deprecated use removedObject(T obj, int ordinal) instead.
      */
-    public abstract void removedObject(T obj);
+    @Deprecated
+    public void removedObject(T obj) { }
+
+    /**
+     * Called once each time an instance is removed from the TypeDeserializationState.
+     *
+     * Please note that in the case of a double snapshot load, all object ordinals are shuffled.
+     * In this case, the "obj" parameter may not currently be assigned to the provided ordinal, and
+     * addedObject may have been called with a different object at the same ordinal.
+     */
+    public abstract void removedObject(T obj, int ordinal);
 
     /**
      * Called once each time an instance is added to the TypeSerializationState
+     *
+     * @deprecated use addedObject(T obj, int ordinal) instead.
      */
-    public abstract void addedObject(T obj);
+    @Deprecated
+    public void addedObject(T obj) { }
+
+    /**
+     * Called once each time an object instance is added to the TypeSerializationState
+     */
+    public abstract void addedObject(T obj, int ordinal);
 
     private static final TypeDeserializationStateListener<Object> NOOP_CALLBACK =
             new TypeDeserializationStateListener<Object>() {
                 @Override
-                public void removedObject(Object obj) { }
+                public void removedObject(Object obj, int ordinal) { }
 
                 @Override
-                public void addedObject(Object obj) { }
+                public void addedObject(Object obj, int ordinal) { }
             };
 
     /**

@@ -35,7 +35,7 @@ public class VarInt {
     }
 
     public static void writeVLong(ByteDataBuffer buf, long value) {
-        if(value < 0)                   buf.write((byte)0x81);
+        if(value < 0)                                buf.write((byte)0x81);
         if(value > 0xFFFFFFFFFFFFFFL || value < 0)   buf.write((byte)(0x80 | ((value >>> 56) & 0x7FL)));
         if(value > 0x1FFFFFFFFFFFFL || value < 0)    buf.write((byte)(0x80 | ((value >>> 49) & 0x7FL)));
         if(value > 0x3FFFFFFFFFFL || value < 0)      buf.write((byte)(0x80 | ((value >>> 42) & 0x7FL)));
@@ -48,6 +48,19 @@ public class VarInt {
         buf.write((byte)(value & 0x7FL));
     }
 
+    public static void writeVLong(OutputStream out, long value) throws IOException {
+        if(value < 0)                                out.write((byte)0x81);
+        if(value > 0xFFFFFFFFFFFFFFL || value < 0)   out.write((byte)(0x80 | ((value >>> 56) & 0x7FL)));
+        if(value > 0x1FFFFFFFFFFFFL || value < 0)    out.write((byte)(0x80 | ((value >>> 49) & 0x7FL)));
+        if(value > 0x3FFFFFFFFFFL || value < 0)      out.write((byte)(0x80 | ((value >>> 42) & 0x7FL)));
+        if(value > 0x7FFFFFFFFL || value < 0)        out.write((byte)(0x80 | ((value >>> 35) & 0x7FL)));
+        if(value > 0xFFFFFFFL || value < 0)          out.write((byte)(0x80 | ((value >>> 28) & 0x7FL)));
+        if(value > 0x1FFFFFL || value < 0)           out.write((byte)(0x80 | ((value >>> 21) & 0x7FL)));
+        if(value > 0x3FFFL || value < 0)             out.write((byte)(0x80 | ((value >>> 14) & 0x7FL)));
+        if(value > 0x7FL || value < 0)               out.write((byte)(0x80 | ((value >>>  7) & 0x7FL)));
+
+        out.write((byte)(value & 0x7FL));
+    }
 
     public static void writeVInt(ByteDataBuffer buf, int value) {
         if(value > 0x0FFFFFFF || value < 0) buf.write((byte)(0x80 | ((value >>> 28))));
@@ -119,6 +132,23 @@ public class VarInt {
 
         return value;
     }
+
+    public static long readVLong(InputStream in) throws IOException {
+        byte b = (byte)in.read();
+
+        if(b == (byte) 0x80)
+            throw new RuntimeException("Attempting to read null value as long");
+
+        long value = b & 0x7F;
+        while ((b & 0x80) != 0) {
+          b = (byte)in.read();
+          value <<= 7;
+          value |= (b & 0x7F);
+        }
+
+        return value;
+    }
+
 
     public static int sizeOfVInt(int value) {
         if(value < 0)

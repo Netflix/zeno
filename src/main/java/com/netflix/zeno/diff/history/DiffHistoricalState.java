@@ -55,6 +55,14 @@ public class DiffHistoricalState {
         return (DiffHistoricalTypeState<K, V>)typeStates.get(objectType);
     }
 
+    public int numTotalChanges() {
+        int totalChanges = 0;
+        for(Map.Entry<String, DiffHistoricalTypeState<?, ?>>entry : typeStates.entrySet()) {
+            totalChanges += entry.getValue().numChanges();
+        }
+        return totalChanges;
+    }
+
     public <K, V> void addTypeState(TypeDiffInstruction<?> typeInstruction, Map<K, V> from, Map<K, V> to) {
         String typeIdentifier = typeInstruction.getTypeIdentifier();
         boolean isGroupOfObjects = !typeInstruction.isUniqueKey();

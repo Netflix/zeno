@@ -17,6 +17,7 @@
  */
 package com.netflix.zeno.fastblob.record;
 
+
 /**
  * Writes data to a SegmentedByteArray, tracking the index to which it writes.
  *
@@ -54,9 +55,8 @@ public class ByteDataBuffer {
     }
 
     public void copyTo(ByteDataBuffer other) {
-        for(int i=0;i<position;i++) {
-            other.write(buf.get(i));
-        }
+        other.buf.copy(buf, 0, other.position, position);
+        other.position += position;
     }
 
     public byte get(int index) {

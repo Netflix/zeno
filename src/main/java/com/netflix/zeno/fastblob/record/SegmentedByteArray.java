@@ -19,6 +19,7 @@ package com.netflix.zeno.fastblob.record;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 
 /**
@@ -72,6 +73,78 @@ public class SegmentedByteArray implements ByteData {
     public void copy(ByteData src, int srcPos, int destPos, int length) {
         for(int i=0;i<length;i++) {
             set(destPos++, src.get(srcPos++));
+        }
+    }
+
+    /**
+     * For a SegmentedByteArray, this is a faster copy implementation.
+     *
+     * @param src
+     * @param srcPos
+     * @param destPos
+     * @param length
+     */
+    public void copy(SegmentedByteArray src, int srcPos, int destPos, int length) {
+        int segmentLength = 1 << log2OfSegmentSize;
+        int currentSegment = destPos >>> log2OfSegmentSize;
+        int segmentStartPos = destPos & bitmask;
+        int remainingBytesInSegment = segmentLength - segmentStartPos;
+
+        while(length > 0) {
+            int bytesToCopyFromSegment = Math.min(remainingBytesInSegment, length);
+            ensureCapacity(currentSegment);
+            int copiedBytes = src.copy(srcPos, segments[currentSegment], segmentStartPos, bytesToCopyFromSegment);
+
+            srcPos += copiedBytes;
+            length -= copiedBytes;
+            segmentStartPos = 0;
+            remainingBytesInSegment = segmentLength;
+            currentSegment++;
+        }
+
+    }
+
+    /**
+     * copies exactly data.length bytes from this SegmentedByteArray into the provided byte array
+     *
+     * @param index
+     * @param data
+     * @return the number of bytes copied
+     */
+    public int copy(int srcPos, byte[] data, int destPos, int length) {
+        int segmentSize = 1 << log2OfSegmentSize;
+        int remainingBytesInSegment = segmentSize - (srcPos & bitmask);
+        int dataPosition = destPos;
+
+        while(length > 0) {
+            byte[] segment = segments[srcPos >>> log2OfSegmentSize];
+
+            int bytesToCopyFromSegment = Math.min(remainingBytesInSegment, length);
+
+            System.arraycopy(segment, srcPos & bitmask, data, dataPosition, bytesToCopyFromSegment);
+
+            dataPosition += bytesToCopyFromSegment;
+            srcPos += bytesToCopyFromSegment;
+            remainingBytesInSegment = segmentSize - (srcPos & bitmask);
+            length -= bytesToCopyFromSegment;
+        }
+
+        return dataPosition - destPos;
+    }
+
+    public void readFrom(RandomAccessFile file, long pointer, int length) throws IOException {
+        file.seek(pointer);
+        int segmentSize = 1 << log2OfSegmentSize;
+        int segment = 0;
+        while(length > 0) {
+            ensureCapacity(segment);
+            int bytesToCopy = Math.min(segmentSize, length);
+            int bytesCopied = 0;
+            while(bytesCopied < bytesToCopy){
+                bytesCopied += file.read(segments[segment], bytesCopied, (bytesToCopy - bytesCopied));
+            }
+            segment++;
+            length -= bytesCopied;
         }
     }
 
