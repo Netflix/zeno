@@ -319,8 +319,6 @@ public class FastBlobStateEngine extends SerializationFramework {
     }
 
     public void copyTo(FastBlobStateEngine otherStateEngine) {
-        long startTime = System.currentTimeMillis();
-
         fillDeserializationStatesFromSerializedData();
 
         SimultaneousExecutor executor = new SimultaneousExecutor(4.0d);
@@ -335,17 +333,13 @@ public class FastBlobStateEngine extends SerializationFramework {
             ie.printStackTrace();
         }
         executor.shutdown();
-
-        System.out.println("#####Copied a state engine in " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     private void fillSerializationStates(FastBlobStateEngine otherStateEngine, final SimultaneousExecutor executor, CountDownLatch latch) {
-        long startTime = System.currentTimeMillis();
         for(NFTypeSerializer<?> serializer : getTopLevelSerializers()) {
             String serializerName = serializer.getName();
             executor.submit(fillSerializationStateRunnable(otherStateEngine, serializerName, executor, latch));
         }
-        System.out.println("#######Copied Serialization states in " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     private Runnable fillSerializationStateRunnable(final FastBlobStateEngine otherStateEngine,
@@ -362,14 +356,11 @@ public class FastBlobStateEngine extends SerializationFramework {
     private void fillSerializationState(FastBlobStateEngine otherStateEngine,
             FastBlobTypeSerializationState<?> typeSerializationState,
             FastBlobTypeDeserializationState<?> typeDeserializationState, final SimultaneousExecutor executor, CountDownLatch latch) {
-        long startTime = System.currentTimeMillis();
         int threadsSize = executor.getMaximumPoolSize();
         for(int i=0;i<threadsSize;i++) {
             executor.submit(fillSerializationStatesRunnable(otherStateEngine, typeSerializationState,
                     typeDeserializationState, threadsSize, latch, i));
         }
-        System.out.println("#######Copied Serialization state" + "(" + typeDeserializationState.getSchema().getName()
-                + ") in " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     private Runnable fillSerializationStatesRunnable(final FastBlobStateEngine otherStateEngine,
@@ -395,11 +386,9 @@ public class FastBlobStateEngine extends SerializationFramework {
      * @param otherStateEngineSystem.out.println("#######Copied Serialization states in " + (System.currentTimeMillis() - startTime) + "ms");
      */
     private void fillDeserializationStatesFromSerializedData() {
-        long startTime = System.currentTimeMillis();
         for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
             serializationState.fillDeserializationState(getTypeDeserializationState(serializationState.getSchema().getName()));
         }
-        System.out.println("#######Filled Serialization states in " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     public void prepareForDoubleSnapshotRefresh() {
