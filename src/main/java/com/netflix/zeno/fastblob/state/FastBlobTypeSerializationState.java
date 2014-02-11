@@ -146,16 +146,15 @@ public class FastBlobTypeSerializationState<T> {
     }
 
     /**
-     * Copy the previous state data into the provided FastBlobTypeSerializationState.<p/>
+     * Fill the data from this serialization state into the provided FastBlobTypeDeserializationState<p/>
      *
-     * This is used during FastBlobStateEngine combination.<p/>
-     *
-     * Thread safety:  This cannot be safely called concurrently with add() operations to *this* state engine.<p/>
+     * The provided deserialization state should be of the exact same type as this FastBlobTypeSerializationState (it should contain
+     * exactly the same schema).<p/>
      *
      * @param otherState
      */
-    public void copyTo(FastBlobTypeSerializationState<?> otherState) {
-        ordinalMap.copySerializedObjectData(otherState, imageMemberships);
+    public void fillDeserializationState(FastBlobTypeDeserializationState<?> otherState) {
+       otherState.populateFromByteOrdinalMap(ordinalMap);
     }
 
     /**
@@ -279,12 +278,12 @@ public class FastBlobTypeSerializationState<T> {
      * Serialize this FastBlobTypeSerializationState to an OutputStream
      */
     public void serializeTo(DataOutputStream os) throws IOException {
-        boolean isPreviousSchemaExist = previousStateTypeSchema != null;
-        os.writeBoolean(isPreviousSchemaExist);
-        
-        if(isPreviousSchemaExist) {
-            previousStateTypeSchema.writeTo(os);
-        }
+//        boolean isPreviousSchemaExist = previousStateTypeSchema != null;
+//        os.writeBoolean(isPreviousSchemaExist);
+//
+//        if(isPreviousSchemaExist) {
+//            previousStateTypeSchema.writeTo(os);
+//        }
 
         ordinalMap.serializeTo(os);
 
@@ -292,20 +291,20 @@ public class FastBlobTypeSerializationState<T> {
             bitSet.serializeTo(os);
         }
 
-        for(ThreadSafeBitSet bitSet : previousCycleImageMemberships) {
-            bitSet.serializeTo(os);
-        }
+//        for(ThreadSafeBitSet bitSet : previousCycleImageMemberships) {
+//            bitSet.serializeTo(os);
+//        }
     }
 
     /**
      * Deserialize this FastBlobTypeSerializationState from an InputStream
      */
     public void deserializeFrom(DataInputStream is, int numConfigs) throws IOException {
-        boolean isPreviousSchemaSerialized = is.readBoolean();
-        
-        if(isPreviousSchemaSerialized) {
-            previousStateTypeSchema = FastBlobSchema.readFrom(is);
-        }
+//        boolean isPreviousSchemaSerialized = is.readBoolean();
+//
+//        if(isPreviousSchemaSerialized) {
+//            previousStateTypeSchema = FastBlobSchema.readFrom(is);
+//        }
 
         ordinalMap = ByteArrayOrdinalMap.deserializeFrom(is);
 
@@ -314,10 +313,10 @@ public class FastBlobTypeSerializationState<T> {
             imageMemberships[i] = bitSet;
         }
 
-        for(int i=0;i<numConfigs;i++) {
-            ThreadSafeBitSet bitSet = ThreadSafeBitSet.deserializeFrom(is);
-            previousCycleImageMemberships[i] = bitSet;
-        }
+//        for(int i=0;i<numConfigs;i++) {
+//            ThreadSafeBitSet bitSet = ThreadSafeBitSet.deserializeFrom(is);
+//            previousCycleImageMemberships[i] = bitSet;
+//        }
     }
 
     /**

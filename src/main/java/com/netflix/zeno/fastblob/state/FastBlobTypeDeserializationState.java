@@ -21,13 +21,16 @@ import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
+import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.util.CollectionUnwrapper;
+import com.netflix.zeno.util.SimultaneousExecutor;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 /**
  * This class represents the "deserialization state" for a single type at some level of the object
@@ -104,6 +107,31 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
         previousObjects = objects;
         copiedPreviousObjects = new BitSet(previousObjects.size());
         objects = new ArrayList<T>(previousObjects.size());
+    }
+    
+    /**
+     * Fill this state from the serialized data which exists in this ByteArrayOrdinalMap
+     *
+     * @param ordinalMap
+     */    
+    public void populateFromByteOrdinalMap(final ByteArrayOrdinalMap ordinalMap) {
+        ByteDataBuffer byteData = ordinalMap.getByteData();
+        AtomicLongArray pointersAndOrdinals = ordinalMap.getPointersAndOrdinals();
+        FastBlobDeserializationRecord rec = new FastBlobDeserializationRecord(getSchema(), byteData.getUnderlyingArray());
+        for(int i=0;i<pointersAndOrdinals.length();i++) {
+            long pointerAndOrdinal = pointersAndOrdinals.get(i);
+            if(!ByteArrayOrdinalMap.isPointerAndOrdinalEmpty(pointerAndOrdinal)) {
+                int pointer = ByteArrayOrdinalMap.getPointer(pointerAndOrdinal);
+                int ordinal = ByteArrayOrdinalMap.getOrdinal(pointerAndOrdinal);
+
+                int sizeOfData = VarInt.readVInt(byteData.getUnderlyingArray(), pointer);
+                pointer += VarInt.sizeOfVInt(sizeOfData);
+
+                rec.position(pointer);
+                
+                add(ordinal, rec);
+            }
+        }
     }
 
     /**
@@ -192,15 +220,29 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
         }
         return count;
     }
+    
+    /**
+     * Return the maximum ordinal of any object contained in this FastBlobTypeDeserializationState.
+     * 
+     * @return
+     */
+    public int maxOrdinal() {
+        for(int i=objects.size() - 1;i >= 0;i--) {
+            if(objects.get(i) != null)
+                return i;
+        }
+        return -1;
+    }
 
     @Override
     public Iterator<T> iterator() {
         return new TypeDeserializationStateIterator<T>(objects);
     }
 
-    private void ensureCapacity(int size) {
+    void ensureCapacity(int size) {
         while(objects.size() < size) {
             objects.add(null);
         }
     }
+
 }
