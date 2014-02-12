@@ -269,9 +269,21 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
         return data;
     }
 
+
     /**
      * Read an Object's ordinal reference as a variable-byte integer.  Use the framework to look up the Object by ordinal.
      */
+    @Override
+    public <T> T deserializeObject(FastBlobDeserializationRecord rec, String fieldName, Class<T> clazz) {
+        return deserializeObject(rec, fieldName, rec.getObjectType(fieldName), clazz);
+    }
+        
+    /**
+     * @deprecated use instead deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, Class<T> clazz);
+     *  
+     * Read an Object's ordinal reference as a variable-byte integer.  Use the framework to look up the Object by ordinal.
+     */
+    @Deprecated     
     @Override
     public <T> T deserializeObject(FastBlobDeserializationRecord rec, String fieldName, String typeName, Class<T> clazz) {
         ByteData byteData = rec.getByteData();

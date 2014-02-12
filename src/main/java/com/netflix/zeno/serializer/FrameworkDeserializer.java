@@ -139,15 +139,27 @@ public abstract class FrameworkDeserializer <D extends NFDeserializationRecord> 
     abstract public byte[] deserializeBytes(D rec, String fieldName);
 
     /**
+     * @Deprecated instead use deserializeObject(D rec, String fieldName, Class<T> clazz)
+     * 
      * Deserializing class object
      * @param rec
      * @param fieldName
      * @param typeName
-     * @param clazz TODO
+     * @param clazz
      * @param obj
      */
+    @Deprecated     
     abstract public <T> T deserializeObject(D rec, String fieldName, String typeName, Class<T> clazz);
 
+    /**
+     * Deserializing class object
+     * @param rec
+     * @param fieldName
+     * @param clazz
+     * @param obj
+     */
+    abstract public <T> T deserializeObject(D rec, String fieldName, Class<T> clazz);
+    
     /**
      * Deserializing list
      * @param rec

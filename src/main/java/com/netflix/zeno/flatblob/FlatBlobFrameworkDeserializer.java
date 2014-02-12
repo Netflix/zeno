@@ -259,7 +259,16 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
         return data;
     }
 
-
+    
+    @Override
+    public <T> T deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, Class<T> clazz) {
+        return deserializeObject(rec, fieldName, rec.getObjectType(fieldName), clazz);
+    }
+    
+    /**
+     * @deprecated use instead deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, Class<T> clazz); 
+     */
+    @Deprecated    
     @Override
     @SuppressWarnings("unchecked")
     public <T> T deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, String typeName, Class<T> clazz) {

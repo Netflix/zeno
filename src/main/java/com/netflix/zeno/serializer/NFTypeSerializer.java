@@ -78,9 +78,18 @@ public abstract class NFTypeSerializer<T> {
         serializationFramework.getFrameworkSerializer().serializeObject(rec, fieldName, typeName, obj);
     }
 
+    /**
+     * @deprecated use instead deserializeObject(NFDeserializationRecord rec, String fieldName); 
+     */
+    @Deprecated    
     @SuppressWarnings("unchecked")
     protected <X> X deserializeObject(NFDeserializationRecord rec, String typeName, String fieldName) {
         return (X) serializationFramework.getFrameworkDeserializer().deserializeObject(rec, fieldName, typeName, null);
+    }
+    
+    @SuppressWarnings("unchecked")
+    protected <X> X deserializeObject(NFDeserializationRecord rec, String fieldName) {
+        return (X) serializationFramework.getFrameworkDeserializer().deserializeObject(rec, fieldName, null);
     }
 
     public FastBlobSchema getFastBlobSchema() {
@@ -98,8 +107,20 @@ public abstract class NFTypeSerializer<T> {
         this.serializationFramework = framework;
     }
 
+    /**
+     * @deprecated use instead field(String name, String objectType); 
+     */
+    @Deprecated
     protected FastBlobSchemaField field(String name) {
         return field(name, FieldType.OBJECT);
+    }
+    
+    protected FastBlobSchemaField field(String name, String objectType) {
+        FastBlobSchemaField field = new FastBlobSchemaField();
+        field.name = name;
+        field.type = FieldType.OBJECT;
+        field.objectType = objectType;
+        return field;
     }
 
     protected FastBlobSchemaField field(String name, FieldType fieldType) {
@@ -112,7 +133,10 @@ public abstract class NFTypeSerializer<T> {
     protected FastBlobSchema schema(FastBlobSchemaField... fields) {
         FastBlobSchema schema = new FastBlobSchema(schemaName, fields.length);
         for(FastBlobSchemaField field : fields) {
-            schema.addField(field.name, field.type);
+            if(field.objectType != null)
+                schema.addField(field.name, field.objectType);
+            else
+                schema.addField(field.name, field.type);
         }
         return schema;
     }
@@ -196,6 +220,7 @@ public abstract class NFTypeSerializer<T> {
     public static class FastBlobSchemaField {
         public String name;
         public FastBlobSchema.FieldType type;
+        public String objectType;
     }
 
 }

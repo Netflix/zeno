@@ -86,8 +86,8 @@ public class JsonSerializationFramework extends SerializationFramework {
     public <T> T deserializeJson(String type, String json) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode node = mapper.readTree(json);
-        JsonReadGenericRecord readRecord = new JsonReadGenericRecord(node);
         NFTypeSerializer<T> serializer = getSerializer(type);
+        JsonReadGenericRecord readRecord = new JsonReadGenericRecord(serializer.getFastBlobSchema(), node);
         T object = serializer.deserialize(readRecord);
 
         return object;
@@ -101,7 +101,7 @@ public class JsonSerializationFramework extends SerializationFramework {
         mapSerializer.setSerializationFramework(this);
         
         JsonNode node = new ObjectMapper().readTree(json);
-        JsonReadGenericRecord readRecord = new JsonReadGenericRecord(node);
+        JsonReadGenericRecord readRecord = new JsonReadGenericRecord(mapSerializer.getFastBlobSchema(), node);
         return mapSerializer.deserialize(readRecord);
     }
 

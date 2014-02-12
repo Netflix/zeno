@@ -29,7 +29,7 @@ import java.util.Arrays;
  *
  * The schema is a hash table of Strings (field name) to field position.<p/>
  *
- * Schemas are flat lists of fields, each specified by (fieldName, fieldType).
+ * Schemas are flat lists of fields, each specified by (fieldName, fieldType, objectType). objectType will be null for primitive types.
  *
  * @author dkoszewnik
  *
@@ -41,6 +41,7 @@ public class FastBlobSchema {
     private final int hashedPositionArray[];
     private final String fieldNames[];
     private final FieldType fieldTypes[];
+    private final String objectTypes[];
 
     private int size;
 
@@ -50,6 +51,7 @@ public class FastBlobSchema {
         this.hashedPositionArray = new int[1 << (32 - Integer.numberOfLeadingZeros(numFields * 10 / 7))];
         this.fieldNames = new String[numFields];
         this.fieldTypes = new FieldType[numFields];
+        this.objectTypes = new String[numFields];
 
         Arrays.fill(hashedPositionArray, -1);
     }
@@ -72,6 +74,22 @@ public class FastBlobSchema {
 
         return size++;
     }
+    
+    /**
+     * Add an OBJECT field into this <code>FastBlobSchema</code>, which points to the provided object type. <p/>
+     *
+     * The position of the field is hashed into the <code>hashedPositionArray</code> by the hashCode of the fieldName.
+     *
+     * @return the position of the field.
+     */
+    public int addField(String fieldName, String objectType) {
+        fieldNames[size] = fieldName;
+        fieldTypes[size] = FieldType.OBJECT;
+        objectTypes[size] = objectType;
+        hashPositionIntoArray(size);
+
+        return size++;
+    }    
 
     /**
      * Returns the position of a field previously added to the map, or -1 if the field has not been added to the map.
@@ -111,7 +129,7 @@ public class FastBlobSchema {
         if(position == -1)
             throw new IllegalArgumentException("Field name " + fieldName + " does not exist in schema " + schemaName);
 
-        return fieldTypes[getPosition(fieldName)];
+        return fieldTypes[position];
     }
 
     /**
@@ -119,6 +137,25 @@ public class FastBlobSchema {
      */
     public FieldType getFieldType(int fieldPosition) {
         return fieldTypes[fieldPosition];
+    }
+    
+    /**
+     * @return the object type of the field with the given name
+     */
+    public String getObjectType(String fieldName) {
+        int position = getPosition(fieldName);
+        
+        if(position == -1)
+            throw new IllegalArgumentException("Field name " + fieldName + " does not exist in schema " + schemaName);
+        
+        return objectTypes[position];
+    }
+    
+    /**
+     * @return The object type at the specified position
+     */
+    public String getObjectType(int fieldPosition) {
+        return objectTypes[fieldPosition];
     }
 
     /**
@@ -174,6 +211,14 @@ public class FastBlobSchema {
                         }
 
                         if(!otherSchema.getFieldType(i).equals(getFieldType(i))) {
+                            return false;
+                        }
+                        
+                        if(otherSchema.getObjectType(i) == null && getObjectType(i) != null) {
+                            return false;
+                        }
+                        
+                        if(otherSchema.getObjectType(i) != null && !otherSchema.getObjectType(i).equals(getObjectType(i))) {
                             return false;
                         }
                     }

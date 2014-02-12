@@ -18,6 +18,7 @@
 package com.netflix.zeno.fastblob.record;
 
 import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.serializer.AbstractNFDeserializationRecord;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 
 /**
@@ -30,15 +31,13 @@ import com.netflix.zeno.serializer.NFDeserializationRecord;
  * @author dkoszewnik
  *
  */
-public class FastBlobDeserializationRecord implements NFDeserializationRecord {
-
-    private final FastBlobSchema schema;
+public class FastBlobDeserializationRecord extends AbstractNFDeserializationRecord {
 
     private final ByteData byteData;
     private final int fieldPointers[];
 
     public FastBlobDeserializationRecord(FastBlobSchema schema, ByteData byteData) {
-        this.schema = schema;
+        super(schema);
         this.fieldPointers = new int[schema.numFields()];
         this.byteData = byteData;
     }
@@ -55,7 +54,7 @@ public class FastBlobDeserializationRecord implements NFDeserializationRecord {
         for(int i=0;i<fieldPointers.length;i++) {
             fieldPointers[i] = currentPosition;
 
-            FieldType type = schema.getFieldType(i);
+            FieldType type = getSchema().getFieldType(i);
 
             currentPosition += fieldLength(currentPosition, type);
         }
@@ -74,7 +73,7 @@ public class FastBlobDeserializationRecord implements NFDeserializationRecord {
      * get the offset into the byte data for the field represented by the String.
      */
     public int getPosition(String fieldName) {
-        int fieldPosition = schema.getPosition(fieldName);
+        int fieldPosition = getSchema().getPosition(fieldName);
 
         if(fieldPosition == -1)
             return -1;
@@ -86,8 +85,8 @@ public class FastBlobDeserializationRecord implements NFDeserializationRecord {
      * get the length of the specified field for this record
      */
     public int getFieldLength(String fieldName) {
-        int fieldPosition = schema.getPosition(fieldName);
-        FieldType fieldType = schema.getFieldType(fieldPosition);
+        int fieldPosition = getSchema().getPosition(fieldName);
+        FieldType fieldType = getSchema().getFieldType(fieldPosition);
 
         return fieldLength(fieldPointers[fieldPosition], fieldType);
     }

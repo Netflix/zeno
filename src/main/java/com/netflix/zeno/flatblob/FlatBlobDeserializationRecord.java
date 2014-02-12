@@ -21,18 +21,17 @@ import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.serializer.AbstractNFDeserializationRecord;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 
-public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
-
-    private final FastBlobSchema schema;
+public class FlatBlobDeserializationRecord extends AbstractNFDeserializationRecord {
 
     private final int fieldPointers[];
     private ByteData byteData;
     private boolean cacheElements;
 
     public FlatBlobDeserializationRecord(FastBlobSchema schema) {
-        this.schema = schema;
+        super(schema);
         this.fieldPointers = new int[schema.numFields()];
     }
 
@@ -60,7 +59,7 @@ public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
         for(int i=0;i<fieldPointers.length;i++) {
             fieldPointers[i] = currentPosition;
 
-            FieldType type = schema.getFieldType(i);
+            FieldType type = getSchema().getFieldType(i);
 
             currentPosition += fieldLength(currentPosition, type);
         }
@@ -79,13 +78,21 @@ public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
      * get the offset into the byte data for the field represented by the String.
      */
     public int getPosition(String fieldName) {
-        int fieldPosition = schema.getPosition(fieldName);
+        int fieldPosition = getSchema().getPosition(fieldName);
 
         if(fieldPosition == -1)
             return -1;
 
         return fieldPointers[fieldPosition];
     }
+    
+    
+    /**
+     * get the offset into the byte data for the field represented by the String.
+     */
+    public String getObjectType(String fieldName) {
+        return getSchema().getObjectType(fieldName);
+    }    
 
     private int fieldLength(int currentPosition, FieldType type) {
         if(type.startsWithVarIntEncodedLength()) {
@@ -103,8 +110,7 @@ public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
                 int sizeOfOrdinal = VarInt.sizeOfVInt(ordinal);
 
                 if(VarInt.readVNull(byteData, currentPosition + sizeOfOrdinal)) {
-                    System.out.println(schema.getName());
-                    System.out.println("asdf");
+                    System.out.println(getSchema().getName());
                 }
 
                 int flatDataSize = VarInt.readVInt(byteData, currentPosition + sizeOfOrdinal);
