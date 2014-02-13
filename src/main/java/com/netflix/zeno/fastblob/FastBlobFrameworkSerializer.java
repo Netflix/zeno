@@ -239,6 +239,7 @@ public class FastBlobFrameworkSerializer extends FrameworkSerializer<FastBlobSer
     /**
      * Recursively call the framework to serialize the speicfied Object, then serialize the resulting ordinal as a variable-byte integer.
      */
+    @Deprecated
     @Override
     public void serializeObject(FastBlobSerializationRecord rec, String fieldName, String typeName, Object obj) {
         if(obj == null)
@@ -257,6 +258,11 @@ public class FastBlobFrameworkSerializer extends FrameworkSerializer<FastBlobSer
         int ordinal = typeSerializationState.add(obj, rec.getImageMembershipsFlags());
 
         VarInt.writeVInt(fieldBuffer, ordinal);
+    }
+    
+    @Override
+    public void serializeObject(FastBlobSerializationRecord rec, String fieldName, Object obj) {
+        serializeObject(rec, fieldName, rec.getSchema().getObjectType(fieldName), obj);
     }
 
     /**

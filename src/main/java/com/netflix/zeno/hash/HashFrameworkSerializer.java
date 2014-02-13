@@ -49,6 +49,7 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
         serializePrimitive(rec, fieldName, value);
     }
 
+    @Deprecated
     @SuppressWarnings({ "unchecked" })
     @Override
     public void serializeObject(HashGenericRecord rec, String fieldName, String typeName, Object obj) {
@@ -56,6 +57,11 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
             return;
         }
         getSerializer(typeName).serialize(obj, rec);
+    }
+    
+    @Override
+    public void serializeObject(HashGenericRecord rec, String fieldName, Object obj) {
+        serializeObject(rec, fieldName, rec.getSchema().getObjectType(fieldName), obj);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -78,9 +84,9 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
             return;
         }
         rec.put(null, "<");
-        HashGenericRecord independent = new HashGenericRecord(new HashOrderIndependent());
+        HashGenericRecord independent = new HashGenericRecord(rec.getSchema(), new HashOrderIndependent());
         for (T t : set) {
-            HashGenericRecord dependent = new HashGenericRecord(new HashOrderDependent());
+            HashGenericRecord dependent = new HashGenericRecord(rec.getSchema(), new HashOrderDependent());
             ((NFTypeSerializer) (framework.getSerializer(typeName))).serialize(t, dependent);
             independent.put(null, dependent.hash());
         }
@@ -95,9 +101,9 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
             return;
         }
         rec.put(null, "{");
-        HashGenericRecord independent = new HashGenericRecord(new HashOrderIndependent());
+        HashGenericRecord independent = new HashGenericRecord(rec.getSchema(), new HashOrderIndependent());
         for (Map.Entry<K, V> entry : map.entrySet()) {
-            HashGenericRecord dependent = new HashGenericRecord(new HashOrderDependent());
+            HashGenericRecord dependent = new HashGenericRecord(rec.getSchema(), new HashOrderDependent());
             ((NFTypeSerializer) (framework.getSerializer(keyTypeName))).serialize(entry.getKey(), dependent);
             ((NFTypeSerializer) (framework.getSerializer(valueTypeName))).serialize(entry.getValue(), dependent);
             independent.put(null, dependent.hash());

@@ -49,6 +49,7 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
         rec.serializePrimitive(fieldName, new DiffByteArray(value));
     }
 
+    @Deprecated
     @Override
     @SuppressWarnings("unchecked")
     public void serializeObject(DiffRecord rec, String fieldName, String typeName, Object obj) {
@@ -60,6 +61,11 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
         rec.serializeObject(fieldName);
         getSerializer(typeName).serialize(obj, rec);
         rec.finishedObject();
+    }
+    
+    @Override
+    public void serializeObject(DiffRecord rec, String fieldName, Object obj) {
+        serializeObject(rec, fieldName, rec.getSchema().getObjectType(fieldName), obj);
     }
 
     @Override

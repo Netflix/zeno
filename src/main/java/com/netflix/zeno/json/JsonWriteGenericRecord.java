@@ -20,6 +20,8 @@ package com.netflix.zeno.json;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.netflix.zeno.fastblob.record.FastBlobSchema;
+import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 
 import java.io.Writer;
@@ -29,20 +31,21 @@ import java.io.Writer;
  * @author tvaliulin
  *
  */
-public class JsonWriteGenericRecord implements NFSerializationRecord {
+public class JsonWriteGenericRecord extends AbstractNFSerializationRecord {
 
     private static final JsonFactory s_jfactory = new JsonFactory();
     private static final DefaultPrettyPrinter prettyPrinter = new DefaultPrettyPrinter();
 
     private JsonGenerator jGenerator;
 
-    public JsonWriteGenericRecord(Writer writer, boolean pretty) {
-        this(writer);
+    public JsonWriteGenericRecord(FastBlobSchema schema, Writer writer, boolean pretty) {
+        this(schema, writer);
         if(pretty)
             jGenerator.setPrettyPrinter(prettyPrinter);
     }
 
-    public JsonWriteGenericRecord(Writer writer) {
+    public JsonWriteGenericRecord(FastBlobSchema schema, Writer writer) {
+        super(schema);
         try {
             jGenerator = s_jfactory.createGenerator(writer);
         } catch (Exception ex) {
@@ -50,7 +53,8 @@ public class JsonWriteGenericRecord implements NFSerializationRecord {
         }
     }
 
-    public JsonWriteGenericRecord(JsonGenerator jGenerator) {
+    public JsonWriteGenericRecord(FastBlobSchema schema, JsonGenerator jGenerator) {
+        super(schema);
         this.jGenerator = jGenerator;
     }
 

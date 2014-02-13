@@ -72,6 +72,7 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
         return type.isEnum() || PrimitiveObjectIdentifier.isPrimitiveOrWrapper(type);
     }
 
+    @Deprecated
     @Override
     @SuppressWarnings("unchecked")
     public void serializeObject(GenericObject rec, String fieldName, String typeName, Object obj) {
@@ -81,10 +82,16 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
             serializePrimitive(rec, fieldName, obj);
             return;
         } else {
-            GenericObject subObject = new GenericObject(typeName, obj);
+            GenericObject subObject = new GenericObject(rec.getSchema(), typeName, obj);
             getSerializer(typeName).serialize(obj, subObject);
             rec.add(fieldName, subObject);
         }
+    }
+    
+    @Override
+    @SuppressWarnings("unchecked")
+    public void serializeObject(GenericObject rec, String fieldName, Object obj) {
+        serializeObject(rec, fieldName, rec.getObjectType(fieldName), obj);
     }
 
     @Override
@@ -101,7 +108,7 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
         if(obj == null) {
             rec.add(fieldName, null);
         } else {
-            GenericObject setObject = new GenericObject(collectionType, CollectionType.COLLECTION, obj);
+            GenericObject setObject = new GenericObject(rec.getSchema(), collectionType, CollectionType.COLLECTION, obj);
             serializeCollectionElements(setObject, elementTypeName, obj);
             rec.add(fieldName, setObject);
         }
@@ -114,7 +121,7 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
             if(element == null) {
                 record.add("element", obj, ++counter);
             } else {
-                GenericObject elementObject = new GenericObject(elementTypeName, element);
+                GenericObject elementObject = new GenericObject(record.getSchema(), elementTypeName, element);
                 getSerializer(elementTypeName).doSerialize(element, elementObject);
                 record.add("element", elementObject, ++counter);
             }
@@ -128,21 +135,21 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
             record.add(fieldName, null);
         }
 
-        GenericObject mapObject = new GenericObject("Map", CollectionType.MAP, map);
+        GenericObject mapObject = new GenericObject(record.getSchema(), "Map", CollectionType.MAP, map);
         int counter = 0;
 
         for(Map.Entry<K, V> entry : map.entrySet()) {
             counter++;
-            GenericObject entryObject = new GenericObject("Map.Entry", entry);
+            GenericObject entryObject = new GenericObject(record.getSchema(), "Map.Entry", entry);
 
-            GenericObject keyObject = new GenericObject(keyTypeName, entry.getKey());
+            GenericObject keyObject = new GenericObject(record.getSchema(), keyTypeName, entry.getKey());
             getSerializer(keyTypeName).doSerialize(entry.getKey(), keyObject);
             entryObject.add("key", keyObject);
 
             if(entry.getValue() == null) {
                 entryObject.add("value", null);
             } else {
-                GenericObject valueObject = new GenericObject(valueTypeName, entry.getValue());
+                GenericObject valueObject = new GenericObject(record.getSchema(), valueTypeName, entry.getValue());
                 getSerializer(valueTypeName).doSerialize(entry.getValue(), valueObject);
                 entryObject.add("value", valueObject);
             }

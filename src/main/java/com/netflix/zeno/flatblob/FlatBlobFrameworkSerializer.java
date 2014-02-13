@@ -170,6 +170,7 @@ public class FlatBlobFrameworkSerializer extends FrameworkSerializer<FlatBlobSer
         }
     }
 
+    @Deprecated
     @Override
     public void serializeObject(FlatBlobSerializationRecord rec, String fieldName, String typeName, Object obj) {
         if(obj == null)
@@ -186,6 +187,11 @@ public class FlatBlobFrameworkSerializer extends FrameworkSerializer<FlatBlobSer
         VarInt.writeVInt(fieldBuffer, ordinal);
         VarInt.writeVInt(fieldBuffer, subRecord.sizeOfData());
         subRecord.writeDataTo(fieldBuffer);
+    }
+    
+    @Override
+    public void serializeObject(FlatBlobSerializationRecord rec, String fieldName, Object obj) {
+        serializeObject(rec, fieldName, rec.getSchema().getObjectType(fieldName), obj);
     }
 
     @Override

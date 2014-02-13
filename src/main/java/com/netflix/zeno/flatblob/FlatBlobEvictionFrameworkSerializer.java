@@ -28,11 +28,19 @@ public class FlatBlobEvictionFrameworkSerializer extends FrameworkSerializer<NFS
     }
 
     @Override
+    @Deprecated
     @SuppressWarnings("unchecked")
     public void serializeObject(NFSerializationRecord rec, String fieldName, String typeName, Object obj) {
         getSerializer(typeName).serialize(obj, rec);
         flatBlobFramework.getTypeCache(typeName).evict(obj);
     }
+
+    @Deprecated
+    @Override
+    @SuppressWarnings("unchecked")
+    public void serializeObject(NFSerializationRecord rec, String fieldName, Object obj) {
+    }
+     
 
     @Override
     @SuppressWarnings("unchecked")

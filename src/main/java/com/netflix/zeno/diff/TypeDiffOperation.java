@@ -44,13 +44,12 @@ public class TypeDiffOperation<T> {
     @SuppressWarnings("unchecked")
     public TypeDiff<T> performDiff(DiffSerializationFramework framework, Iterable<T> fromState, Iterable<T> toState) {
         TypeDiff<T> diff = new TypeDiff<T>(instruction.getTypeIdentifier());
-
-        DiffRecord fromRec = new DiffRecord();
-        DiffRecord toRec = new DiffRecord();
+        NFTypeSerializer<T> typeSerializer = (NFTypeSerializer<T>) framework.getSerializer(instruction.getSerializerName());
+        
+        DiffRecord fromRec = new DiffRecord(typeSerializer.getFastBlobSchema());
+        DiffRecord toRec = new DiffRecord(typeSerializer.getFastBlobSchema());
         fromRec.setTopLevelSerializerName(instruction.getSerializerName());
         toRec.setTopLevelSerializerName(instruction.getSerializerName());
-
-        NFTypeSerializer<T> typeSerializer = (NFTypeSerializer<T>) framework.getSerializer(instruction.getSerializerName());
 
         Map<Object, T> fromStateObjects = new HashMap<Object, T>();
 

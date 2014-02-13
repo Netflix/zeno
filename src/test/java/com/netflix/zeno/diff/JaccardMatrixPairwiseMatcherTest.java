@@ -60,9 +60,9 @@ public class JaccardMatrixPairwiseMatcherTest {
     }
 
     private void addObject(Object obj, String serializerName, List<Field> objs, List<DiffRecord> recs) {
-        DiffRecord rec = new DiffRecord();
-        rec.setTopLevelSerializerName(serializerName);
         NFTypeSerializer<Object> serializer = (NFTypeSerializer<Object>) diffFramework.getSerializer(serializerName);
+        DiffRecord rec = new DiffRecord(serializer.getFastBlobSchema());
+        rec.setTopLevelSerializerName(serializerName);
         serializer.doSerialize(obj, rec);
 
         objs.add(new Field("obj", obj));

@@ -17,7 +17,9 @@
  */
 package com.netflix.zeno.hash;
 
+import com.netflix.zeno.fastblob.record.FastBlobSchema;
 import com.netflix.zeno.hash.HashGenericRecordSerializers.Serializer;
+import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 
 /**
@@ -25,17 +27,18 @@ import com.netflix.zeno.serializer.NFSerializationRecord;
  * @author tvaliulin
  *
  */
-public final class HashGenericRecord implements NFSerializationRecord
+public final class HashGenericRecord extends AbstractNFSerializationRecord
 {
     HashAlgorithm hasher;
 
-    public HashGenericRecord()
+    public HashGenericRecord(FastBlobSchema schema)
     {
-        hasher = new HashOrderDependent();
+        this(schema, new HashOrderDependent());
     }
 
-    public HashGenericRecord(HashAlgorithm hasher)
+    public HashGenericRecord(FastBlobSchema schema, HashAlgorithm hasher)
     {
+        super(schema);
         this.hasher = hasher;
     }
 
