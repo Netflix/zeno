@@ -242,10 +242,21 @@ public class FastBlobFrameworkSerializer extends FrameworkSerializer<FastBlobSer
     @Deprecated
     @Override
     public void serializeObject(FastBlobSerializationRecord rec, String fieldName, String typeName, Object obj) {
+        int position = rec.getSchema().getPosition(fieldName);
+        validateField(fieldName, position);
+        serializeObject(rec, position, fieldName, typeName, obj);
+    }
+
+    private void validateField(String fieldName, int position) {
+        if(position == -1) {
+            throw new IllegalArgumentException("Attempting to serialize non existent field " + fieldName + ".");            
+        }
+    }
+
+    private void serializeObject(FastBlobSerializationRecord rec, int position, String fieldName, String typeName, Object obj) {
         if(obj == null)
             return;
-
-        int position = rec.getSchema().getPosition(fieldName);
+        
         FieldType fieldType = rec.getSchema().getFieldType(position);
 
         if(fieldType != FieldType.OBJECT)
@@ -262,7 +273,9 @@ public class FastBlobFrameworkSerializer extends FrameworkSerializer<FastBlobSer
     
     @Override
     public void serializeObject(FastBlobSerializationRecord rec, String fieldName, Object obj) {
-        serializeObject(rec, fieldName, rec.getSchema().getObjectType(fieldName), obj);
+        int position = rec.getSchema().getPosition(fieldName);
+        validateField(fieldName, position);
+        serializeObject(rec, position, fieldName, rec.getSchema().getObjectType(fieldName), obj);
     }
 
     /**

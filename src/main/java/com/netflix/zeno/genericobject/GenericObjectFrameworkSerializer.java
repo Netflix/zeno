@@ -19,6 +19,7 @@ package com.netflix.zeno.genericobject;
 
 import com.netflix.zeno.genericobject.GenericObject.CollectionType;
 import com.netflix.zeno.serializer.FrameworkSerializer;
+import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
 import com.netflix.zeno.util.PrimitiveObjectIdentifier;
 
@@ -124,8 +125,9 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
             if(element == null) {
                 record.add("element", obj, ++counter);
             } else {
-                GenericObject elementObject = new GenericObject(record.getSchema(), elementTypeName, element);
-                getSerializer(elementTypeName).doSerialize(element, elementObject);
+                NFTypeSerializer elementSerializer = getSerializer(elementTypeName);
+                GenericObject elementObject = new GenericObject(elementSerializer.getFastBlobSchema(), elementTypeName, element);
+                elementSerializer.doSerialize(element, elementObject);
                 record.add("element", elementObject, ++counter);
             }
         }
@@ -145,15 +147,17 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
             counter++;
             GenericObject entryObject = new GenericObject(record.getSchema(), "Map.Entry", entry);
 
-            GenericObject keyObject = new GenericObject(record.getSchema(), keyTypeName, entry.getKey());
-            getSerializer(keyTypeName).doSerialize(entry.getKey(), keyObject);
+            NFTypeSerializer keySerializer = getSerializer(keyTypeName);
+            GenericObject keyObject = new GenericObject(keySerializer.getFastBlobSchema(), keyTypeName, entry.getKey());
+            keySerializer.doSerialize(entry.getKey(), keyObject);
             entryObject.add("key", keyObject);
 
             if(entry.getValue() == null) {
                 entryObject.add("value", null);
             } else {
-                GenericObject valueObject = new GenericObject(record.getSchema(), valueTypeName, entry.getValue());
-                getSerializer(valueTypeName).doSerialize(entry.getValue(), valueObject);
+                NFTypeSerializer valueSerializer = getSerializer(valueTypeName);
+                GenericObject valueObject = new GenericObject(valueSerializer.getFastBlobSchema(), valueTypeName, entry.getValue());
+                valueSerializer.doSerialize(entry.getValue(), valueObject);
                 entryObject.add("value", valueObject);
             }
 

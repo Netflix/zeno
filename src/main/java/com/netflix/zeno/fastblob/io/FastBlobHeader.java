@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public class FastBlobHeader {
 
-    public static final int FAST_BLOB_VERSION_HEADER = 1028;
+    public static final int FAST_BLOB_VERSION_HEADER = 1029;
 
     private String version = "";
     private Map<String, String> headerTags = new HashMap<String, String>();
@@ -67,6 +67,7 @@ public class FastBlobHeader {
         this.numberOfTypes = numberOfTypes;
     }
 
+    @Override
     public boolean equals(Object other) {
         if(other instanceof FastBlobHeader) {
             FastBlobHeader oh = (FastBlobHeader)other;

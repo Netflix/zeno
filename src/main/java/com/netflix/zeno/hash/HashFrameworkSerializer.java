@@ -88,10 +88,11 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
             return;
         }
         rec.put(null, "<");
+        NFTypeSerializer elementSerializer = (NFTypeSerializer) (framework.getSerializer(typeName));
         HashGenericRecord independent = new HashGenericRecord(rec.getSchema(), new HashOrderIndependent());
         for (T t : set) {
-            HashGenericRecord dependent = new HashGenericRecord(rec.getSchema(), new HashOrderDependent());
-            ((NFTypeSerializer) (framework.getSerializer(typeName))).serialize(t, dependent);
+            HashGenericRecord dependent = new HashGenericRecord(elementSerializer.getFastBlobSchema(), new HashOrderDependent());
+            elementSerializer.serialize(t, dependent);
             independent.put(null, dependent.hash());
         }
         rec.put(null, independent.hash());
@@ -105,11 +106,13 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
             return;
         }
         rec.put(null, "{");
+        NFTypeSerializer keySerializer = (NFTypeSerializer) (framework.getSerializer(keyTypeName));
+        NFTypeSerializer valueSerializer = (NFTypeSerializer) (framework.getSerializer(valueTypeName));
         HashGenericRecord independent = new HashGenericRecord(rec.getSchema(), new HashOrderIndependent());
         for (Map.Entry<K, V> entry : map.entrySet()) {
             HashGenericRecord dependent = new HashGenericRecord(rec.getSchema(), new HashOrderDependent());
-            ((NFTypeSerializer) (framework.getSerializer(keyTypeName))).serialize(entry.getKey(), dependent);
-            ((NFTypeSerializer) (framework.getSerializer(valueTypeName))).serialize(entry.getValue(), dependent);
+            keySerializer.serialize(entry.getKey(), dependent);
+            valueSerializer.serialize(entry.getValue(), dependent);
             independent.put(null, dependent.hash());
         }
         rec.put(null, independent.hash());

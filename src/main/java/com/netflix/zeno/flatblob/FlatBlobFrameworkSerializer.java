@@ -177,11 +177,21 @@ public class FlatBlobFrameworkSerializer extends FrameworkSerializer<FlatBlobSer
     @Deprecated
     @Override
     public void serializeObject(FlatBlobSerializationRecord rec, String fieldName, String typeName, Object obj) {
+        int fieldPosition = rec.getSchema().getPosition(fieldName);
+        validateField(fieldName, fieldPosition);
+        serializeObject(rec, fieldPosition, typeName, obj);
+    }
+
+    private void validateField(String fieldName, int fieldPosition) {
+        if(fieldPosition == -1) {
+            throw new IllegalArgumentException("Attempting to serialize non existent field " + fieldName + ".");            
+        }
+    }
+
+    private void serializeObject(FlatBlobSerializationRecord rec, int fieldPosition, String typeName, Object obj) {
         if(obj == null)
             return;
-
-        int fieldPosition = rec.getSchema().getPosition(fieldName);
-
+        
         int ordinal = findOrdinalInStateEngine(typeName, obj);
 
         FlatBlobSerializationRecord subRecord = getSerializationRecord(typeName);
@@ -195,7 +205,9 @@ public class FlatBlobFrameworkSerializer extends FrameworkSerializer<FlatBlobSer
     
     @Override
     public void serializeObject(FlatBlobSerializationRecord rec, String fieldName, Object obj) {
-        serializeObject(rec, fieldName, rec.getSchema().getObjectType(fieldName), obj);
+        int fieldPosition = rec.getSchema().getPosition(fieldName);
+        validateField(fieldName, fieldPosition);
+        serializeObject(rec, fieldPosition, rec.getSchema().getObjectType(fieldName), obj);
     }
 
     @Override
