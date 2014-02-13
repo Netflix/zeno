@@ -39,7 +39,7 @@ public class FastBlobSchemaTest {
         schema = new FastBlobSchema("test", 3);
 
         schema.addField("field1", FieldType.INT);
-        schema.addField("field2", FieldType.OBJECT);
+        schema.addField("field2", "Field2");
         schema.addField("field3", FieldType.FLOAT);
     }
 
@@ -70,7 +70,7 @@ public class FastBlobSchemaTest {
         FastBlobSchema otherSchema = new FastBlobSchema("test", 3);
 
         otherSchema.addField("field1", FieldType.INT);
-        otherSchema.addField("field2", FieldType.OBJECT);
+        otherSchema.addField("field2", "Field2");
         otherSchema.addField("field3", FieldType.FLOAT);
 
         Assert.assertTrue(otherSchema.equals(schema));
@@ -79,7 +79,7 @@ public class FastBlobSchemaTest {
         FastBlobSchema anotherSchema = new FastBlobSchema("test", 3);
 
         anotherSchema.addField("field1", FieldType.INT);
-        anotherSchema.addField("field2", FieldType.OBJECT);
+        anotherSchema.addField("field2", "Field2");
         anotherSchema.addField("field3", FieldType.INT);
 
         Assert.assertFalse(anotherSchema.equals(schema));

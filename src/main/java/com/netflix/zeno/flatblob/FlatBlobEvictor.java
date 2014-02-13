@@ -1,12 +1,9 @@
 package com.netflix.zeno.flatblob;
 
-import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.SerializationFramework;
 import com.netflix.zeno.serializer.SerializerFactory;
 
 public class FlatBlobEvictor extends SerializationFramework {
-
-    private final NFSerializationRecord THE_RECORD = new NFSerializationRecord() { };
 
     public FlatBlobEvictor(SerializerFactory serializerFactory, FlatBlobSerializationFramework flatBlobFramework) {
         super(serializerFactory);
@@ -14,9 +11,7 @@ public class FlatBlobEvictor extends SerializationFramework {
     }
 
     public void evict(String type, Object obj) {
-        getSerializer(type).serialize(obj, THE_RECORD);
+        FlatBlobSerializationRecord record = new FlatBlobSerializationRecord(getSerializer(type).getFastBlobSchema());        
+        getSerializer(type).serialize(obj, record);
     }
-
-
-
 }

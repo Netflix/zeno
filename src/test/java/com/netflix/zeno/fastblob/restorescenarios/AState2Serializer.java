@@ -34,13 +34,13 @@ public class AState2Serializer extends NFTypeSerializer<TypeAState2>{
     @Override
     public void doSerialize(TypeAState2 value, NFSerializationRecord rec) {
         serializePrimitive(rec, "a1", value.getA1());
-        serializeObject(rec, "c", "TypeC", value.getC());
+        serializeObject(rec, "c", value.getC());
     }
 
     @Override
     protected TypeAState2 doDeserialize(NFDeserializationRecord rec) {
         int a1 = deserializeInteger(rec, "a1");
-        TypeC c = deserializeObject(rec, "TypeC", "c");
+        TypeC c = deserializeObject(rec, "c");
 
         return new TypeAState2(a1, c);
     }
@@ -49,7 +49,7 @@ public class AState2Serializer extends NFTypeSerializer<TypeAState2>{
     protected FastBlobSchema createSchema() {
         return schema(
                 field("a1", FieldType.INT),
-                field("c")
+                field("c", "TypeC")
         );
     }
 

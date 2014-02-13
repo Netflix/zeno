@@ -196,6 +196,9 @@ public class FastBlobSchema {
         for(int i=0;i<size;i++) {
             dos.writeUTF(fieldNames[i]);
             dos.writeUTF(fieldTypes[i].name());
+            if(fieldTypes[i].equals(FieldType.OBJECT)) {
+                dos.writeUTF(objectTypes[i]);
+            }
         }
     }
 
@@ -243,8 +246,11 @@ public class FastBlobSchema {
         for(int i=0;i<size;i++) {
             String fieldName = dis.readUTF();
             String fieldType = dis.readUTF();
-
-            schema.addField(fieldName, Enum.valueOf(FieldType.class, fieldType));
+            if(FieldType.OBJECT.equals(FieldType.valueOf(fieldType))) {
+                schema.addField(fieldName, dis.readUTF());
+            }else {
+                schema.addField(fieldName, Enum.valueOf(FieldType.class, fieldType));
+            }
         }
 
         return schema;

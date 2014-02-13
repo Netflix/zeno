@@ -275,7 +275,10 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
      */
     @Override
     public <T> T deserializeObject(FastBlobDeserializationRecord rec, String fieldName, Class<T> clazz) {
-        return deserializeObject(rec, fieldName, rec.getObjectType(fieldName), clazz);
+        int fieldPosition = rec.getPosition(fieldName);
+        if (fieldPosition == -1)
+            return null;        
+        return deserializeObject(rec, fieldPosition, rec.getObjectType(fieldName));
     }
         
     /**
@@ -286,8 +289,14 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Deprecated     
     @Override
     public <T> T deserializeObject(FastBlobDeserializationRecord rec, String fieldName, String typeName, Class<T> clazz) {
-        ByteData byteData = rec.getByteData();
         int fieldPosition = rec.getPosition(fieldName);
+        if (fieldPosition == -1)
+            return null;        
+        return deserializeObject(rec, fieldPosition, typeName);
+    }
+
+    private <T> T deserializeObject(FastBlobDeserializationRecord rec, int fieldPosition, String typeName) {
+        ByteData byteData = rec.getByteData();
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;

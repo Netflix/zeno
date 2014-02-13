@@ -1,14 +1,13 @@
 package com.netflix.zeno.flatblob;
 
 import com.netflix.zeno.serializer.FrameworkSerializer;
-import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-public class FlatBlobEvictionFrameworkSerializer extends FrameworkSerializer<NFSerializationRecord> {
+public class FlatBlobEvictionFrameworkSerializer extends FrameworkSerializer<FlatBlobSerializationRecord> {
 
     private final FlatBlobSerializationFramework flatBlobFramework;
 
@@ -18,12 +17,12 @@ public class FlatBlobEvictionFrameworkSerializer extends FrameworkSerializer<NFS
     }
 
     @Override
-    public void serializePrimitive(NFSerializationRecord rec, String fieldName, Object value) {
+    public void serializePrimitive(FlatBlobSerializationRecord rec, String fieldName, Object value) {
         /// nothing to do.
     }
 
     @Override
-    public void serializeBytes(NFSerializationRecord rec, String fieldName, byte[] value) {
+    public void serializeBytes(FlatBlobSerializationRecord rec, String fieldName, byte[] value) {
         /// nothing to do.
     }
 
@@ -34,19 +33,20 @@ public class FlatBlobEvictionFrameworkSerializer extends FrameworkSerializer<NFS
     @Override
     @Deprecated
     @SuppressWarnings("unchecked")
-    public void serializeObject(NFSerializationRecord rec, String fieldName, String typeName, Object obj) {
+    public void serializeObject(FlatBlobSerializationRecord rec, String fieldName, String typeName, Object obj) {
         getSerializer(typeName).serialize(obj, rec);
         flatBlobFramework.getTypeCache(typeName).evict(obj);
     }
 
     @Override
-    public void serializeObject(NFSerializationRecord rec, String fieldName, Object obj) {
+    public void serializeObject(FlatBlobSerializationRecord rec, String fieldName, Object obj) {
+        serializeObject(rec, fieldName, rec.getObjectType(fieldName), obj);
     }
      
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> void serializeList(NFSerializationRecord rec, String fieldName, String typeName, Collection<T> obj) {
+    public <T> void serializeList(FlatBlobSerializationRecord rec, String fieldName, String typeName, Collection<T> obj) {
         FlatBlobTypeCache<T> typeCache = flatBlobFramework.getTypeCache(typeName);
         NFTypeSerializer<T> serializer = getSerializer(typeName);
         for(T t : obj) {
@@ -56,13 +56,13 @@ public class FlatBlobEvictionFrameworkSerializer extends FrameworkSerializer<NFS
     }
 
     @Override
-    public <T> void serializeSet(NFSerializationRecord rec, String fieldName, String typeName, Set<T> obj) {
+    public <T> void serializeSet(FlatBlobSerializationRecord rec, String fieldName, String typeName, Set<T> obj) {
         serializeList(rec, fieldName, typeName, obj);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <K, V> void serializeMap(NFSerializationRecord rec, String fieldName, String keyTypeName, String valueTypeName, Map<K, V> obj) {
+    public <K, V> void serializeMap(FlatBlobSerializationRecord rec, String fieldName, String keyTypeName, String valueTypeName, Map<K, V> obj) {
         FlatBlobTypeCache<K> keyCache = flatBlobFramework.getTypeCache(keyTypeName);
         FlatBlobTypeCache<V> valueCache = flatBlobFramework.getTypeCache(valueTypeName);
         NFTypeSerializer<K> keySerializer = getSerializer(keyTypeName);

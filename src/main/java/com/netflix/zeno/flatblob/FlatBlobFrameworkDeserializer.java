@@ -262,7 +262,10 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     
     @Override
     public <T> T deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, Class<T> clazz) {
-        return deserializeObject(rec, fieldName, rec.getObjectType(fieldName), clazz);
+        int position = rec.getPosition(fieldName);
+        if (position == -1)
+            return null;
+        return deserializeObject(rec, position, rec.getObjectType(fieldName));
     }
     
     /**
@@ -273,6 +276,12 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @SuppressWarnings("unchecked")
     public <T> T deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, String typeName, Class<T> clazz) {
         int position = rec.getPosition(fieldName);
+        if (position == -1)
+            return null;
+        return deserializeObject(rec, position, typeName);
+    }
+
+    private <T> T deserializeObject(FlatBlobDeserializationRecord rec, int position, String typeName) {
         ByteData underlyingData = rec.getByteData();
 
         if (position == -1 || VarInt.readVNull(underlyingData, position))

@@ -20,7 +20,7 @@ package com.netflix.zeno.fastblob.record;
 import com.netflix.zeno.fastblob.FastBlobFrameworkSerializer;
 import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
 import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
-import com.netflix.zeno.serializer.NFSerializationRecord;
+import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
 
 /**
  * An NFSerializationRecord for the FastBlobStateEngine serialization framework.<p/>
@@ -41,9 +41,8 @@ import com.netflix.zeno.serializer.NFSerializationRecord;
  * @author dkoszewnik
  *
  */
-public class FastBlobSerializationRecord implements NFSerializationRecord {
+public class FastBlobSerializationRecord extends  AbstractNFSerializationRecord {
 
-    private final FastBlobSchema schema;
     private final ByteDataBuffer fieldData[];
     private final boolean isNonNull[];
 
@@ -53,16 +52,12 @@ public class FastBlobSerializationRecord implements NFSerializationRecord {
      * Create a new FastBlobSerializationRecord which conforms to the given FastBlobSchema.
      */
     public FastBlobSerializationRecord(FastBlobSchema schema) {
-        this.schema = schema;
+        super(schema);
         this.fieldData = new ByteDataBuffer[schema.numFields()];
         this.isNonNull = new boolean[schema.numFields()];
         for (int i = 0; i < fieldData.length; i++) {
             fieldData[i] = new ByteDataBuffer(32);
         }
-    }
-
-    public FastBlobSchema getSchema() {
-        return schema;
     }
 
     /**
@@ -72,7 +67,7 @@ public class FastBlobSerializationRecord implements NFSerializationRecord {
      * @return
      */
     public ByteDataBuffer getFieldBuffer(String field) {
-        int fieldPosition = schema.getPosition(field);
+        int fieldPosition = getSchema().getPosition(field);
         return getFieldBuffer(fieldPosition);
     }
 
@@ -99,13 +94,13 @@ public class FastBlobSerializationRecord implements NFSerializationRecord {
     public void writeDataTo(ByteDataBuffer buf) {
         for (int i = 0; i < fieldData.length; i++) {
             if (isNonNull[i]) {
-                if (schema.getFieldType(i).startsWithVarIntEncodedLength())
+                if (getSchema().getFieldType(i).startsWithVarIntEncodedLength())
                     VarInt.writeVInt(buf, fieldData[i].length());
                 fieldData[i].copyTo(buf);
             } else {
-                if(schema.getFieldType(i) == FieldType.FLOAT) {
+                if(getSchema().getFieldType(i) == FieldType.FLOAT) {
                     FastBlobFrameworkSerializer.writeNullFloat(buf);
-                } else if(schema.getFieldType(i) == FieldType.DOUBLE) {
+                } else if(getSchema().getFieldType(i) == FieldType.DOUBLE) {
                     FastBlobFrameworkSerializer.writeNullDouble(buf);
                 } else {
                     VarInt.writeVNull(buf);

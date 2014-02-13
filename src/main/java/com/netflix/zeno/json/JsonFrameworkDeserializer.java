@@ -93,19 +93,26 @@ public class JsonFrameworkDeserializer extends FrameworkDeserializer<JsonReadGen
      * @deprecated use instead deserializeObject(JsonReadGenericRecord rec, String fieldName, Class<T> clazz); 
      */
     @Deprecated
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public <T> T deserializeObject(JsonReadGenericRecord rec, String fieldName, String typeName, Class<T> clazz) {
         JsonNode node = getJsonNode(rec, fieldName);
         if (node == null)
             return null;
+        return deserializeObject(rec, typeName, node);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private <T> T deserializeObject(JsonReadGenericRecord rec, String typeName, JsonNode node) {
         NFTypeSerializer serializer = ((NFTypeSerializer) (framework.getSerializer(typeName)));
         return (T) serializer.deserialize(new JsonReadGenericRecord(rec.getSchema(), node));
     }
     
     @Override
     public <T> T deserializeObject(JsonReadGenericRecord rec, String fieldName, Class<T> clazz) {
-        return deserializeObject(rec, fieldName, rec.getObjectType(fieldName), clazz);
+        JsonNode node = getJsonNode(rec, fieldName);
+        if (node == null)
+            return null;        
+        return deserializeObject(rec, rec.getObjectType(fieldName), node);
     }
 
     @Override

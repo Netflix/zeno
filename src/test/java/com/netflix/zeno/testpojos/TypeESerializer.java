@@ -32,18 +32,18 @@ public class TypeESerializer extends NFTypeSerializer<TypeE> {
 
     @Override
     public void doSerialize(TypeE value, NFSerializationRecord rec) {
-        serializeObject(rec, "typeF", "TypeF", value.getTypeF());
+        serializeObject(rec, "typeF", value.getTypeF());
     }
 
     @Override
     protected TypeE doDeserialize(NFDeserializationRecord rec) {
-        return new TypeE((TypeF) deserializeObject(rec, "TypeF", ("typeF")));
+        return new TypeE((TypeF) deserializeObject(rec, "typeF"));
     }
 
     @Override
     protected FastBlobSchema createSchema() {
         return schema(
-                field("typeF")
+                field("typeF", "TypeF")
         );
     }
 
