@@ -145,7 +145,8 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
         T obj = previousObjects.get(previousOrdinal);
         ensureCapacity(newOrdinal + 1);
         objects.set(newOrdinal, obj);
-        copiedPreviousObjects.set(previousOrdinal);;
+        copiedPreviousObjects.set(previousOrdinal);
+        stateListener.reassignedObject(obj, previousOrdinal, newOrdinal);
     }
 
     /**
