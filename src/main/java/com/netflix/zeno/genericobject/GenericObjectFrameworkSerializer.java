@@ -72,6 +72,10 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
         return type.isEnum() || PrimitiveObjectIdentifier.isPrimitiveOrWrapper(type);
     }
 
+    /*
+     * @Deprecated instead use serializeObject(GenericObject rec, String fieldName, Object obj)
+     * 
+     */
     @Deprecated
     @Override
     @SuppressWarnings("unchecked")
@@ -89,7 +93,6 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
     }
     
     @Override
-    @SuppressWarnings("unchecked")
     public void serializeObject(GenericObject rec, String fieldName, Object obj) {
         serializeObject(rec, fieldName, rec.getObjectType(fieldName), obj);
     }

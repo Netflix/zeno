@@ -49,6 +49,10 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
         serializePrimitive(rec, fieldName, value);
     }
 
+    /*
+     * @Deprecated instead use serializeObject(HashGenericRecord rec, String fieldName, Object obj)
+     * 
+     */
     @Deprecated
     @SuppressWarnings({ "unchecked" })
     @Override

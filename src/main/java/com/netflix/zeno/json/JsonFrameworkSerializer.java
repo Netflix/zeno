@@ -74,6 +74,10 @@ public class JsonFrameworkSerializer extends FrameworkSerializer<JsonWriteGeneri
         return type.isEnum() || PrimitiveObjectIdentifier.isPrimitiveOrWrapper(type);
     }
 
+    /*
+     * @Deprecated instead use serializeObject(HashGenericRecord rec, String fieldName, Object obj)
+     * 
+     */
     @Deprecated
     @Override
     @SuppressWarnings({ "unchecked" })

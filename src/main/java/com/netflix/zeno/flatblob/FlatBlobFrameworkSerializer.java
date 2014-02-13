@@ -169,7 +169,11 @@ public class FlatBlobFrameworkSerializer extends FrameworkSerializer<FlatBlobSer
             fieldBuffer.write(value[i]);
         }
     }
-
+    
+    /*
+     * @Deprecated instead use serializeObject(FlatBlobSerializationRecord rec, String fieldName, Object obj)
+     * 
+     */
     @Deprecated
     @Override
     public void serializeObject(FlatBlobSerializationRecord rec, String fieldName, String typeName, Object obj) {
