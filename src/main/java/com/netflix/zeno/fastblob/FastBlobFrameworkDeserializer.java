@@ -489,11 +489,13 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
      * @return
      * @throws IOException
      */
-    private char chararr[] = new char[100];
+    private ThreadLocal<char[]> chararr = new ThreadLocal<char[]>();
 
 
     protected String readString(ByteData data, int position, int length) {
         int endPosition = position + length;
+        
+        char chararr[] = getCharArray();
 
         if(length > chararr.length)
             chararr = new char[length];
@@ -508,6 +510,15 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
 
         // The number of chars may be fewer than the number of bytes in the serialized data
         return new String(chararr, 0, count);
+    }
+    
+    private char[] getCharArray() {
+        char ch[] = chararr.get();
+        if(ch == null) {
+            ch = new char[100];
+            chararr.set(ch);
+        }
+        return ch;
     }
 
 }

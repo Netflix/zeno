@@ -24,9 +24,11 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
+import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.SegmentedByteArray;
 import com.netflix.zeno.fastblob.record.SegmentedByteArrayHasher;
 import com.netflix.zeno.fastblob.record.VarInt;
+import com.netflix.zeno.util.SimultaneousExecutor;
 
 /**
  *
@@ -44,7 +46,7 @@ import com.netflix.zeno.fastblob.record.VarInt;
  */
 public class ByteArrayOrdinalMap {
 
-    private final long EMPTY_BUCKET_VALUE = -1L;
+    private final static long EMPTY_BUCKET_VALUE = -1L;
 
     /// IMPORTANT: Thread safety:  We need volatile access semantics to the individual elements in the
     /// pointersAndOrdinals array.  This only works in JVMs 1.5 or later (JSR 133).
@@ -346,38 +348,50 @@ public class ByteArrayOrdinalMap {
     }
 
     /**
-     * Copy all of the data from this ByteArrayOrdinalMap to the provided FastBlobTypeSerializationState.
-     *
-     * Image memberships for each ordinal are determined via the provided array of ThreadSafeBitSets.
+     * Fill a deserialization state from the serialized data which exists in this ByteArrayOrdinalMap
      *
      * @param copyTo
-     * @param imageMemberships
      */
-    void copySerializedObjectData(FastBlobTypeSerializationState<?> copyTo, ThreadSafeBitSet imageMemberships[]) {
-        ByteDataBuffer buf = new ByteDataBuffer();
-        boolean imageMembershipsFlags[] = new boolean[imageMemberships.length];
-
-        for(int i=0;i<pointersAndOrdinals.length();i++) {
-            long pointerAndOrdinal = pointersAndOrdinals.get(i);
-            if(pointerAndOrdinal != EMPTY_BUCKET_VALUE) {
-                int pointer = (int)(pointerAndOrdinal);
-                int ordinal = (int)(pointerAndOrdinal >> 32);
-
-                for(int imageIndex=0;imageIndex<imageMemberships.length;imageIndex++) {
-                    imageMembershipsFlags[imageIndex] = imageMemberships[imageIndex].get(ordinal);
+    void fillDeserializationStateFromData(final FastBlobTypeDeserializationState<?> fill) {
+        SimultaneousExecutor executor = new SimultaneousExecutor(1);
+        final int numThreads = executor.getMaximumPoolSize();
+        
+        fill.ensureCapacity(maxOrdinal() + 1);
+        
+        for(int i=0;i<numThreads;i++) {
+            final int threadNumber = i;
+            executor.execute(new Runnable() {
+                public void run() {
+                    FastBlobDeserializationRecord rec = new FastBlobDeserializationRecord(fill.getSchema(), byteData.getUnderlyingArray());
+                    for(int i=threadNumber;i<pointersAndOrdinals.length();i += numThreads) {
+                        long pointerAndOrdinal = pointersAndOrdinals.get(i);
+                        if(pointerAndOrdinal != EMPTY_BUCKET_VALUE) {
+                            int pointer = (int)(pointerAndOrdinal);
+                            int ordinal = (int)(pointerAndOrdinal >> 32);
+            
+                            int sizeOfData = VarInt.readVInt(byteData.getUnderlyingArray(), pointer);
+                            pointer += VarInt.sizeOfVInt(sizeOfData);
+            
+                            rec.position(pointer);
+                            
+                            fill.add(ordinal, rec);
+                        }
+                    }
                 }
-
-                int sizeOfData = VarInt.readVInt(byteData.getUnderlyingArray(), pointer);
-                pointer += VarInt.sizeOfVInt(sizeOfData);
-
-                for(int j=0;j<sizeOfData;j++) {
-                    buf.write(byteData.get(pointer++));
-                }
-
-                copyTo.addData(buf, imageMembershipsFlags);
-                buf.reset();
-            }
+            });
         }
+        
+        executor.awaitUninterruptibly();
+ }
+    
+    public int maxOrdinal() {
+        int maxOrdinal = 0;
+        for(int i=0;i<pointersAndOrdinals.length();i++) {
+            int ordinal = (int)(pointersAndOrdinals.get(i) >> 32);
+            if(ordinal > maxOrdinal)
+                maxOrdinal = ordinal;
+        }
+        return maxOrdinal;
     }
 
     /**
@@ -549,6 +563,26 @@ public class ByteArrayOrdinalMap {
             deserializedMap.prepareForWrite();
 
         return deserializedMap;
+    }
+
+    public ByteDataBuffer getByteData() {
+        return byteData;
+    }
+
+    public AtomicLongArray getPointersAndOrdinals() {
+        return pointersAndOrdinals;
+    }
+
+    public static boolean isPointerAndOrdinalEmpty(long pointerAndOrdinal) {
+        return pointerAndOrdinal == EMPTY_BUCKET_VALUE;
+    }
+
+    public static int getPointer(long pointerAndOrdinal) {
+        return (int)(pointerAndOrdinal);
+    }
+
+    public static int getOrdinal(long pointerAndOrdinal) {
+        return (int)(pointerAndOrdinal >> 32);
     }
 
 }
