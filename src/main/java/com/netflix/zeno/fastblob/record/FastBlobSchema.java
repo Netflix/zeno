@@ -74,7 +74,7 @@ public class FastBlobSchema {
 
         return size++;
     }
-    
+
     /**
      * Add an OBJECT field into this <code>FastBlobSchema</code>, which points to the provided object type. <p/>
      *
@@ -89,7 +89,7 @@ public class FastBlobSchema {
         hashPositionIntoArray(size);
 
         return size++;
-    }    
+    }
 
     /**
      * Returns the position of a field previously added to the map, or -1 if the field has not been added to the map.
@@ -138,19 +138,19 @@ public class FastBlobSchema {
     public FieldType getFieldType(int fieldPosition) {
         return fieldTypes[fieldPosition];
     }
-    
+
     /**
      * @return the object type of the field with the given name
      */
     public String getObjectType(String fieldName) {
         int position = getPosition(fieldName);
-        
+
         if(position == -1)
             throw new IllegalArgumentException("Field name " + fieldName + " does not exist in schema " + schemaName);
-        
+
         return objectTypes[position];
     }
-    
+
     /**
      * @return The object type at the specified position
      */
@@ -196,9 +196,17 @@ public class FastBlobSchema {
         for(int i=0;i<size;i++) {
             dos.writeUTF(fieldNames[i]);
             dos.writeUTF(fieldTypes[i].name());
-            if(fieldTypes[i].equals(FieldType.OBJECT)) {
-                dos.writeUTF(objectTypes[i]);
+            writeObjectType(dos, i);
+        }
+    }
+
+    private void writeObjectType(DataOutputStream dos, int index)throws IOException {
+        if(fieldTypes[index].equals(FieldType.OBJECT)) {
+            String objectType = "";
+            if(objectTypes[index] != null) {
+                objectType = objectTypes[index];
             }
+            dos.writeUTF(objectType);
         }
     }
 
@@ -216,11 +224,11 @@ public class FastBlobSchema {
                         if(!otherSchema.getFieldType(i).equals(getFieldType(i))) {
                             return false;
                         }
-                        
+
                         if(otherSchema.getObjectType(i) == null && getObjectType(i) != null) {
                             return false;
                         }
-                        
+
                         if(otherSchema.getObjectType(i) != null && !otherSchema.getObjectType(i).equals(getObjectType(i))) {
                             return false;
                         }
@@ -246,14 +254,22 @@ public class FastBlobSchema {
         for(int i=0;i<size;i++) {
             String fieldName = dis.readUTF();
             String fieldType = dis.readUTF();
-            if(FieldType.OBJECT.equals(FieldType.valueOf(fieldType))) {
-                schema.addField(fieldName, dis.readUTF());
+            String objectType = readObjectType(dis, fieldType);
+            if(!objectType.isEmpty()) {
+                schema.addField(fieldName, objectType);
             }else {
                 schema.addField(fieldName, Enum.valueOf(FieldType.class, fieldType));
             }
         }
 
         return schema;
+    }
+
+    private static String readObjectType(DataInputStream dis, String fieldType) throws IOException {
+        if(FieldType.OBJECT.equals(FieldType.valueOf(fieldType))) {
+            return dis.readUTF();
+        }
+        return "";
     }
 
     /**
