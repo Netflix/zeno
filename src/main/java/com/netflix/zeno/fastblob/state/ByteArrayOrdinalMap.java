@@ -399,7 +399,7 @@ public class ByteArrayOrdinalMap {
      * sequence contained in the map pointed to by the specified key, byte by byte.
      */
     private boolean compare(ByteDataBuffer serializedRepresentation, long key) {
-        int position = (int)key;
+        long position = key & 0xFFFFFFFFFL;
 
         int sizeOfData = VarInt.readVInt(byteData.getUnderlyingArray(), position);
 
@@ -523,7 +523,7 @@ public class ByteArrayOrdinalMap {
         /// write the byte data to the stream
         VarInt.writeVLong(os, byteData.length());
 
-        for(int i=0;i<byteData.length();i++) {
+        for(long i=0;i<byteData.length();i++) {
             os.write(byteData.get(i) & 0xFF);
         }
 
