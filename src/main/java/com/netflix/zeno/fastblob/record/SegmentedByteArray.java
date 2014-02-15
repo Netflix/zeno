@@ -70,8 +70,8 @@ public class SegmentedByteArray implements ByteData {
      * @param destPos the position to begin writing in this array
      * @param length the length of the data to copy
      */
-    public void copy(ByteData src, long srcPos, long destPos, int length) {
-        for(int i=0;i<length;i++) {
+    public void copy(ByteData src, long srcPos, long destPos, long length) {
+        for(long i=0;i<length;i++) {
             set(destPos++, src.get(srcPos++));
         }
     }
@@ -84,14 +84,14 @@ public class SegmentedByteArray implements ByteData {
      * @param destPos
      * @param length
      */
-    public void copy(SegmentedByteArray src, long srcPos, long destPos, int length) {
+    public void copy(SegmentedByteArray src, long srcPos, long destPos, long length) {
         int segmentLength = 1 << log2OfSegmentSize;
         int currentSegment = (int)(destPos >>> log2OfSegmentSize);
         int segmentStartPos = (int)(destPos & bitmask);
         int remainingBytesInSegment = segmentLength - segmentStartPos;
 
         while(length > 0) {
-            int bytesToCopyFromSegment = Math.min(remainingBytesInSegment, length);
+            int bytesToCopyFromSegment = (int)Math.min(remainingBytesInSegment, length);
             ensureCapacity(currentSegment);
             int copiedBytes = src.copy(srcPos, segments[currentSegment], segmentStartPos, bytesToCopyFromSegment);
 

@@ -55,7 +55,7 @@ public class ByteDataBuffer {
     }
 
     public void copyTo(ByteDataBuffer other) {
-        other.buf.copy(buf, 0, other.position, (int)position);
+        other.buf.copy(buf, 0, other.position, position);
         other.position += position;
     }
 
