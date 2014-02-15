@@ -29,7 +29,7 @@ public class SegmentedByteArrayHasher {
     private static final int SEED = 0xeab524b9;
 
     public static int hashCode(ByteDataBuffer data) {
-        return hashCode(data.getUnderlyingArray(), 0, data.length());
+        return hashCode(data.getUnderlyingArray(), 0, (int)data.length());
     }
 
     /**
@@ -56,16 +56,16 @@ public class SegmentedByteArrayHasher {
      *
      */
     ///
-    public static int hashCode(ByteData data, int offset, int len) {
+    public static int hashCode(ByteData data, long offset, int len) {
 
         final int c1 = 0xcc9e2d51;
         final int c2 = 0x1b873593;
 
         int h1 = SEED;
-        int roundedEnd = offset + (len & 0xfffffffc); // round down to 4 byte
+        long roundedEnd = offset + (len & 0xfffffffffffffffcL); // round down to 4 byte
                                                       // block
 
-        for (int i = offset; i < roundedEnd; i += 4) {
+        for (long i = offset; i < roundedEnd; i += 4) {
             // little endian load order
             int k1 = (data.get(i) & 0xff) | ((data.get(i + 1) & 0xff) << 8) | ((data.get(i + 2) & 0xff) << 16) | (data.get(i + 3) << 24);
             k1 *= c1;

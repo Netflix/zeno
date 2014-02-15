@@ -27,13 +27,13 @@ public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
 
     private final FastBlobSchema schema;
 
-    private final int fieldPointers[];
+    private final long fieldPointers[];
     private ByteData byteData;
     private boolean cacheElements;
 
     public FlatBlobDeserializationRecord(FastBlobSchema schema) {
         this.schema = schema;
-        this.fieldPointers = new int[schema.numFields()];
+        this.fieldPointers = new long[schema.numFields()];
     }
 
     public void setByteData(ByteData byteData) {
@@ -54,8 +54,8 @@ public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
      * @param objectBeginOffset
      * @return The length of the object's data, in bytes.
      */
-    public int position(int objectBeginOffset) {
-        int currentPosition = objectBeginOffset;
+    public int position(long objectBeginOffset) {
+        long currentPosition = objectBeginOffset;
 
         for(int i=0;i<fieldPointers.length;i++) {
             fieldPointers[i] = currentPosition;
@@ -65,7 +65,7 @@ public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
             currentPosition += fieldLength(currentPosition, type);
         }
 
-        return currentPosition - objectBeginOffset;
+        return (int)(currentPosition - objectBeginOffset);
     }
 
     /**
@@ -78,7 +78,7 @@ public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
     /**
      * get the offset into the byte data for the field represented by the String.
      */
-    public int getPosition(String fieldName) {
+    public long getPosition(String fieldName) {
         int fieldPosition = schema.getPosition(fieldName);
 
         if(fieldPosition == -1)
@@ -87,7 +87,7 @@ public class FlatBlobDeserializationRecord implements NFDeserializationRecord {
         return fieldPointers[fieldPosition];
     }
 
-    private int fieldLength(int currentPosition, FieldType type) {
+    private int fieldLength(long currentPosition, FieldType type) {
         if(type.startsWithVarIntEncodedLength()) {
             if(VarInt.readVNull(byteData, currentPosition)) {
                 return 1;

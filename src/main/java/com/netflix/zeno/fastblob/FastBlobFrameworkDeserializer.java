@@ -39,9 +39,9 @@ import java.util.Set;
 import java.util.SortedMap;
 
 /**
- * 
+ *
  * Defines the operations necessary to decode each of the "Zeno native" elements from FastBlob record fields.
- * 
+ *
  * @author dkoszewnik
  *
  */
@@ -64,7 +64,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public Boolean deserializeBoolean(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -78,7 +78,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public boolean deserializePrimitiveBoolean(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         return byteData.get(fieldPosition) == (byte) 1;
     }
@@ -90,7 +90,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public Integer deserializeInteger(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -106,7 +106,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public int deserializePrimitiveInt(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         int value = VarInt.readVInt(byteData, fieldPosition);
 
@@ -120,7 +120,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public Long deserializeLong(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -136,7 +136,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public long deserializePrimitiveLong(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         long value = VarInt.readVLong(byteData, fieldPosition);
 
@@ -149,7 +149,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public Float deserializeFloat(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1)
             return null;
@@ -168,7 +168,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public float deserializePrimitiveFloat(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         int intBits = readIntBits(byteData, fieldPosition);
 
@@ -176,7 +176,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     }
 
 
-    private int readIntBits(ByteData byteData, int fieldPosition) {
+    private int readIntBits(ByteData byteData, long fieldPosition) {
         int intBits = (byteData.get(fieldPosition++) & 0xFF) << 24;
         intBits |= (byteData.get(fieldPosition++) & 0xFF) << 16;
         intBits |= (byteData.get(fieldPosition++) & 0xFF) << 8;
@@ -190,7 +190,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public Double deserializeDouble(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1)
             return null;
@@ -209,7 +209,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public double deserializePrimitiveDouble(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         long longBits = readLongBits(byteData, fieldPosition);
 
@@ -217,7 +217,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     }
 
 
-    private long readLongBits(ByteData byteData, int fieldPosition) {
+    private long readLongBits(ByteData byteData, long fieldPosition) {
         long longBits = (long) (byteData.get(fieldPosition++) & 0xFF) << 56;
         longBits |= (long) (byteData.get(fieldPosition++) & 0xFF) << 48;
         longBits |= (long) (byteData.get(fieldPosition++) & 0xFF) << 40;
@@ -235,7 +235,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public String deserializeString(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -252,7 +252,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public byte[] deserializeBytes(FastBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -275,7 +275,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public <T> T deserializeObject(FastBlobDeserializationRecord rec, String fieldName, String typeName, Class<T> clazz) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -293,7 +293,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public <T> List<T> deserializeList(FastBlobDeserializationRecord rec, String fieldName, NFTypeSerializer<T> itemSerializer) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -334,7 +334,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public <T> Set<T> deserializeSet(FastBlobDeserializationRecord rec, String fieldName, NFTypeSerializer<T> itemSerializer) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -381,7 +381,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public <K, V> Map<K, V> deserializeMap(FastBlobDeserializationRecord rec, String fieldName, NFTypeSerializer<K> keySerializer, NFTypeSerializer<V> valueSerializer) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -413,7 +413,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     @Override
     public <K, V> SortedMap<K, V> deserializeSortedMap(FastBlobDeserializationRecord rec, String fieldName, NFTypeSerializer<K> keySerializer, NFTypeSerializer<V> valueSerializer) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if(fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -440,7 +440,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     }
 
 
-    private <K, V> void populateMap(ByteData byteData, int fieldPosition, int numElements, MapBuilder<K, V> mapToPopulate, FastBlobTypeDeserializationState<K> keyState, FastBlobTypeDeserializationState<V> valueState) {
+    private <K, V> void populateMap(ByteData byteData, long fieldPosition, int numElements, MapBuilder<K, V> mapToPopulate, FastBlobTypeDeserializationState<K> keyState, FastBlobTypeDeserializationState<V> valueState) {
         int previousValueOrdinal = 0;
 
         for(int i=0;i<numElements;i++) {
@@ -489,12 +489,12 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
      * @return
      * @throws IOException
      */
-    private ThreadLocal<char[]> chararr = new ThreadLocal<char[]>();
+    private final ThreadLocal<char[]> chararr = new ThreadLocal<char[]>();
 
 
-    protected String readString(ByteData data, int position, int length) {
-        int endPosition = position + length;
-        
+    protected String readString(ByteData data, long position, int length) {
+        long endPosition = position + length;
+
         char chararr[] = getCharArray();
 
         if(length > chararr.length)
@@ -511,7 +511,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
         // The number of chars may be fewer than the number of bytes in the serialized data
         return new String(chararr, 0, count);
     }
-    
+
     private char[] getCharArray() {
         char ch[] = chararr.get();
         if(ch == null) {

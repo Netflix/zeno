@@ -62,7 +62,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public Boolean deserializeBoolean(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -76,7 +76,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public boolean deserializePrimitiveBoolean(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         return byteData.get(fieldPosition) == (byte) 1;
     }
@@ -84,7 +84,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public Integer deserializeInteger(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -100,7 +100,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public int deserializePrimitiveInt(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         int value = VarInt.readVInt(byteData, fieldPosition);
 
@@ -110,7 +110,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public Long deserializeLong(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -126,7 +126,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public long deserializePrimitiveLong(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         long value = VarInt.readVLong(byteData, fieldPosition);
 
@@ -139,7 +139,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public Float deserializeFloat(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1)
             return null;
@@ -158,7 +158,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public float deserializePrimitiveFloat(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         int intBits = readIntBits(byteData, fieldPosition);
 
@@ -166,7 +166,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     }
 
 
-    private int readIntBits(ByteData byteData, int fieldPosition) {
+    private int readIntBits(ByteData byteData, long fieldPosition) {
         int intBits = (byteData.get(fieldPosition++) & 0xFF) << 24;
         intBits |= (byteData.get(fieldPosition++) & 0xFF) << 16;
         intBits |= (byteData.get(fieldPosition++) & 0xFF) << 8;
@@ -180,7 +180,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public Double deserializeDouble(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1)
             return null;
@@ -199,7 +199,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public double deserializePrimitiveDouble(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         long longBits = readLongBits(byteData, fieldPosition);
 
@@ -207,7 +207,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     }
 
 
-    private long readLongBits(ByteData byteData, int fieldPosition) {
+    private long readLongBits(ByteData byteData, long fieldPosition) {
         long longBits = (long) (byteData.get(fieldPosition++) & 0xFF) << 56;
         longBits |= (long) (byteData.get(fieldPosition++) & 0xFF) << 48;
         longBits |= (long) (byteData.get(fieldPosition++) & 0xFF) << 40;
@@ -225,7 +225,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public String deserializeString(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -242,7 +242,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public byte[] deserializeBytes(FlatBlobDeserializationRecord rec, String fieldName) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -263,7 +263,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     @SuppressWarnings("unchecked")
     public <T> T deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, String typeName, Class<T> clazz) {
-        int position = rec.getPosition(fieldName);
+        long position = rec.getPosition(fieldName);
         ByteData underlyingData = rec.getByteData();
 
         if (position == -1 || VarInt.readVNull(underlyingData, position))
@@ -299,7 +299,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public <T> List<T> deserializeList(FlatBlobDeserializationRecord rec, String fieldName, NFTypeSerializer<T> itemSerializer) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -354,7 +354,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public <T> Set<T> deserializeSet(FlatBlobDeserializationRecord rec, String fieldName, NFTypeSerializer<T> itemSerializer) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -419,7 +419,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public <K, V> Map<K, V> deserializeMap(FlatBlobDeserializationRecord rec, String fieldName, NFTypeSerializer<K> keySerializer, NFTypeSerializer<V> valueSerializer) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -448,7 +448,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
     @Override
     public <K, V> SortedMap<K, V> deserializeSortedMap(FlatBlobDeserializationRecord rec, String fieldName, NFTypeSerializer<K> keySerializer, NFTypeSerializer<V> valueSerializer) {
         ByteData byteData = rec.getByteData();
-        int fieldPosition = rec.getPosition(fieldName);
+        long fieldPosition = rec.getPosition(fieldName);
 
         if(fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;
@@ -474,7 +474,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
         return minimizedCollections.minimizeSortedMap( (SortedMap<K, V>) map.builderFinish() );
     }
 
-    private <K, V> void populateMap(ByteData byteData, int fieldPosition, int numElements, MapBuilder<K, V> mapToPopulate, NFTypeSerializer<K> keySerializer, FlatBlobTypeCache<K> keyCache, NFTypeSerializer<V> valueSerializer, FlatBlobTypeCache<V> valueCache, boolean shouldCacheElements) {
+    private <K, V> void populateMap(ByteData byteData, long fieldPosition, int numElements, MapBuilder<K, V> mapToPopulate, NFTypeSerializer<K> keySerializer, FlatBlobTypeCache<K> keyCache, NFTypeSerializer<V> valueSerializer, FlatBlobTypeCache<V> valueCache, boolean shouldCacheElements) {
         int previousValueOrdinal = 0;
 
         for(int i=0;i<numElements;i++) {
@@ -541,9 +541,9 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
         }
     }
 
-    private int countFlatBlobSetElementsInRange(ByteData byteData, int fieldPosition, int length) {
+    private int countFlatBlobSetElementsInRange(ByteData byteData, long fieldPosition, int length) {
         int numElements = 0;
-        int endPosition = length + fieldPosition;
+        long endPosition = length + fieldPosition;
 
         while(fieldPosition < endPosition) {
             if(VarInt.readVNull(byteData, fieldPosition) && VarInt.readVNull(byteData, fieldPosition + 1)) {
@@ -566,9 +566,9 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
         return numElements;
     }
 
-    private int countFlatBlobElementsInRange(ByteData byteData, int fieldPosition, int length) {
+    private int countFlatBlobElementsInRange(ByteData byteData, long fieldPosition, int length) {
         int numElements = 0;
-        int endPosition = length + fieldPosition;
+        long endPosition = length + fieldPosition;
 
         while(fieldPosition < endPosition) {
             if(VarInt.readVNull(byteData, fieldPosition)) {
@@ -592,8 +592,8 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
      */
     private final ThreadLocal<char[]> chararr = new ThreadLocal<char[]>();
 
-    private String readString(ByteData data, int position, int length) {
-        int endPosition = position + length;
+    private String readString(ByteData data, long position, int length) {
+        long endPosition = position + length;
 
         char chararr[] = getCharArray(length);
 

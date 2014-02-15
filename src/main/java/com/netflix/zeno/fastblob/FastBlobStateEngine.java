@@ -256,7 +256,7 @@ public class FastBlobStateEngine extends SerializationFramework {
 
     /// arbitrary version number.  Change this when incompatible modifications are made to the state engine
     /// serialization format.
-    private final int STATE_ENGINE_SERIALIZATION_FORMAT_VERSION = 999997;
+    private final int STATE_ENGINE_SERIALIZATION_FORMAT_VERSION = 999996;
 
     /**
      *  Serialize a previous serialization state from the stream.  The deserialized state engine will be in exactly the same state as the serialized state engine.

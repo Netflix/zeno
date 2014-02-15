@@ -33,8 +33,8 @@ import com.netflix.zeno.util.SimultaneousExecutor;
 /**
  *
  * This data structure maps byte sequences to ordinals.  This is a hash table.  The <code>pointersAndOrdinals</code> AtomicLongArray contains
- * keys, and the <code>ByteDataBuffer</code> contains values.  Each key has two components.  The high 32 bits in the key represents the ordinal.
- * The low 32 bits represents the pointer to the start position of the byte sequence in the ByteDataBuffer.  Each byte sequence is preceded by
+ * keys, and the <code>ByteDataBuffer</code> contains values.  Each key has two components.  The high 28 bits in the key represents the ordinal.
+ * The low 36 bits represents the pointer to the start position of the byte sequence in the ByteDataBuffer.  Each byte sequence is preceded by
  * a variable-length integer (see {@link VarInt}), indicating the length of the sequence.<p/>
  *
  * This implementation is extremely fast.  Even though it would be technically correct and clearer,
@@ -50,18 +50,18 @@ public class ByteArrayOrdinalMap {
 
     /// IMPORTANT: Thread safety:  We need volatile access semantics to the individual elements in the
     /// pointersAndOrdinals array.  This only works in JVMs 1.5 or later (JSR 133).
-    /// Ordinal is the high 32 bits.  Pointer to byte data is the low 32 bits.
+    /// Ordinal is the high 28 bits.  Pointer to byte data is the low 36 bits.
     private AtomicLongArray pointersAndOrdinals;
     private final ByteDataBuffer byteData;
     private final FreeOrdinalTracker freeOrdinalTracker;
     private int size;
     private int sizeBeforeGrow;
 
-    private int pointersByOrdinal[];
+    private long pointersByOrdinal[];
 
 
     public ByteArrayOrdinalMap() {
-        this(1048576);
+        this(262144);
     }
 
     public ByteArrayOrdinalMap(int bufferSize) {
@@ -98,7 +98,7 @@ public class ByteArrayOrdinalMap {
         /// linear probing to resolve collisions.
         while(key != EMPTY_BUCKET_VALUE) {
             if(compare(serializedRepresentation, key)) {
-                return (int)(key >> 32);
+                return (int)(key >> 36);
             }
 
             bucket = (bucket + 1) & modBitmask;
@@ -121,7 +121,7 @@ public class ByteArrayOrdinalMap {
 
         while(key != EMPTY_BUCKET_VALUE) {
             if(compare(serializedRepresentation, key)) {
-                return (int)(key >> 32);
+                return (int)(key >> 36);
             }
 
             bucket = (bucket + 1) & modBitmask;
@@ -131,12 +131,12 @@ public class ByteArrayOrdinalMap {
         /// the ordinal for this object still does not exist in the list, even after the lock has been acquired.
         /// it is up to this thread to add it at the current bucket position.
         int ordinal = freeOrdinalTracker.getFreeOrdinal();
-        int pointer = byteData.length();
+        long pointer = byteData.length();
 
-        VarInt.writeVInt(byteData, serializedRepresentation.length());
+        VarInt.writeVInt(byteData, (int)serializedRepresentation.length());
         serializedRepresentation.copyTo(byteData);
 
-        key = ((long)ordinal << 32) | pointer;
+        key = ((long)ordinal << 36) | pointer;
 
         size++;
 
@@ -174,12 +174,12 @@ public class ByteArrayOrdinalMap {
             key = pointersAndOrdinals.get(bucket);
         }
 
-        int pointer = byteData.length();
+        long pointer = byteData.length();
 
-        VarInt.writeVInt(byteData, serializedRepresentation.length());
+        VarInt.writeVInt(byteData, (int)serializedRepresentation.length());
         serializedRepresentation.copyTo(byteData);
 
-        key = ((long)ordinal << 32) | pointer;
+        key = ((long)ordinal << 36) | pointer;
 
         size++;
 
@@ -204,7 +204,7 @@ public class ByteArrayOrdinalMap {
         /// linear probing to resolve collisions.
         while(key != EMPTY_BUCKET_VALUE) {
             if(compare(serializedRepresentation, key)) {
-                return (int)(key >> 32);
+                return (int)(key >> 36);
             }
 
             bucket = (bucket + 1) & modBitmask;
@@ -240,20 +240,20 @@ public class ByteArrayOrdinalMap {
         for(int i=0;i<pointersAndOrdinals.length();i++) {
             long key = pointersAndOrdinals.get(i);
             if(key != EMPTY_BUCKET_VALUE) {
-                int ordinal = (int)(key >> 32);
+                int ordinal = (int)(key >> 36);
                 if(ordinal > maxOrdinal)
                     maxOrdinal = ordinal;
             }
         }
 
-        pointersByOrdinal = new int[maxOrdinal + 1];
+        pointersByOrdinal = new long[maxOrdinal + 1];
         Arrays.fill(pointersByOrdinal, -1);
 
         for(int i=0;i<pointersAndOrdinals.length();i++) {
             long key = pointersAndOrdinals.get(i);
             if(key != EMPTY_BUCKET_VALUE) {
-                int ordinal = (int)(key >> 32);
-                pointersByOrdinal[ordinal] = (int)key;
+                int ordinal = (int)(key >> 36);
+                pointersByOrdinal[ordinal] = key & 0xFFFFFFFFFL;
 
                 int dataLength = VarInt.readVInt(byteData.getUnderlyingArray(), pointersByOrdinal[ordinal]);
                 if(dataLength > maxLength)
@@ -281,27 +281,27 @@ public class ByteArrayOrdinalMap {
         for(int i=0;i<pointersAndOrdinals.length();i++) {
             long key = pointersAndOrdinals.get(i);
             if(key != EMPTY_BUCKET_VALUE) {
-                populatedReverseKeys[counter++] = key << 32 | key >>> 32;
+                populatedReverseKeys[counter++] = key << 28 | key >>> 36;
             }
         }
 
         Arrays.sort(populatedReverseKeys);
 
         SegmentedByteArray arr = byteData.getUnderlyingArray();
-        int currentCopyPointer = 0;
+        long currentCopyPointer = 0;
 
         for(int i=0;i<populatedReverseKeys.length;i++) {
-            int ordinal = (int)populatedReverseKeys[i];
+            int ordinal = (int)(populatedReverseKeys[i] & 0xFFFFFFF);
 
             if(usedOrdinals.get(ordinal)) {
-                int pointer = (int)(populatedReverseKeys[i] >> 32);
+                long pointer = populatedReverseKeys[i] >> 28;
                 int length = VarInt.readVInt(arr, pointer);
                 length += VarInt.sizeOfVInt(length);
 
                 if(currentCopyPointer != pointer)
                     arr.copy(arr, pointer, currentCopyPointer, length);
 
-                populatedReverseKeys[i] = populatedReverseKeys[i] << 32 | currentCopyPointer;
+                populatedReverseKeys[i] = populatedReverseKeys[i] << 36 | currentCopyPointer;
 
                 currentCopyPointer += length;
             } else {
@@ -328,7 +328,7 @@ public class ByteArrayOrdinalMap {
      * @throws IOException
      */
     public void writeSerializedObject(OutputStream out, int ordinal) throws IOException {
-        int pointer = pointersByOrdinal[ordinal];
+        long pointer = pointersByOrdinal[ordinal] & 0xFFFFFFFFFL;
         int length = VarInt.readVInt(byteData.getUnderlyingArray(), pointer);
         pointer += VarInt.sizeOfVInt(length);
 
@@ -343,7 +343,7 @@ public class ByteArrayOrdinalMap {
         return pointersByOrdinal == null;
     }
 
-    public int getDataSize() {
+    public long getDataSize() {
         return byteData.length();
     }
 
@@ -355,9 +355,9 @@ public class ByteArrayOrdinalMap {
     void fillDeserializationStateFromData(final FastBlobTypeDeserializationState<?> fill) {
         SimultaneousExecutor executor = new SimultaneousExecutor(1);
         final int numThreads = executor.getMaximumPoolSize();
-        
+
         fill.ensureCapacity(maxOrdinal() + 1);
-        
+
         for(int i=0;i<numThreads;i++) {
             final int threadNumber = i;
             executor.execute(new Runnable() {
@@ -366,28 +366,28 @@ public class ByteArrayOrdinalMap {
                     for(int i=threadNumber;i<pointersAndOrdinals.length();i += numThreads) {
                         long pointerAndOrdinal = pointersAndOrdinals.get(i);
                         if(pointerAndOrdinal != EMPTY_BUCKET_VALUE) {
-                            int pointer = (int)(pointerAndOrdinal);
-                            int ordinal = (int)(pointerAndOrdinal >> 32);
-            
+                            long pointer = pointerAndOrdinal & 0xFFFFFFFFFL;
+                            int ordinal = (int)(pointerAndOrdinal >> 36);
+
                             int sizeOfData = VarInt.readVInt(byteData.getUnderlyingArray(), pointer);
                             pointer += VarInt.sizeOfVInt(sizeOfData);
-            
+
                             rec.position(pointer);
-                            
+
                             fill.add(ordinal, rec);
                         }
                     }
                 }
             });
         }
-        
+
         executor.awaitUninterruptibly();
  }
-    
+
     public int maxOrdinal() {
         int maxOrdinal = 0;
         for(int i=0;i<pointersAndOrdinals.length();i++) {
-            int ordinal = (int)(pointersAndOrdinals.get(i) >> 32);
+            int ordinal = (int)(pointersAndOrdinals.get(i) >> 36);
             if(ordinal > maxOrdinal)
                 maxOrdinal = ordinal;
         }
@@ -466,7 +466,7 @@ public class ByteArrayOrdinalMap {
      * Get the hash code for the byte array pointed to by the specified key.
      */
     private int rehashPreviouslyAddedData(long key) {
-        int position = (int)key;
+        long position = key & 0xFFFFFFFFFL;
 
         int sizeOfData = VarInt.readVInt(byteData.getUnderlyingArray(), position);
         position += VarInt.sizeOfVInt(sizeOfData);
@@ -516,12 +516,12 @@ public class ByteArrayOrdinalMap {
         VarInt.writeVInt(os, keys.length);
 
         for(int i=0;i<keys.length;i++) {
-            VarInt.writeVInt(os, (int)(keys[i] >> 32));
-            VarInt.writeVInt(os, (int)(keys[i]));
+            VarInt.writeVInt(os, (int)(keys[i] >> 36));
+            VarInt.writeVLong(os, keys[i] & 0xFFFFFFFFFL);
         }
 
         /// write the byte data to the stream
-        VarInt.writeVInt(os, byteData.length());
+        VarInt.writeVLong(os, byteData.length());
 
         for(int i=0;i<byteData.length();i++) {
             os.write(byteData.get(i) & 0xFF);
@@ -544,14 +544,14 @@ public class ByteArrayOrdinalMap {
         long keys[] = new long[VarInt.readVInt(is)];
 
         for(int i=0;i<keys.length;i++) {
-            keys[i] = ((long)VarInt.readVInt(is) << 32) | VarInt.readVInt(is);
+            keys[i] = (VarInt.readVLong(is) << 36) | VarInt.readVLong(is);
         }
 
-        ByteDataBuffer byteData = new ByteDataBuffer(1048576);
+        ByteDataBuffer byteData = new ByteDataBuffer(262144);
 
-        int byteDataSize = VarInt.readVInt(is);
+        long byteDataSize = VarInt.readVLong(is);
 
-        for(int i=0;i<byteDataSize;i++) {
+        for(long i=0;i<byteDataSize;i++) {
             byteData.write((byte)is.read());
         }
 
@@ -577,12 +577,12 @@ public class ByteArrayOrdinalMap {
         return pointerAndOrdinal == EMPTY_BUCKET_VALUE;
     }
 
-    public static int getPointer(long pointerAndOrdinal) {
-        return (int)(pointerAndOrdinal);
+    public static long getPointer(long pointerAndOrdinal) {
+        return pointerAndOrdinal & 0xFFFFFFFFFL;
     }
 
     public static int getOrdinal(long pointerAndOrdinal) {
-        return (int)(pointerAndOrdinal >> 32);
+        return (int)(pointerAndOrdinal >> 36);
     }
 
 }

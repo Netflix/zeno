@@ -100,7 +100,7 @@ public class FastBlobSerializationRecord implements NFSerializationRecord {
         for (int i = 0; i < fieldData.length; i++) {
             if (isNonNull[i]) {
                 if (schema.getFieldType(i).startsWithVarIntEncodedLength())
-                    VarInt.writeVInt(buf, fieldData[i].length());
+                    VarInt.writeVInt(buf, (int)fieldData[i].length());
                 fieldData[i].copyTo(buf);
             } else {
                 if(schema.getFieldType(i) == FieldType.FLOAT) {

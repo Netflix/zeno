@@ -82,7 +82,7 @@ public class FlatBlobSerializationRecord implements NFSerializationRecord {
             FieldType fieldType = schema.getFieldType(i);
             if (isNonNull[i]) {
                 if (fieldType.startsWithVarIntEncodedLength()) {
-                    VarInt.writeVInt(buf, fieldData[i].length());
+                    VarInt.writeVInt(buf, (int)fieldData[i].length());
                 }
                 fieldData[i].copyTo(buf);
             } else {
@@ -109,7 +109,7 @@ public class FlatBlobSerializationRecord implements NFSerializationRecord {
             FieldType fieldType = schema.getFieldType(i);
             if (isNonNull[i]) {
                 if (fieldType.startsWithVarIntEncodedLength()) {
-                    dataSize += VarInt.sizeOfVInt(fieldData[i].length());
+                    dataSize += VarInt.sizeOfVInt((int)fieldData[i].length());
                 }
 
                 dataSize += fieldData[i].length();

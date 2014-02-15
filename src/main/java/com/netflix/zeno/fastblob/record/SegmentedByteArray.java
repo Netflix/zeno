@@ -49,17 +49,17 @@ public class SegmentedByteArray implements ByteData {
     /**
      * Set the byte at the given index to the specified value
      */
-    public void set(int index, byte value) {
-        int segmentIndex = index >> log2OfSegmentSize;
+    public void set(long index, byte value) {
+        int segmentIndex = (int)(index >> log2OfSegmentSize);
         ensureCapacity(segmentIndex);
-        segments[segmentIndex][index & bitmask] = value;
+        segments[segmentIndex][(int)(index & bitmask)] = value;
     }
 
     /**
      * Get the value of the byte at the specified index.
      */
-    public byte get(int index) {
-        return segments[index >>> log2OfSegmentSize][index & bitmask];
+    public byte get(long index) {
+        return segments[(int)(index >>> log2OfSegmentSize)][(int)(index & bitmask)];
     }
 
     /**
@@ -70,7 +70,7 @@ public class SegmentedByteArray implements ByteData {
      * @param destPos the position to begin writing in this array
      * @param length the length of the data to copy
      */
-    public void copy(ByteData src, int srcPos, int destPos, int length) {
+    public void copy(ByteData src, long srcPos, long destPos, int length) {
         for(int i=0;i<length;i++) {
             set(destPos++, src.get(srcPos++));
         }
@@ -84,10 +84,10 @@ public class SegmentedByteArray implements ByteData {
      * @param destPos
      * @param length
      */
-    public void copy(SegmentedByteArray src, int srcPos, int destPos, int length) {
+    public void copy(SegmentedByteArray src, long srcPos, long destPos, int length) {
         int segmentLength = 1 << log2OfSegmentSize;
-        int currentSegment = destPos >>> log2OfSegmentSize;
-        int segmentStartPos = destPos & bitmask;
+        int currentSegment = (int)(destPos >>> log2OfSegmentSize);
+        int segmentStartPos = (int)(destPos & bitmask);
         int remainingBytesInSegment = segmentLength - segmentStartPos;
 
         while(length > 0) {
@@ -111,21 +111,21 @@ public class SegmentedByteArray implements ByteData {
      * @param data
      * @return the number of bytes copied
      */
-    public int copy(int srcPos, byte[] data, int destPos, int length) {
+    public int copy(long srcPos, byte[] data, int destPos, int length) {
         int segmentSize = 1 << log2OfSegmentSize;
-        int remainingBytesInSegment = segmentSize - (srcPos & bitmask);
+        int remainingBytesInSegment = (int)(segmentSize - (srcPos & bitmask));
         int dataPosition = destPos;
 
         while(length > 0) {
-            byte[] segment = segments[srcPos >>> log2OfSegmentSize];
+            byte[] segment = segments[(int)(srcPos >>> log2OfSegmentSize)];
 
             int bytesToCopyFromSegment = Math.min(remainingBytesInSegment, length);
 
-            System.arraycopy(segment, srcPos & bitmask, data, dataPosition, bytesToCopyFromSegment);
+            System.arraycopy(segment, (int)(srcPos & bitmask), data, dataPosition, bytesToCopyFromSegment);
 
             dataPosition += bytesToCopyFromSegment;
             srcPos += bytesToCopyFromSegment;
-            remainingBytesInSegment = segmentSize - (srcPos & bitmask);
+            remainingBytesInSegment = segmentSize - (int)(srcPos & bitmask);
             length -= bytesToCopyFromSegment;
         }
 
@@ -151,18 +151,18 @@ public class SegmentedByteArray implements ByteData {
     /**
      * Write a portion of this data to an OutputStream.
      */
-    public void writeTo(OutputStream os, int startPosition, int len) throws IOException {
+    public void writeTo(OutputStream os, long startPosition, long len) throws IOException {
         int segmentSize = 1 << log2OfSegmentSize;
-        int remainingBytesInSegment = segmentSize - (startPosition & bitmask);
-        int remainingBytesInCopy = len;
+        int remainingBytesInSegment = segmentSize - (int)(startPosition & bitmask);
+        long remainingBytesInCopy = len;
 
         while(remainingBytesInCopy > 0) {
-            int bytesToCopyFromSegment = Math.min(remainingBytesInSegment, remainingBytesInCopy);
+            long bytesToCopyFromSegment = Math.min(remainingBytesInSegment, remainingBytesInCopy);
 
-            os.write(segments[startPosition >>> log2OfSegmentSize], startPosition & bitmask, bytesToCopyFromSegment);
+            os.write(segments[(int)(startPosition >>> log2OfSegmentSize)], (int)(startPosition & bitmask), (int)bytesToCopyFromSegment);
 
             startPosition += bytesToCopyFromSegment;
-            remainingBytesInSegment = segmentSize - (startPosition & bitmask);
+            remainingBytesInSegment = segmentSize - (int)(startPosition & bitmask);
             remainingBytesInCopy -= bytesToCopyFromSegment;
         }
     }

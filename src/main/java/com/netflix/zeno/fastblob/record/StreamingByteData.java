@@ -49,10 +49,10 @@ public class StreamingByteData extends InputStream implements ByteData {
     private final int log2OfBufferSegmentLength;
     private final int bufferSegmentLengthMask;
 
-    private int bufferStartPosition;
+    private long bufferStartPosition;
     private final byte buf[][];
 
-    private int eofPosition = Integer.MAX_VALUE;
+    private long eofPosition = Long.MAX_VALUE;
     private int currentStreamPosition;
 
     public StreamingByteData(InputStream in, int log2OfBufferSegmentLength) {
@@ -64,7 +64,7 @@ public class StreamingByteData extends InputStream implements ByteData {
 
         for(int i=0;i<4;i++) {
             buf[i] = new byte[bufferSegmentLength];
-            if(eofPosition == Integer.MAX_VALUE)
+            if(eofPosition == Long.MAX_VALUE)
                 fillArray(buf[i], (bufferSegmentLength * i));
         }
     }
@@ -78,7 +78,7 @@ public class StreamingByteData extends InputStream implements ByteData {
      * @return the byte at position.
      */
     @Override
-    public byte get(int position) {
+    public byte get(long position) {
         // subtract the buffer start position to get the position in the buffer
         position -= bufferStartPosition;
 
@@ -90,7 +90,7 @@ public class StreamingByteData extends InputStream implements ByteData {
         }
 
         // return the appropriate byte out of the buffer
-        return buf[position >>> log2OfBufferSegmentLength][position & bufferSegmentLengthMask];
+        return buf[(int)(position >>> log2OfBufferSegmentLength)][(int)(position & bufferSegmentLengthMask)];
     }
 
     @Override
@@ -138,14 +138,14 @@ public class StreamingByteData extends InputStream implements ByteData {
 
         bufferStartPosition += bufferSegmentLength;
 
-        if(eofPosition == Integer.MAX_VALUE)
+        if(eofPosition == Long.MAX_VALUE)
             fillArray(buf[3], bufferStartPosition + (bufferSegmentLength * 3));
     }
 
     /**
      * Fills a byte array with data from the underlying stream
      */
-    private void fillArray(byte arr[], int segmentStartByte) {
+    private void fillArray(byte arr[], long segmentStartByte) {
         try {
             int n = 0;
             while (n < arr.length) {

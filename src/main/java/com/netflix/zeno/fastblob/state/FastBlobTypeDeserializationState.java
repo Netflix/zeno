@@ -124,7 +124,7 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
         for(int i=0;i<pointersAndOrdinals.length();i++) {
             long pointerAndOrdinal = pointersAndOrdinals.get(i);
             if(!ByteArrayOrdinalMap.isPointerAndOrdinalEmpty(pointerAndOrdinal)) {
-                int pointer = ByteArrayOrdinalMap.getPointer(pointerAndOrdinal);
+                long pointer = ByteArrayOrdinalMap.getPointer(pointerAndOrdinal);
                 int ordinal = ByteArrayOrdinalMap.getOrdinal(pointerAndOrdinal);
 
                 int sizeOfData = VarInt.readVInt(byteData.getUnderlyingArray(), pointer);
