@@ -53,7 +53,7 @@ public class StreamingByteData extends InputStream implements ByteData {
     private final byte buf[][];
 
     private long eofPosition = Long.MAX_VALUE;
-    private int currentStreamPosition;
+    private long currentStreamPosition;
 
     public StreamingByteData(InputStream in, int log2OfBufferSegmentLength) {
         this.underlyingStream = in;
@@ -89,6 +89,9 @@ public class StreamingByteData extends InputStream implements ByteData {
             position -= bufferSegmentLength;
         }
 
+        if((int)(position >>> log2OfBufferSegmentLength) < 0 || (int)(position & bufferSegmentLengthMask) < 0)
+            System.out.println("found a bug");
+
         // return the appropriate byte out of the buffer
         return buf[(int)(position >>> log2OfBufferSegmentLength)][(int)(position & bufferSegmentLengthMask)];
     }
@@ -104,7 +107,7 @@ public class StreamingByteData extends InputStream implements ByteData {
     }
 
 
-    public int currentStreamPosition() {
+    public long currentStreamPosition() {
         return currentStreamPosition;
     }
 
