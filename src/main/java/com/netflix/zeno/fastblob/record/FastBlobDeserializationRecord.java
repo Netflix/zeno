@@ -19,7 +19,6 @@ package com.netflix.zeno.fastblob.record;
 
 import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
 import com.netflix.zeno.serializer.AbstractNFDeserializationRecord;
-import com.netflix.zeno.serializer.NFDeserializationRecord;
 
 /**
  * Produces a set of offsets into the fields for a specific object.<p/>
@@ -34,11 +33,11 @@ import com.netflix.zeno.serializer.NFDeserializationRecord;
 public class FastBlobDeserializationRecord extends AbstractNFDeserializationRecord {
 
     private final ByteData byteData;
-    private final int fieldPointers[];
+    private final long fieldPointers[];
 
     public FastBlobDeserializationRecord(FastBlobSchema schema, ByteData byteData) {
         super(schema);
-        this.fieldPointers = new int[schema.numFields()];
+        this.fieldPointers = new long[schema.numFields()];
         this.byteData = byteData;
     }
 
@@ -48,8 +47,8 @@ public class FastBlobDeserializationRecord extends AbstractNFDeserializationReco
      * @param objectBeginOffset
      * @return The length of the object's data, in bytes.
      */
-    public int position(int objectBeginOffset) {
-        int currentPosition = objectBeginOffset;
+    public int position(long objectBeginOffset) {
+        long currentPosition = objectBeginOffset;
 
         for(int i=0;i<fieldPointers.length;i++) {
             fieldPointers[i] = currentPosition;
@@ -59,7 +58,7 @@ public class FastBlobDeserializationRecord extends AbstractNFDeserializationReco
             currentPosition += fieldLength(currentPosition, type);
         }
 
-        return currentPosition - objectBeginOffset;
+        return (int)(currentPosition - objectBeginOffset);
     }
 
     /**
@@ -72,7 +71,7 @@ public class FastBlobDeserializationRecord extends AbstractNFDeserializationReco
     /**
      * get the offset into the byte data for the field represented by the String.
      */
-    public int getPosition(String fieldName) {
+    public long getPosition(String fieldName) {
         int fieldPosition = getSchema().getPosition(fieldName);
 
         if(fieldPosition == -1)
@@ -91,7 +90,7 @@ public class FastBlobDeserializationRecord extends AbstractNFDeserializationReco
         return fieldLength(fieldPointers[fieldPosition], fieldType);
     }
 
-    private int fieldLength(int currentPosition, FieldType type) {
+    private int fieldLength(long currentPosition, FieldType type) {
         if(type.startsWithVarIntEncodedLength()) {
             if(VarInt.readVNull(byteData, currentPosition)) {
                 return 1;

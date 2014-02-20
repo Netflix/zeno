@@ -28,6 +28,6 @@ package com.netflix.zeno.fastblob.record;
  */
 public interface ByteData {
 
-    byte get(int position);
+    byte get(long position);
 
 }

@@ -27,7 +27,7 @@ package com.netflix.zeno.fastblob.record;
 public class ByteDataBuffer {
 
     private final SegmentedByteArray buf;
-    private int position;
+    private long position;
 
     public ByteDataBuffer() {
         this(256);
@@ -46,11 +46,11 @@ public class ByteDataBuffer {
         position = 0;
     }
 
-    public void setPosition(int position) {
+    public void setPosition(long position) {
         this.position = position;
     }
 
-    public int length() {
+    public long length() {
         return position;
     }
 
@@ -59,7 +59,7 @@ public class ByteDataBuffer {
         other.position += position;
     }
 
-    public byte get(int index) {
+    public byte get(long index) {
         return buf.get(index);
     }
 

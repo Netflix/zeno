@@ -19,20 +19,19 @@ package com.netflix.zeno.flatblob;
 
 import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.serializer.AbstractNFDeserializationRecord;
-import com.netflix.zeno.serializer.NFDeserializationRecord;
 
 public class FlatBlobDeserializationRecord extends AbstractNFDeserializationRecord {
 
-    private final int fieldPointers[];
+    private final long fieldPointers[];
     private ByteData byteData;
     private boolean cacheElements;
 
     public FlatBlobDeserializationRecord(FastBlobSchema schema) {
         super(schema);
-        this.fieldPointers = new int[schema.numFields()];
+        this.fieldPointers = new long[schema.numFields()];
     }
 
     public void setByteData(ByteData byteData) {
@@ -53,8 +52,8 @@ public class FlatBlobDeserializationRecord extends AbstractNFDeserializationReco
      * @param objectBeginOffset
      * @return The length of the object's data, in bytes.
      */
-    public int position(int objectBeginOffset) {
-        int currentPosition = objectBeginOffset;
+    public int position(long objectBeginOffset) {
+        long currentPosition = objectBeginOffset;
 
         for(int i=0;i<fieldPointers.length;i++) {
             fieldPointers[i] = currentPosition;
@@ -64,7 +63,7 @@ public class FlatBlobDeserializationRecord extends AbstractNFDeserializationReco
             currentPosition += fieldLength(currentPosition, type);
         }
 
-        return currentPosition - objectBeginOffset;
+        return (int)(currentPosition - objectBeginOffset);
     }
 
     /**
@@ -77,7 +76,7 @@ public class FlatBlobDeserializationRecord extends AbstractNFDeserializationReco
     /**
      * get the offset into the byte data for the field represented by the String.
      */
-    public int getPosition(String fieldName) {
+    public long getPosition(String fieldName) {
         int fieldPosition = getSchema().getPosition(fieldName);
 
         if(fieldPosition == -1)
@@ -85,16 +84,17 @@ public class FlatBlobDeserializationRecord extends AbstractNFDeserializationReco
 
         return fieldPointers[fieldPosition];
     }
-    
-    
+
+
     /**
      * get the offset into the byte data for the field represented by the String.
      */
+    @Override
     public String getObjectType(String fieldName) {
         return getSchema().getObjectType(fieldName);
-    }    
+    }
 
-    private int fieldLength(int currentPosition, FieldType type) {
+    private int fieldLength(long currentPosition, FieldType type) {
         if(type.startsWithVarIntEncodedLength()) {
             if(VarInt.readVNull(byteData, currentPosition)) {
                 return 1;

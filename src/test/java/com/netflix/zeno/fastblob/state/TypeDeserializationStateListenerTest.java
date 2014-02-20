@@ -28,9 +28,8 @@ import com.netflix.zeno.testpojos.TypeFSerializer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,13 +44,11 @@ public class TypeDeserializationStateListenerTest {
     byte delta[];
     byte snapshot2[];
 
+    byte brokenDeltaChainSnapshot2[];
+
     @Before
     public void createStates() throws Exception {
-        stateEngine = new FastBlobStateEngine(new SerializerFactory() {
-            public NFTypeSerializer<?>[] createSerializers() {
-                return new NFTypeSerializer<?>[] { new TypeFSerializer() };
-            }
-        });
+        stateEngine = newStateEngine();
 
         /// first state has 1 - 10
         addFs(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
@@ -78,7 +75,27 @@ public class TypeDeserializationStateListenerTest {
 
         writer.writeSnapshot(baos);
         snapshot2 = baos.toByteArray();
+        baos.reset();
+
+        /// we also create a broken delta chain to cause ordinal reassignments.
+        stateEngine = newStateEngine();
+
+        addFs(1, 2, 4, 5, 6, 8, 9, 11, 12);
+
+        stateEngine.prepareForWrite();
+
+        writer = new FastBlobWriter(stateEngine);
+        writer.writeSnapshot(baos);
+        brokenDeltaChainSnapshot2 = baos.toByteArray();
    }
+
+    private FastBlobStateEngine newStateEngine() {
+        return new FastBlobStateEngine(new SerializerFactory() {
+            public NFTypeSerializer<?>[] createSerializers() {
+                return new NFTypeSerializer<?>[] { new TypeFSerializer() };
+            }
+        });
+    }
 
     private void addFs(int... values) {
         for(int value : values)
@@ -93,8 +110,9 @@ public class TypeDeserializationStateListenerTest {
         FastBlobReader reader = new FastBlobReader(stateEngine);
         reader.readSnapshot(new ByteArrayInputStream(snapshot1));
 
-        Assert.assertTrue(listener.getRemovedValues().isEmpty());
-        Assert.assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), listener.getAddedValues());
+        Assert.assertEquals(0, listener.getRemovedValuesSize());
+        Assert.assertEquals(10, listener.getAddedValuesSize());
+        Assert.assertEquals(3, listener.getAddedValueOrdinal(4));
     }
 
     @Test
@@ -106,8 +124,10 @@ public class TypeDeserializationStateListenerTest {
         stateEngine.setTypeDeserializationStateListener("TypeF", listener);
         reader.readDelta(new ByteArrayInputStream(delta));
 
-        Assert.assertEquals(Arrays.asList(3, 7, 10), listener.getRemovedValues());
-        Assert.assertEquals(Arrays.asList(11, 12), listener.getAddedValues());
+        Assert.assertEquals(3, listener.getRemovedValuesSize());
+        Assert.assertEquals(2, listener.getRemovedValueOrdinal(3));
+        Assert.assertEquals(2, listener.getAddedValuesSize());
+        Assert.assertEquals(10, listener.getAddedValueOrdinal(11));
     }
 
     @Test
@@ -119,33 +139,98 @@ public class TypeDeserializationStateListenerTest {
         stateEngine.setTypeDeserializationStateListener("TypeF", listener);
         reader.readSnapshot(new ByteArrayInputStream(snapshot2));
 
-        Assert.assertEquals(Arrays.asList(3, 7, 10), listener.getRemovedValues());
-        Assert.assertEquals(Arrays.asList(11, 12), listener.getAddedValues());
-
+        Assert.assertEquals(3, listener.getRemovedValuesSize());
+        Assert.assertEquals(2, listener.getRemovedValueOrdinal(3));
+        Assert.assertEquals(2, listener.getAddedValuesSize());
+        Assert.assertEquals(10, listener.getAddedValueOrdinal(11));
+        Assert.assertEquals(7, listener.getReassignedValuesSize());
+        Assert.assertEquals(new OrdinalReassignment(3, 3), listener.getOrdinalReassignment(4));
     }
 
+    @Test
+    public void testListenerDoubleSnapshotDiscontinuousState() throws IOException {
+        FastBlobReader reader = new FastBlobReader(stateEngine);
+        reader.readSnapshot(new ByteArrayInputStream(snapshot1));
+
+        TestTypeDeserializationStateListener listener = new TestTypeDeserializationStateListener();
+        stateEngine.setTypeDeserializationStateListener("TypeF", listener);
+        reader.readSnapshot(new ByteArrayInputStream(brokenDeltaChainSnapshot2));
+
+        Assert.assertEquals(3, listener.getRemovedValuesSize());
+        Assert.assertEquals(2, listener.getRemovedValueOrdinal(3));
+        Assert.assertEquals(2, listener.getAddedValuesSize());
+        Assert.assertEquals(7, listener.getAddedValueOrdinal(11));
+        Assert.assertEquals(7, listener.getReassignedValuesSize());
+        Assert.assertEquals(new OrdinalReassignment(3, 2), listener.getOrdinalReassignment(4));
+        Assert.assertEquals(new OrdinalReassignment(8, 6), listener.getOrdinalReassignment(9));
+    }
+
+
     private static class TestTypeDeserializationStateListener extends TypeDeserializationStateListener<TypeF> {
-        List<Integer> removedValues = new ArrayList<Integer>();
-        List<Integer> addedValues = new ArrayList<Integer>();
+        Map<Integer, Integer> removedValuesAndOrdinals = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> addedValuesAndOrdinals = new HashMap<Integer, Integer>();
+        Map<Integer, OrdinalReassignment> reassignedValues = new HashMap<Integer, OrdinalReassignment>();
 
         @Override
         public void removedObject(TypeF obj, int ordinal) {
-            removedValues.add(obj.getValue());
+            removedValuesAndOrdinals.put(obj.getValue(), ordinal);
         }
 
         @Override
         public void addedObject(TypeF obj, int ordinal) {
-            addedValues.add(obj.getValue());
+            addedValuesAndOrdinals.put(obj.getValue(), ordinal);
         }
 
-        public List<Integer> getRemovedValues() {
-            return removedValues;
+        @Override
+        public void reassignedObject(TypeF obj, int oldOrdinal, int newOrdinal) {
+            OrdinalReassignment reassignment = new OrdinalReassignment(oldOrdinal, newOrdinal);
+            reassignment.oldOrdinal = oldOrdinal;
+            reassignment.newOrdinal = newOrdinal;
+            reassignedValues.put(obj.getValue(), reassignment);
         }
 
-        public List<Integer> getAddedValues() {
-            return addedValues;
+        public int getRemovedValuesSize() {
+            return removedValuesAndOrdinals.size();
         }
+
+        public int getRemovedValueOrdinal(Integer value) {
+            return removedValuesAndOrdinals.get(value);
+        }
+
+        public int getAddedValuesSize() {
+            return addedValuesAndOrdinals.size();
+        }
+
+        public int getAddedValueOrdinal(Integer value) {
+            return addedValuesAndOrdinals.get(value);
+        }
+
+        public int getReassignedValuesSize() {
+            return reassignedValues.size();
+        }
+
+        public OrdinalReassignment getOrdinalReassignment(Integer value) {
+            return reassignedValues.get(value);
+        }
+
 
     }
 
+    static class OrdinalReassignment {
+        private int oldOrdinal;
+        private int newOrdinal;
+
+        public OrdinalReassignment(int oldOrdinal, int newOrdinal) {
+            this.oldOrdinal = oldOrdinal;
+            this.newOrdinal = newOrdinal;
+        }
+
+        public boolean equals(Object other) {
+            if(other instanceof OrdinalReassignment) {
+                OrdinalReassignment otherOR = (OrdinalReassignment)other;
+                return oldOrdinal == otherOR.oldOrdinal && newOrdinal == otherOR.newOrdinal;
+            }
+            return false;
+        }
+    }
 }

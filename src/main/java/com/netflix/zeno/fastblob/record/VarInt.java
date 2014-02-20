@@ -81,11 +81,11 @@ public class VarInt {
     }
 
 
-    public static boolean readVNull(ByteData arr, int position) {
+    public static boolean readVNull(ByteData arr, long position) {
         return arr.get(position) == (byte)0x80;
     }
 
-    public static int readVInt(ByteData arr, int position) {
+    public static int readVInt(ByteData arr, long position) {
         byte b = arr.get(position++);
 
         if(b == (byte) 0x80)
@@ -117,7 +117,7 @@ public class VarInt {
         return value;
     }
 
-    public static long readVLong(ByteData arr, int position) {
+    public static long readVLong(ByteData arr, long position) {
         byte b = arr.get(position++);
 
         if(b == (byte) 0x80)
@@ -186,7 +186,7 @@ public class VarInt {
         return 9;
     }
 
-    public static int countVarIntsInRange(ByteData byteData, int fieldPosition, int length) {
+    public static int countVarIntsInRange(ByteData byteData, long fieldPosition, int length) {
         int numInts = 0;
 
         boolean insideInt = false;

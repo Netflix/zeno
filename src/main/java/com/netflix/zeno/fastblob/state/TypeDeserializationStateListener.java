@@ -27,7 +27,7 @@ package com.netflix.zeno.fastblob.state;
 public abstract class TypeDeserializationStateListener<T> {
 
     /**
-     * Called once each time an instance is removed from the TypeDeserializationState
+     * Called once each time an instance is removed from the TypeDeserializationState<p/>
      *
      * @deprecated use removedObject(T obj, int ordinal) instead.
      */
@@ -35,13 +35,22 @@ public abstract class TypeDeserializationStateListener<T> {
     public void removedObject(T obj) { }
 
     /**
-     * Called once each time an instance is removed from the TypeDeserializationState.
+     * Called once each time an instance is removed from the TypeDeserializationState.<p/>
      *
      * Please note that in the case of a double snapshot load, all object ordinals are shuffled.
      * In this case, the "obj" parameter may not currently be assigned to the provided ordinal, and
      * addedObject may have been called with a different object at the same ordinal.
      */
     public abstract void removedObject(T obj, int ordinal);
+
+
+    /**
+     * Called once each time an instance's ordinal is reassigned.  This will happen in the case of a double snapshot reload.<p/>
+     *
+     * This is called once for every object which is copied from the previous state, whether or not the ordinal has changed.  In some cases,
+     * oldOrdinal and newOrdinal may be the same value.
+     */
+    public abstract void reassignedObject(T obj, int oldOrdinal, int newOrdinal);
 
     /**
      * Called once each time an instance is added to the TypeSerializationState
@@ -63,6 +72,9 @@ public abstract class TypeDeserializationStateListener<T> {
 
                 @Override
                 public void addedObject(Object obj, int ordinal) { }
+
+                @Override
+                public void reassignedObject(Object obj, int oldOrdinal, int newOrdinal) { }
             };
 
     /**

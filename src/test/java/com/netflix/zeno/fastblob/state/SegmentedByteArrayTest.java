@@ -58,4 +58,13 @@ public class SegmentedByteArrayTest {
         }
     }
 
+    @Test
+    public void canReferenceLongSpace() {
+        SegmentedByteArray arr = new SegmentedByteArray(25);
+
+        arr.set(0x1FFFFFFFFL, (byte)100);
+
+        Assert.assertEquals((byte)100, arr.get(0x1FFFFFFFFL));
+    }
+
 }
