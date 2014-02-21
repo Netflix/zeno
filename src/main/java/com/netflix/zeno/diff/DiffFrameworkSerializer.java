@@ -92,15 +92,9 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
 
         rec.serializeObject(fieldName);
 
-        FastBlobSchema collectionSchema = rec.getSchema();
-        FastBlobSchema elementSchema = getSerializer(typeName).getFastBlobSchema();
-
         for(T t : obj) {
-            rec.setSchema(elementSchema);
             serializeObject(rec, "element", typeName, t);
         }
-
-        rec.setSchema(collectionSchema);
 
         rec.finishedObject();
     }
@@ -114,18 +108,10 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
 
         rec.serializeObject(fieldName);
 
-        FastBlobSchema mapSchema = rec.getSchema();
-        FastBlobSchema keySchema = getSerializer(keyTypeName).getFastBlobSchema();
-        FastBlobSchema valueSchema = getSerializer(valueTypeName).getFastBlobSchema();
-
         for(Map.Entry<K, V> entry : obj.entrySet()) {
-            rec.setSchema(keySchema);
-            serializeObject(rec, "key", entry.getKey());
-            rec.setSchema(valueSchema);
-            serializeObject(rec, "value", entry.getValue());
+            serializeObject(rec, "key", keyTypeName, entry.getKey());
+            serializeObject(rec, "value", valueTypeName, entry.getValue());
         }
-
-        rec.setSchema(mapSchema);
 
         rec.finishedObject();
     }

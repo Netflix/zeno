@@ -19,7 +19,7 @@ package com.netflix.zeno.fastblob.lazy;
 
 /**
  * Quasi-succinct indices:<br/>
- * http://vigna.di.unimi.it/ftp/papers/QuasiSuccinctIndices.pdf
+ * http://vigna.di.unimi.it/ftp/papers/QuasiSuccinctIndices.pdf<p/>
  *
  * Thanks to Sebastiano Vigna and Massimo Santini, of the LAW lab at the Università degli studi di Milano,
  * for pointing in this direction after reading the NetflixGraph tech blog.
