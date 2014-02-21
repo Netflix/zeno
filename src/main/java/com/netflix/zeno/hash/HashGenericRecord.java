@@ -17,7 +17,7 @@
  */
 package com.netflix.zeno.hash;
 
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.hash.HashGenericRecordSerializers.Serializer;
 import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;

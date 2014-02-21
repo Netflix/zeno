@@ -17,9 +17,6 @@
  */
 package com.netflix.zeno.fastblob.state;
 
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -30,6 +27,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FieldDefinition;
+import com.netflix.zeno.fastblob.record.schema.TypedFieldDefinition;
+
 public class FastBlobSchemaTest {
 
     private FastBlobSchema schema;
@@ -38,9 +40,9 @@ public class FastBlobSchemaTest {
     public void setUp() {
         schema = new FastBlobSchema("test", 3);
 
-        schema.addField("field1", FieldType.INT);
-        schema.addField("field2", "Field2");
-        schema.addField("field3", FieldType.FLOAT);
+        schema.addField("field1", new FieldDefinition(FieldType.INT));
+        schema.addField("field2", new TypedFieldDefinition(FieldType.OBJECT, "Field2"));
+        schema.addField("field3", new FieldDefinition(FieldType.FLOAT));
     }
 
     @Test
@@ -69,18 +71,18 @@ public class FastBlobSchemaTest {
     public void testEquals() throws IOException {
         FastBlobSchema otherSchema = new FastBlobSchema("test", 3);
 
-        otherSchema.addField("field1", FieldType.INT);
-        otherSchema.addField("field2", "Field2");
-        otherSchema.addField("field3", FieldType.FLOAT);
+        otherSchema.addField("field1", new FieldDefinition(FieldType.INT));
+        otherSchema.addField("field2", new TypedFieldDefinition(FieldType.OBJECT, "Field2"));
+        otherSchema.addField("field3", new FieldDefinition(FieldType.FLOAT));
 
         Assert.assertTrue(otherSchema.equals(schema));
 
 
         FastBlobSchema anotherSchema = new FastBlobSchema("test", 3);
 
-        anotherSchema.addField("field1", FieldType.INT);
-        anotherSchema.addField("field2", "Field2");
-        anotherSchema.addField("field3", FieldType.INT);
+        anotherSchema.addField("field1", new FieldDefinition(FieldType.INT));
+        anotherSchema.addField("field2", new TypedFieldDefinition(FieldType.OBJECT, "Field2"));
+        anotherSchema.addField("field3", new FieldDefinition(FieldType.INT));
 
         Assert.assertFalse(anotherSchema.equals(schema));
     }

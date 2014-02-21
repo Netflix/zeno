@@ -17,15 +17,14 @@
  */
 package com.netflix.zeno.serializer.common;
 
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import java.util.Collection;
+import java.util.Map;
+
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
-
-import java.util.Collection;
-import java.util.Map;
 
 /**
 *
@@ -58,7 +57,7 @@ public class MapSerializer<K, V> extends NFTypeSerializer<Map<K, V>> {
     @Override
     protected FastBlobSchema createSchema() {
         return schema(
-            field("map", FieldType.MAP)
+            mapField("map", keySerializer.getName(), valueSerializer.getName())
         );
     }
 

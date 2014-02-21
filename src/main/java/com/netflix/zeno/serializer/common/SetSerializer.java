@@ -17,12 +17,13 @@
  */
 package com.netflix.zeno.serializer.common;
 
+import java.util.Set;
+
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
-
-import java.util.Set;
 
 /**
 *
@@ -52,6 +53,11 @@ public class SetSerializer<E> extends CollectionSerializer<E, Set<E>> {
     public void setSerializationFramework(SerializationFramework framework) {
         this.serializationFramework = framework;
         this.elementSerializer.setSerializationFramework(framework);
+    }
+
+    @Override
+    protected FastBlobSchema createSchema() {
+        return schema(setField(ORDINALS_FIELD_NAME, elementSerializer.getName()));
     }
 
 }

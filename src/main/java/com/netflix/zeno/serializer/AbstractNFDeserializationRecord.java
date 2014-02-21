@@ -1,6 +1,6 @@
 package com.netflix.zeno.serializer;
 
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 
 public class AbstractNFDeserializationRecord implements NFDeserializationRecord{
     private final FastBlobSchema schema;

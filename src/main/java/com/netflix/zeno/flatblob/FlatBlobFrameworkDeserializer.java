@@ -28,8 +28,8 @@ import java.util.Set;
 import java.util.SortedMap;
 
 import com.netflix.zeno.fastblob.record.ByteData;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.VarInt;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.FrameworkDeserializer;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.util.collections.CollectionImplementation;

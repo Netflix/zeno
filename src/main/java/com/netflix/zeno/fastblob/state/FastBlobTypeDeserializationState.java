@@ -17,19 +17,19 @@
  */
 package com.netflix.zeno.fastblob.state;
 
-import com.netflix.zeno.fastblob.record.ByteDataBuffer;
-import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
-import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.serializer.NFTypeSerializer;
-import com.netflix.zeno.util.CollectionUnwrapper;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLongArray;
+
+import com.netflix.zeno.fastblob.record.ByteDataBuffer;
+import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
+import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
+import com.netflix.zeno.fastblob.record.VarInt;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.serializer.NFTypeSerializer;
+import com.netflix.zeno.util.CollectionUnwrapper;
 
 /**
  * This class represents the "deserialization state" for a single type at some level of the object

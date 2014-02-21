@@ -18,8 +18,8 @@
 package com.netflix.zeno.flatblob;
 
 import com.netflix.zeno.fastblob.record.ByteData;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.serializer.AbstractNFDeserializationRecord;
 

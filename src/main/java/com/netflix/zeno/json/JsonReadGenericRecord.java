@@ -18,7 +18,7 @@
 package com.netflix.zeno.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.AbstractNFDeserializationRecord;
 
 /**
