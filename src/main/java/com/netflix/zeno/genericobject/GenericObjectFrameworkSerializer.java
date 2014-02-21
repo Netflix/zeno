@@ -75,7 +75,7 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
 
     /*
      * @Deprecated instead use serializeObject(GenericObject rec, String fieldName, Object obj)
-     * 
+     *
      */
     @Deprecated
     @Override
@@ -92,7 +92,7 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
             rec.add(fieldName, subObject);
         }
     }
-    
+
     @Override
     public void serializeObject(GenericObject rec, String fieldName, Object obj) {
         serializeObject(rec, fieldName, rec.getObjectType(fieldName), obj);
@@ -125,7 +125,7 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
             if(element == null) {
                 record.add("element", obj, ++counter);
             } else {
-                NFTypeSerializer elementSerializer = getSerializer(elementTypeName);
+                NFTypeSerializer<Object> elementSerializer = getSerializer(elementTypeName);
                 GenericObject elementObject = new GenericObject(elementSerializer.getFastBlobSchema(), elementTypeName, element);
                 elementSerializer.doSerialize(element, elementObject);
                 record.add("element", elementObject, ++counter);
@@ -147,7 +147,7 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
             counter++;
             GenericObject entryObject = new GenericObject(record.getSchema(), "Map.Entry", entry);
 
-            NFTypeSerializer keySerializer = getSerializer(keyTypeName);
+            NFTypeSerializer<Object> keySerializer = getSerializer(keyTypeName);
             GenericObject keyObject = new GenericObject(keySerializer.getFastBlobSchema(), keyTypeName, entry.getKey());
             keySerializer.doSerialize(entry.getKey(), keyObject);
             entryObject.add("key", keyObject);
@@ -155,7 +155,7 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
             if(entry.getValue() == null) {
                 entryObject.add("value", null);
             } else {
-                NFTypeSerializer valueSerializer = getSerializer(valueTypeName);
+                NFTypeSerializer<Object> valueSerializer = getSerializer(valueTypeName);
                 GenericObject valueObject = new GenericObject(valueSerializer.getFastBlobSchema(), valueTypeName, entry.getValue());
                 valueSerializer.doSerialize(entry.getValue(), valueObject);
                 entryObject.add("value", valueObject);

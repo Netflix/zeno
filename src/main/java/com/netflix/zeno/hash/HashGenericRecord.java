@@ -20,24 +20,20 @@ package com.netflix.zeno.hash;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.hash.HashGenericRecordSerializers.Serializer;
 import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
-import com.netflix.zeno.serializer.NFSerializationRecord;
 
 /**
  *
  * @author tvaliulin
  *
  */
-public final class HashGenericRecord extends AbstractNFSerializationRecord
-{
+public final class HashGenericRecord extends AbstractNFSerializationRecord {
     HashAlgorithm hasher;
 
-    public HashGenericRecord(FastBlobSchema schema)
-    {
+    public HashGenericRecord(FastBlobSchema schema) {
         this(schema, new HashOrderDependent());
     }
 
-    public HashGenericRecord(FastBlobSchema schema, HashAlgorithm hasher)
-    {
+    public HashGenericRecord(FastBlobSchema schema, HashAlgorithm hasher) {
         super(schema);
         this.hasher = hasher;
     }
@@ -57,41 +53,40 @@ public final class HashGenericRecord extends AbstractNFSerializationRecord
         write(arg1);
     }
 
-    private void write(Object obj)
-    {
-        try{
-            if( obj == null){
+    private void write(Object obj) {
+        try {
+            if (obj == null) {
                 hasher.write(0);
                 return;
             }
-            if( obj.getClass().isEnum()){
-                hasher.write(((Enum<?>)obj).name());
-            } else if( obj.getClass().isArray()){
-                if( obj.getClass().getComponentType().isPrimitive()){
+            if (obj.getClass().isEnum()) {
+                hasher.write(((Enum<?>) obj).name());
+            } else if (obj.getClass().isArray()) {
+                if (obj.getClass().getComponentType().isPrimitive()) {
                     Serializer serializer = HashGenericRecordSerializers.getPrimitiveArraySerializer(obj.getClass().getComponentType());
-                    if( serializer == null){
+                    if (serializer == null) {
                         throw new RuntimeException("Can't find serializer for array of type:" + obj.getClass());
                     }
                     serializer.serialize(hasher, obj);
                 } else {
-                    Object[] objects = (Object[])obj;
-                    for( Object object : objects){
+                    Object[] objects = (Object[]) obj;
+                    for (Object object : objects) {
                         write(object);
                     }
                 }
             } else {
                 Serializer serializer = HashGenericRecordSerializers.getTypeSerializer(obj.getClass());
-                if( serializer == null){
+                if (serializer == null) {
                     throw new RuntimeException("Can't find serializer for type:" + obj.getClass());
                 }
                 serializer.serialize(hasher, obj);
             }
-        } catch (Exception ex){
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    public byte[] hash(){
+    public byte[] hash() {
         return hasher.bytes();
     }
 

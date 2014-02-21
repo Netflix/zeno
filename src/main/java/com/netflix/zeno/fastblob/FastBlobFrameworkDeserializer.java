@@ -20,13 +20,6 @@ package com.netflix.zeno.fastblob;
 import static com.netflix.zeno.fastblob.FastBlobFrameworkSerializer.NULL_DOUBLE_BITS;
 import static com.netflix.zeno.fastblob.FastBlobFrameworkSerializer.NULL_FLOAT_BITS;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-
 import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.VarInt;
@@ -38,6 +31,12 @@ import com.netflix.zeno.util.collections.MinimizedUnmodifiableCollections;
 import com.netflix.zeno.util.collections.builder.ListBuilder;
 import com.netflix.zeno.util.collections.builder.MapBuilder;
 import com.netflix.zeno.util.collections.builder.SetBuilder;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
 
 /**
  *

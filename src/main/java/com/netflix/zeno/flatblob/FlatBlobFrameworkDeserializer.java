@@ -273,7 +273,6 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
      */
     @Deprecated
     @Override
-    @SuppressWarnings("unchecked")
     public <T> T deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, String typeName, Class<T> clazz) {
         long position = rec.getPosition(fieldName);
         if (position == -1)
@@ -281,6 +280,7 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
         return deserializeObject(rec, position, typeName);
     }
 
+    @SuppressWarnings("unchecked")
     private <T> T deserializeObject(FlatBlobDeserializationRecord rec, long position, String typeName) {
         ByteData underlyingData = rec.getByteData();
 

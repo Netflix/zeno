@@ -19,7 +19,6 @@ package com.netflix.zeno.genericobject;
 
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
-import com.netflix.zeno.serializer.NFSerializationRecord;
 
 import java.util.ArrayList;
 import java.util.List;

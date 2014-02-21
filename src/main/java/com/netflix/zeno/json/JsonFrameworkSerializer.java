@@ -76,7 +76,7 @@ public class JsonFrameworkSerializer extends FrameworkSerializer<JsonWriteGeneri
 
     /*
      * @Deprecated instead use serializeObject(HashGenericRecord rec, String fieldName, Object obj)
-     * 
+     *
      */
     @Deprecated
     @Override
@@ -100,9 +100,8 @@ public class JsonFrameworkSerializer extends FrameworkSerializer<JsonWriteGeneri
             throw new RuntimeException(ex);
         }
     }
-    
+
     @Override
-    @SuppressWarnings({ "unchecked" })
     public void serializeObject(JsonWriteGenericRecord record, String fieldName, Object obj) {
         serializeObject(record, fieldName, record.getObjectType(fieldName), obj);
     }
