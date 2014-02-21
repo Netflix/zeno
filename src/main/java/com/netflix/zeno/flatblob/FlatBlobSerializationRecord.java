@@ -19,14 +19,13 @@ package com.netflix.zeno.flatblob;
 
 import com.netflix.zeno.fastblob.FastBlobFrameworkSerializer;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.serializer.NFSerializationRecord;
+import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
 
-public class FlatBlobSerializationRecord implements NFSerializationRecord {
+public class FlatBlobSerializationRecord extends AbstractNFSerializationRecord {
 
-    private final FastBlobSchema schema;
     private final ByteDataBuffer fieldData[];
     private final boolean isNonNull[];
 
@@ -34,16 +33,12 @@ public class FlatBlobSerializationRecord implements NFSerializationRecord {
      * Create a new FlatBlobSerializationRecord which conforms to the given FastBlobSchema.
      */
     public FlatBlobSerializationRecord(FastBlobSchema schema) {
-        this.schema = schema;
+        super(schema);
         this.fieldData = new ByteDataBuffer[schema.numFields()];
         this.isNonNull = new boolean[schema.numFields()];
         for (int i = 0; i < fieldData.length; i++) {
             fieldData[i] = new ByteDataBuffer(32);
         }
-    }
-
-    public FastBlobSchema getSchema() {
-        return schema;
     }
 
     /**
@@ -53,7 +48,7 @@ public class FlatBlobSerializationRecord implements NFSerializationRecord {
      * @return
      */
     public ByteDataBuffer getFieldBuffer(String field) {
-        int fieldPosition = schema.getPosition(field);
+        int fieldPosition = getSchema().getPosition(field);
         return getFieldBuffer(fieldPosition);
     }
 
@@ -79,7 +74,7 @@ public class FlatBlobSerializationRecord implements NFSerializationRecord {
      */
     public void writeDataTo(ByteDataBuffer buf) {
         for (int i = 0; i < fieldData.length; i++) {
-            FieldType fieldType = schema.getFieldType(i);
+            FieldType fieldType = getSchema().getFieldType(i);
             if (isNonNull[i]) {
                 if (fieldType.startsWithVarIntEncodedLength()) {
                     VarInt.writeVInt(buf, (int)fieldData[i].length());
@@ -106,7 +101,7 @@ public class FlatBlobSerializationRecord implements NFSerializationRecord {
         int dataSize = 0;
 
         for (int i = 0; i < fieldData.length; i++) {
-            FieldType fieldType = schema.getFieldType(i);
+            FieldType fieldType = getSchema().getFieldType(i);
             if (isNonNull[i]) {
                 if (fieldType.startsWithVarIntEncodedLength()) {
                     dataSize += VarInt.sizeOfVInt((int)fieldData[i].length());

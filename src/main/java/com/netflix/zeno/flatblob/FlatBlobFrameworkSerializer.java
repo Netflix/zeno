@@ -169,14 +169,29 @@ public class FlatBlobFrameworkSerializer extends FrameworkSerializer<FlatBlobSer
             fieldBuffer.write(value[i]);
         }
     }
-
+    
+    /*
+     * @Deprecated instead use serializeObject(FlatBlobSerializationRecord rec, String fieldName, Object obj)
+     * 
+     */
+    @Deprecated
     @Override
     public void serializeObject(FlatBlobSerializationRecord rec, String fieldName, String typeName, Object obj) {
+        int fieldPosition = rec.getSchema().getPosition(fieldName);
+        validateField(fieldName, fieldPosition);
+        serializeObject(rec, fieldPosition, typeName, obj);
+    }
+
+    private void validateField(String fieldName, int fieldPosition) {
+        if(fieldPosition == -1) {
+            throw new IllegalArgumentException("Attempting to serialize non existent field " + fieldName + ".");            
+        }
+    }
+
+    private void serializeObject(FlatBlobSerializationRecord rec, int fieldPosition, String typeName, Object obj) {
         if(obj == null)
             return;
-
-        int fieldPosition = rec.getSchema().getPosition(fieldName);
-
+        
         int ordinal = findOrdinalInStateEngine(typeName, obj);
 
         FlatBlobSerializationRecord subRecord = getSerializationRecord(typeName);
@@ -186,6 +201,13 @@ public class FlatBlobFrameworkSerializer extends FrameworkSerializer<FlatBlobSer
         VarInt.writeVInt(fieldBuffer, ordinal);
         VarInt.writeVInt(fieldBuffer, subRecord.sizeOfData());
         subRecord.writeDataTo(fieldBuffer);
+    }
+    
+    @Override
+    public void serializeObject(FlatBlobSerializationRecord rec, String fieldName, Object obj) {
+        int fieldPosition = rec.getSchema().getPosition(fieldName);
+        validateField(fieldName, fieldPosition);
+        serializeObject(rec, fieldPosition, rec.getSchema().getObjectType(fieldName), obj);
     }
 
     @Override

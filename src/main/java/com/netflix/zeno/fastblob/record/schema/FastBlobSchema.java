@@ -15,7 +15,7 @@
  *     limitations under the License.
  *
  */
-package com.netflix.zeno.fastblob.record;
+package com.netflix.zeno.fastblob.record.schema;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -29,7 +29,7 @@ import java.util.Arrays;
  *
  * The schema is a hash table of Strings (field name) to field position.<p/>
  *
- * Schemas are flat lists of fields, each specified by (fieldName, fieldType).
+ * Schemas are flat lists of fields, each specified by (fieldName, fieldType, objectType). objectType will be null for primitive types.
  *
  * @author dkoszewnik
  *
@@ -40,7 +40,7 @@ public class FastBlobSchema {
 
     private final int hashedPositionArray[];
     private final String fieldNames[];
-    private final FieldType fieldTypes[];
+    private final FieldDefinition fieldDefinitions[];
 
     private int size;
 
@@ -49,7 +49,7 @@ public class FastBlobSchema {
 
         this.hashedPositionArray = new int[1 << (32 - Integer.numberOfLeadingZeros(numFields * 10 / 7))];
         this.fieldNames = new String[numFields];
-        this.fieldTypes = new FieldType[numFields];
+        this.fieldDefinitions = new FieldDefinition[numFields];
 
         Arrays.fill(hashedPositionArray, -1);
     }
@@ -61,13 +61,33 @@ public class FastBlobSchema {
     /**
      * Add a field into this <code>FastBlobSchema</code>.
      *
-     * The position of the field is hashed into the <code>hashedPositionArray</code> by the hashCode of the fieldName.
+     * @return the position of the field.
+     *
+     * @deprecated use addField with a new FieldDefinition instead.
+     */
+    @Deprecated
+    public int addField(String fieldName, FieldType fieldType) {
+        return addField(fieldName, new FieldDefinition(fieldType));
+    }
+
+    /**
+     * Add a field into this <code>FastBlobSchema</code>.
+     *
+     * The position of the field is hashed into the <code>hashedPositionArray</code> by the hashCode of the fieldName.<p/>
+     *
+     * Create a new FieldDefinition for your type as follows:<p/>
+     *
+     * <ul>
+     * <li>For a primitive value, use new FieldDefinition(...)</li>
+     * <li>For an OBJECT, LIST, or SET, use new TypedFieldDefinition(...)</li>
+     * <li>For a MAP, use new MapFieldDefinition(...)</li>
+     * </ul>
      *
      * @return the position of the field.
      */
-    public int addField(String fieldName, FieldType fieldType) {
+    public int addField(String fieldName, FieldDefinition fieldDefinition) {
         fieldNames[size] = fieldName;
-        fieldTypes[size] = fieldType;
+        fieldDefinitions[size] = fieldDefinition;
         hashPositionIntoArray(size);
 
         return size++;
@@ -111,14 +131,56 @@ public class FastBlobSchema {
         if(position == -1)
             throw new IllegalArgumentException("Field name " + fieldName + " does not exist in schema " + schemaName);
 
-        return fieldTypes[getPosition(fieldName)];
+        return fieldDefinitions[position].getFieldType();
     }
 
     /**
      * @return The type of the field at the specified position
      */
     public FieldType getFieldType(int fieldPosition) {
-        return fieldTypes[fieldPosition];
+        return fieldDefinitions[fieldPosition].getFieldType();
+    }
+
+    /**
+     * @return The type of the field with the given name
+     */
+    public FieldDefinition getFieldDefinition(String fieldName) {
+        int position = getPosition(fieldName);
+
+        if(position == -1)
+            throw new IllegalArgumentException("Field name " + fieldName + " does not exist in schema " + schemaName);
+
+        return getFieldDefinition(position);
+    }
+
+    /**
+     * @return The FieldDefinition at the specified position
+     */
+    public FieldDefinition getFieldDefinition(int fieldPosition) {
+        return fieldDefinitions[fieldPosition];
+    }
+
+    /**
+     * @return the object type of the field with the given name
+     */
+    public String getObjectType(String fieldName) {
+        int position = getPosition(fieldName);
+
+        if(position == -1)
+            throw new IllegalArgumentException("Field name " + fieldName + " does not exist in schema " + schemaName);
+
+        return getObjectType(position);
+    }
+
+    /**
+     * @return The object type at the specified position
+     */
+    public String getObjectType(int fieldPosition) {
+        if(fieldDefinitions[fieldPosition] instanceof TypedFieldDefinition) {
+            return ((TypedFieldDefinition)fieldDefinitions[fieldPosition]).getSubType();
+        }
+
+        return null;
     }
 
     /**
@@ -150,18 +212,6 @@ public class FastBlobSchema {
         return key & Integer.MAX_VALUE;
     }
 
-    /**
-     * Write this FastBlobSchema to a stream.
-     */
-    public void writeTo(DataOutputStream dos) throws IOException {
-        dos.writeUTF(schemaName);
-        dos.writeShort(size);
-        for(int i=0;i<size;i++) {
-            dos.writeUTF(fieldNames[i]);
-            dos.writeUTF(fieldTypes[i].name());
-        }
-    }
-
     @Override
     public boolean equals(Object other) {
         if(other instanceof FastBlobSchema) {
@@ -173,7 +223,7 @@ public class FastBlobSchema {
                             return false;
                         }
 
-                        if(!otherSchema.getFieldType(i).equals(getFieldType(i))) {
+                        if(!otherSchema.getFieldDefinition(i).equals(getFieldDefinition(i))) {
                             return false;
                         }
                     }
@@ -187,6 +237,40 @@ public class FastBlobSchema {
     }
 
     /**
+     * Write this FastBlobSchema to a stream.
+     */
+    public void writeTo(DataOutputStream dos) throws IOException {
+        dos.writeUTF(schemaName);
+        dos.writeShort(size);
+        for(int i=0;i<size;i++) {
+            dos.writeUTF(fieldNames[i]);
+            writeFieldDefinition(dos, fieldDefinitions[i]);
+        }
+    }
+
+    private void writeFieldDefinition(DataOutputStream dos, FieldDefinition def)throws IOException {
+        FieldType fieldType = def.getFieldType();
+        dos.writeUTF(fieldType.name());
+
+        if(fieldType == FieldType.OBJECT || fieldType == FieldType.LIST || fieldType == FieldType.SET) {
+            if(def instanceof TypedFieldDefinition) {
+                dos.writeUTF(((TypedFieldDefinition)def).getSubType());
+            } else {
+                dos.writeUTF("");
+            }
+        } else if(fieldType == FieldType.MAP) {
+            if(def instanceof MapFieldDefinition) {
+                MapFieldDefinition mfd = (MapFieldDefinition)def;
+                dos.writeUTF(mfd.getKeyType());
+                dos.writeUTF(mfd.getValueType());
+            } else {
+                dos.writeUTF("");
+                dos.writeUTF("");
+            }
+        }
+    }
+
+    /**
      * Read a FastBlobSchema from a stream.
      */
     public static FastBlobSchema readFrom(DataInputStream dis) throws IOException {
@@ -197,13 +281,33 @@ public class FastBlobSchema {
 
         for(int i=0;i<size;i++) {
             String fieldName = dis.readUTF();
-            String fieldType = dis.readUTF();
+            FieldDefinition def = readFieldDefinition(dis);
 
-            schema.addField(fieldName, Enum.valueOf(FieldType.class, fieldType));
+            schema.addField(fieldName, def);
         }
 
         return schema;
     }
+
+    private static FieldDefinition readFieldDefinition(DataInputStream dis) throws IOException {
+        FieldType fieldType = Enum.valueOf(FieldType.class, dis.readUTF());
+
+        if(fieldType == FieldType.OBJECT || fieldType == FieldType.LIST || fieldType == FieldType.SET) {
+            String subType = dis.readUTF();
+
+            if(!subType.isEmpty())
+                return new TypedFieldDefinition(fieldType, subType);
+        } else if(fieldType == FieldType.MAP) {
+            String keyType = dis.readUTF();
+            String valueType = dis.readUTF();
+
+            if(!keyType.isEmpty())
+                return new MapFieldDefinition(keyType, valueType);
+        }
+
+        return new FieldDefinition(fieldType);
+    }
+
 
     /**
      * All allowable field types.
@@ -217,6 +321,12 @@ public class FastBlobSchema {
         DOUBLE(8, false),
         STRING(-1, true),
         BYTES(-1, true),
+        LIST(-1, true),
+        SET(-1, true),
+        @Deprecated
+        /**
+         * @deprecated Use SET or LIST instead of COLLECTION
+         */
         COLLECTION(-1, true),
         MAP(-1, true);
 

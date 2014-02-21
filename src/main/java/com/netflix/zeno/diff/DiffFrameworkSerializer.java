@@ -49,6 +49,7 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
         rec.serializePrimitive(fieldName, new DiffByteArray(value));
     }
 
+    @Deprecated
     @Override
     @SuppressWarnings("unchecked")
     public void serializeObject(DiffRecord rec, String fieldName, String typeName, Object obj) {
@@ -60,6 +61,11 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
         rec.serializeObject(fieldName);
         getSerializer(typeName).serialize(obj, rec);
         rec.finishedObject();
+    }
+    
+    @Override
+    public void serializeObject(DiffRecord rec, String fieldName, Object obj) {
+        serializeObject(rec, fieldName, rec.getSchema().getObjectType(fieldName), obj);
     }
 
     @Override
@@ -82,7 +88,7 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
 
 
         for(T t : obj) {
-            serializeObject(rec, "element", typeName, t);
+            serializeObject(new DiffRecord(getSerializer(typeName).getFastBlobSchema()), "element", t);
         }
 
         rec.finishedObject();
@@ -98,8 +104,8 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
         rec.serializeObject(fieldName);
 
         for(Map.Entry<K, V> entry : obj.entrySet()) {
-            serializeObject(rec, "key", keyTypeName, entry.getKey());
-            serializeObject(rec, "value", valueTypeName, entry.getValue());
+            serializeObject(new DiffRecord(getSerializer(keyTypeName).getFastBlobSchema()), "key", entry.getKey());
+            serializeObject(new DiffRecord(getSerializer(valueTypeName).getFastBlobSchema()), "value", entry.getValue());
         }
 
         rec.finishedObject();

@@ -24,8 +24,8 @@ import java.io.OutputStream;
 
 import com.netflix.zeno.fastblob.FastBlobStateEngine;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 
 /**

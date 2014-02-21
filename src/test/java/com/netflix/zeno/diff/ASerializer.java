@@ -17,14 +17,14 @@
  */
 package com.netflix.zeno.diff;
 
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
+import java.util.Collection;
+import java.util.Set;
+
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.common.SetSerializer;
-
-import java.util.Collection;
-import java.util.Set;
 
 public class ASerializer extends NFTypeSerializer<TypeA>{
 
@@ -34,19 +34,19 @@ public class ASerializer extends NFTypeSerializer<TypeA>{
 
     @Override
     public void doSerialize(TypeA value, NFSerializationRecord rec) {
-        serializeObject(rec, "typeBs", "SetOfTypeBs", value.getTypeBs());
+        serializeObject(rec, "typeBs", value.getTypeBs());
     }
 
     @Override
     protected TypeA doDeserialize(NFDeserializationRecord rec) {
-        Set<TypeB> setOfTypeBs = deserializeObject(rec, "SetOfTypeBs", "typeBs");
+        Set<TypeB> setOfTypeBs = deserializeObject(rec, "typeBs");
         return new TypeA(setOfTypeBs);
     }
 
     @Override
     protected FastBlobSchema createSchema() {
         return schema(
-                field("typeBs")
+                field("typeBs", "SetOfTypeBs")
         );
     }
 

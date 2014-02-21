@@ -20,6 +20,13 @@ package com.netflix.zeno.fastblob;
 import static com.netflix.zeno.fastblob.FastBlobFrameworkSerializer.NULL_DOUBLE_BITS;
 import static com.netflix.zeno.fastblob.FastBlobFrameworkSerializer.NULL_FLOAT_BITS;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+
 import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.VarInt;
@@ -31,12 +38,6 @@ import com.netflix.zeno.util.collections.MinimizedUnmodifiableCollections;
 import com.netflix.zeno.util.collections.builder.ListBuilder;
 import com.netflix.zeno.util.collections.builder.MapBuilder;
 import com.netflix.zeno.util.collections.builder.SetBuilder;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
 
 /**
  *
@@ -269,13 +270,34 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
         return data;
     }
 
+
     /**
      * Read an Object's ordinal reference as a variable-byte integer.  Use the framework to look up the Object by ordinal.
      */
     @Override
-    public <T> T deserializeObject(FastBlobDeserializationRecord rec, String fieldName, String typeName, Class<T> clazz) {
-        ByteData byteData = rec.getByteData();
+    public <T> T deserializeObject(FastBlobDeserializationRecord rec, String fieldName, Class<T> clazz) {
         long fieldPosition = rec.getPosition(fieldName);
+        if (fieldPosition == -1)
+            return null;
+        return deserializeObject(rec, fieldPosition, rec.getObjectType(fieldName));
+    }
+
+    /**
+     * @deprecated use instead deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, Class<T> clazz);
+     *
+     * Read an Object's ordinal reference as a variable-byte integer.  Use the framework to look up the Object by ordinal.
+     */
+    @Deprecated
+    @Override
+    public <T> T deserializeObject(FastBlobDeserializationRecord rec, String fieldName, String typeName, Class<T> clazz) {
+        long fieldPosition = rec.getPosition(fieldName);
+        if (fieldPosition == -1)
+            return null;
+        return deserializeObject(rec, fieldPosition, typeName);
+    }
+
+    private <T> T deserializeObject(FastBlobDeserializationRecord rec, long fieldPosition, String typeName) {
+        ByteData byteData = rec.getByteData();
 
         if (fieldPosition == -1 || VarInt.readVNull(byteData, fieldPosition))
             return null;

@@ -89,14 +89,30 @@ public class JsonFrameworkDeserializer extends FrameworkDeserializer<JsonReadGen
         return node.textValue();
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    /**
+     * @deprecated use instead deserializeObject(JsonReadGenericRecord rec, String fieldName, Class<T> clazz); 
+     */
+    @Deprecated
     @Override
     public <T> T deserializeObject(JsonReadGenericRecord rec, String fieldName, String typeName, Class<T> clazz) {
         JsonNode node = getJsonNode(rec, fieldName);
         if (node == null)
             return null;
+        return deserializeObject(rec, typeName, node);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private <T> T deserializeObject(JsonReadGenericRecord rec, String typeName, JsonNode node) {
         NFTypeSerializer serializer = ((NFTypeSerializer) (framework.getSerializer(typeName)));
-        return (T) serializer.deserialize(new JsonReadGenericRecord(node));
+        return (T) serializer.deserialize(new JsonReadGenericRecord(rec.getSchema(), node));
+    }
+    
+    @Override
+    public <T> T deserializeObject(JsonReadGenericRecord rec, String fieldName, Class<T> clazz) {
+        JsonNode node = getJsonNode(rec, fieldName);
+        if (node == null)
+            return null;        
+        return deserializeObject(rec, rec.getObjectType(fieldName), node);
     }
 
     @Override
@@ -132,7 +148,7 @@ public class JsonFrameworkDeserializer extends FrameworkDeserializer<JsonReadGen
         try {
             for (Iterator<JsonNode> it = nodes.elements(); it.hasNext();) {
                 JsonNode node = it.next();
-                T element = itemSerializer.deserialize(new JsonReadGenericRecord(node));
+                T element = itemSerializer.deserialize(new JsonReadGenericRecord(itemSerializer.getFastBlobSchema(), node));
                 elements.add(element);
             }
         } catch (Exception ex) {
@@ -167,8 +183,8 @@ public class JsonFrameworkDeserializer extends FrameworkDeserializer<JsonReadGen
         }
         for (Iterator<JsonNode> it = node.elements(); it.hasNext();) {
             JsonNode element = it.next();
-            K key = keySerializer.deserialize(new JsonReadGenericRecord(element.get("key")));
-            V value = valueSerializer.deserialize(new JsonReadGenericRecord(element.get("value")));
+            K key = keySerializer.deserialize(new JsonReadGenericRecord(keySerializer.getFastBlobSchema(), element.get("key")));
+            V value = valueSerializer.deserialize(new JsonReadGenericRecord(valueSerializer.getFastBlobSchema(), element.get("value")));
             map.put(key, value);
         }
         return map;

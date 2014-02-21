@@ -17,16 +17,16 @@
  */
 package com.netflix.zeno.fastblob;
 
-import com.netflix.zeno.fastblob.record.ByteDataBuffer;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
-import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
-import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+
+import com.netflix.zeno.fastblob.record.ByteDataBuffer;
+import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
+import com.netflix.zeno.fastblob.record.VarInt;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
 
 /**
  * Rather than adding objects to a serialization state and having the ByteArrayOrdinalMap assign ordinals,
@@ -48,15 +48,14 @@ public class FastBlobHeapFriendlyClientFrameworkSerializer extends FastBlobFrame
     }
 
     @Override
-    public void serializeObject(FastBlobSerializationRecord rec, String fieldName, String typeName, Object obj) {
+    protected void serializeObject(FastBlobSerializationRecord rec, int position, String fieldName, String typeName, Object obj) {
         if(obj == null)
             return;
 
-        int position = rec.getSchema().getPosition(fieldName);
         FieldType fieldType = rec.getSchema().getFieldType(position);
 
         if(fieldType != FieldType.OBJECT)
-            throw new IllegalArgumentException("Attempting to serialize an Object as " + fieldType + " in field " + fieldName);
+            throw new IllegalArgumentException("Attempting to serialize an Object as " + fieldType + " in field " + fieldName + ".  Carefully check your schema for type " + rec.getSchema().getName() + ".");
 
         ByteDataBuffer fieldBuffer = rec.getFieldBuffer(position);
 
@@ -75,7 +74,7 @@ public class FastBlobHeapFriendlyClientFrameworkSerializer extends FastBlobFrame
         int position = rec.getSchema().getPosition(fieldName);
         FieldType fieldType = rec.getSchema().getFieldType(position);
 
-        if(fieldType != FieldType.COLLECTION)
+        if(fieldType != FieldType.LIST && fieldType != FieldType.COLLECTION)
             throw new IllegalArgumentException("Attempting to serialize a List as " + fieldType + " in field " + fieldName);
 
         ByteDataBuffer fieldBuffer = rec.getFieldBuffer(position);
@@ -100,7 +99,7 @@ public class FastBlobHeapFriendlyClientFrameworkSerializer extends FastBlobFrame
         int position = rec.getSchema().getPosition(fieldName);
         FieldType fieldType = rec.getSchema().getFieldType(position);
 
-        if(fieldType != FieldType.COLLECTION)
+        if(fieldType != FieldType.SET && fieldType != FieldType.COLLECTION)
             throw new IllegalArgumentException("Attempting to serialize a Set as " + fieldType + " in field " + fieldName);
 
         ByteDataBuffer fieldBuffer = rec.getFieldBuffer(position);

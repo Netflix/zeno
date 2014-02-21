@@ -19,8 +19,8 @@ package com.netflix.zeno.fastblob;
 
 import com.netflix.zeno.fastblob.io.FastBlobReader;
 import com.netflix.zeno.fastblob.io.FastBlobWriter;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;

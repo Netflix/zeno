@@ -17,12 +17,15 @@
  */
 package com.netflix.zeno.serializer;
 
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FieldDefinition;
+import com.netflix.zeno.fastblob.record.schema.MapFieldDefinition;
+import com.netflix.zeno.fastblob.record.schema.TypedFieldDefinition;
 /**
  * The NFTypeSerializer is used to represent a hierarchy of Objects contained in a POJO Object model.<p/>
  *
@@ -38,13 +41,12 @@ import java.util.List;
 public abstract class NFTypeSerializer<T> {
 
     private final String schemaName;
-    private final FastBlobSchema schema;
+    private FastBlobSchema schema;
 
     protected SerializationFramework serializationFramework;
 
     public NFTypeSerializer(String schemaName) {
         this.schemaName = schemaName;
-        this.schema = createSchema();
     }
 
     public void serialize(T value, NFSerializationRecord rec) {
@@ -73,17 +75,37 @@ public abstract class NFTypeSerializer<T> {
         serializationFramework.getFrameworkSerializer().serializeBytes(rec, fieldName, value);
     }
 
+    /*
+     * @Deprecated instead use serializeObject(NFSerializationRecord rec, String fieldName, Object obj)
+     */
+    @Deprecated
     @SuppressWarnings("unchecked")
     protected void serializeObject(NFSerializationRecord rec, String fieldName, String typeName, Object obj) {
         serializationFramework.getFrameworkSerializer().serializeObject(rec, fieldName, typeName, obj);
     }
 
     @SuppressWarnings("unchecked")
+    protected void serializeObject(NFSerializationRecord rec, String fieldName, Object obj) {
+        serializationFramework.getFrameworkSerializer().serializeObject(rec, fieldName, obj);
+    }
+
+    /**
+     * @deprecated use instead deserializeObject(NFDeserializationRecord rec, String fieldName);
+     */
+    @Deprecated
+    @SuppressWarnings("unchecked")
     protected <X> X deserializeObject(NFDeserializationRecord rec, String typeName, String fieldName) {
         return (X) serializationFramework.getFrameworkDeserializer().deserializeObject(rec, fieldName, typeName, null);
     }
 
+    @SuppressWarnings("unchecked")
+    protected <X> X deserializeObject(NFDeserializationRecord rec, String fieldName) {
+        return (X) serializationFramework.getFrameworkDeserializer().deserializeObject(rec, fieldName, null);
+    }
+
     public FastBlobSchema getFastBlobSchema() {
+        if(schema == null)
+            schema = createSchema();
         return schema;
     }
 
@@ -98,14 +120,46 @@ public abstract class NFTypeSerializer<T> {
         this.serializationFramework = framework;
     }
 
+    /**
+     * @deprecated use instead field(String name, String objectType);
+     */
+    @Deprecated
     protected FastBlobSchemaField field(String name) {
         return field(name, FieldType.OBJECT);
+    }
+
+    protected FastBlobSchemaField field(String name, String objectType) {
+        FastBlobSchemaField field = new FastBlobSchemaField();
+        field.name = name;
+        field.type = new TypedFieldDefinition(FieldType.OBJECT, objectType);
+        return field;
     }
 
     protected FastBlobSchemaField field(String name, FieldType fieldType) {
         FastBlobSchemaField field = new FastBlobSchemaField();
         field.name = name;
-        field.type = fieldType;
+        field.type = new FieldDefinition(fieldType);
+        return field;
+    }
+
+    protected FastBlobSchemaField listField(String name, String elementType) {
+        FastBlobSchemaField field = new FastBlobSchemaField();
+        field.name = name;
+        field.type = new TypedFieldDefinition(FieldType.LIST, elementType);
+        return field;
+    }
+
+    protected FastBlobSchemaField setField(String name, String elementType) {
+        FastBlobSchemaField field = new FastBlobSchemaField();
+        field.name = name;
+        field.type = new TypedFieldDefinition(FieldType.SET, elementType);
+        return field;
+    }
+
+    protected FastBlobSchemaField mapField(String name, String keyType, String valueType) {
+        FastBlobSchemaField field = new FastBlobSchemaField();
+        field.name = name;
+        field.type = new MapFieldDefinition(keyType, valueType);
         return field;
     }
 
@@ -195,7 +249,7 @@ public abstract class NFTypeSerializer<T> {
 
     public static class FastBlobSchemaField {
         public String name;
-        public FastBlobSchema.FieldType type;
+        public FieldDefinition type;
     }
 
 }

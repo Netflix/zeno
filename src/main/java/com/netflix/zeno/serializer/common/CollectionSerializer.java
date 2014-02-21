@@ -17,12 +17,10 @@
  */
 package com.netflix.zeno.serializer.common;
 
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import java.util.Collection;
+
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
-
-import java.util.Collection;
 
 /**
 *
@@ -37,20 +35,15 @@ abstract class CollectionSerializer<E, T extends Collection<E>> extends NFTypeSe
 
     protected final NFTypeSerializer<E> elementSerializer;
 
+    @SuppressWarnings({ "unchecked" })
+    @Override
+    public void doSerialize(T list, NFSerializationRecord rec) {
+        serializationFramework.getFrameworkSerializer().serializeList(rec, ORDINALS_FIELD_NAME, elementSerializer.getName(), list);
+    }
+
     public CollectionSerializer(String schemaName, NFTypeSerializer<E> elementSerializer) {
         super(schemaName);
         this.elementSerializer = elementSerializer;
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public void doSerialize(T list, NFSerializationRecord rec) {
-        serializationFramework.getFrameworkSerializer().serializeList(rec, ORDINALS_FIELD_NAME, elementSerializer.getName(), (Collection) list);
-    }
-
-    @Override
-    protected FastBlobSchema createSchema() {
-        return schema(field(ORDINALS_FIELD_NAME, FieldType.COLLECTION));
     }
 
     @Override

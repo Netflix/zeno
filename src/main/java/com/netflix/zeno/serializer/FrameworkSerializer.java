@@ -108,13 +108,25 @@ public abstract class FrameworkSerializer<S extends NFSerializationRecord> {
     abstract public void serializeBytes(S rec, String fieldName, byte[] value);
 
     /**
+     * @deprecated instead use serializeObject(S rec, String fieldName, Object obj)
+     * 
      * Serializing class object
      * @param rec
      * @param fieldName
      * @param typeName
      * @param obj
      */
+    @Deprecated
     abstract public void serializeObject(S rec, String fieldName, String typeName, Object obj);
+    
+    /**
+     * Serializing class object
+     * @param rec
+     * @param fieldName
+     * @param typeName
+     * @param obj
+     */
+    abstract public void serializeObject(S rec, String fieldName, Object obj);
 
     /**
      * Serializing list

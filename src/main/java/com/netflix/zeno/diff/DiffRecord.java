@@ -17,6 +17,8 @@
  */
 package com.netflix.zeno.diff;
 
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 
@@ -35,12 +37,13 @@ import com.netflix.zeno.serializer.NFTypeSerializer;
  * @author dkoszewnik
  *
  */
-public class DiffRecord implements NFSerializationRecord {
+public class DiffRecord extends AbstractNFSerializationRecord {
 
     private final DiffPropertyPath propertyPath;
     private final DiffRecordValueListMap fieldValues;
 
-    public DiffRecord() {
+    public DiffRecord(FastBlobSchema schema) {
+        super(schema);
         this.propertyPath = new DiffPropertyPath();
         this.fieldValues = new DiffRecordValueListMap();
     }

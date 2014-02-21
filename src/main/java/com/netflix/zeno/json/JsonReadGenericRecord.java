@@ -18,17 +18,19 @@
 package com.netflix.zeno.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.netflix.zeno.serializer.NFDeserializationRecord;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.serializer.AbstractNFDeserializationRecord;
 
 /**
  * @author tvaliulin
  *
  */
-public class JsonReadGenericRecord implements NFDeserializationRecord {
+public class JsonReadGenericRecord extends AbstractNFDeserializationRecord {
 
     private final JsonNode node;
 
-    public JsonReadGenericRecord(JsonNode node) {
+    public JsonReadGenericRecord(FastBlobSchema schema, JsonNode node) {
+        super(schema);
         this.node = node;
     }
 

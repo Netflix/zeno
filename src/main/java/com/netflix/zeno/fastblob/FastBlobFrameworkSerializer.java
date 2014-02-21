@@ -17,18 +17,18 @@
  */
 package com.netflix.zeno.fastblob;
 
-import com.netflix.zeno.fastblob.record.ByteDataBuffer;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
-import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
-import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
-import com.netflix.zeno.serializer.FrameworkSerializer;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+
+import com.netflix.zeno.fastblob.record.ByteDataBuffer;
+import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
+import com.netflix.zeno.fastblob.record.VarInt;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
+import com.netflix.zeno.serializer.FrameworkSerializer;
 
 /**
  * Defines the binary serialized representation for each of the "Zeno native" elements in a FastBlob
@@ -239,12 +239,24 @@ public class FastBlobFrameworkSerializer extends FrameworkSerializer<FastBlobSer
     /**
      * Recursively call the framework to serialize the speicfied Object, then serialize the resulting ordinal as a variable-byte integer.
      */
+    @Deprecated
     @Override
     public void serializeObject(FastBlobSerializationRecord rec, String fieldName, String typeName, Object obj) {
+        int position = rec.getSchema().getPosition(fieldName);
+        validateField(fieldName, position);
+        serializeObject(rec, position, fieldName, typeName, obj);
+    }
+
+    private void validateField(String fieldName, int position) {
+        if(position == -1) {
+            throw new IllegalArgumentException("Attempting to serialize non existent field " + fieldName + ".");
+        }
+    }
+
+    protected void serializeObject(FastBlobSerializationRecord rec, int position, String fieldName, String typeName, Object obj) {
         if(obj == null)
             return;
 
-        int position = rec.getSchema().getPosition(fieldName);
         FieldType fieldType = rec.getSchema().getFieldType(position);
 
         if(fieldType != FieldType.OBJECT)
@@ -257,6 +269,13 @@ public class FastBlobFrameworkSerializer extends FrameworkSerializer<FastBlobSer
         int ordinal = typeSerializationState.add(obj, rec.getImageMembershipsFlags());
 
         VarInt.writeVInt(fieldBuffer, ordinal);
+    }
+
+    @Override
+    public void serializeObject(FastBlobSerializationRecord rec, String fieldName, Object obj) {
+        int position = rec.getSchema().getPosition(fieldName);
+        validateField(fieldName, position);
+        serializeObject(rec, position, fieldName, rec.getSchema().getObjectType(fieldName), obj);
     }
 
     /**
@@ -273,7 +292,7 @@ public class FastBlobFrameworkSerializer extends FrameworkSerializer<FastBlobSer
         int position = rec.getSchema().getPosition(fieldName);
         FieldType fieldType = rec.getSchema().getFieldType(position);
 
-        if(fieldType != FieldType.COLLECTION)
+        if(fieldType != FieldType.LIST && fieldType != FieldType.COLLECTION)
             throw new IllegalArgumentException("Attempting to serialize a List as " + fieldType + " in field " + fieldName + ".  Carefully check your schema for type " + rec.getSchema().getName() + ".");
 
         ByteDataBuffer fieldBuffer = rec.getFieldBuffer(position);
@@ -304,7 +323,7 @@ public class FastBlobFrameworkSerializer extends FrameworkSerializer<FastBlobSer
         int position = rec.getSchema().getPosition(fieldName);
         FieldType fieldType = rec.getSchema().getFieldType(position);
 
-        if(fieldType != FieldType.COLLECTION)
+        if(fieldType != FieldType.SET && fieldType != FieldType.COLLECTION)
             throw new IllegalArgumentException("Attempting to serialize a Set as " + fieldType + " in field " + fieldName + ".  Carefully check your schema for type " + rec.getSchema().getName() + ".");
 
         ByteDataBuffer fieldBuffer = rec.getFieldBuffer(position);

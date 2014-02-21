@@ -20,9 +20,16 @@ package com.netflix.zeno.flatblob;
 import static com.netflix.zeno.flatblob.FlatBlobFrameworkSerializer.NULL_DOUBLE_BITS;
 import static com.netflix.zeno.flatblob.FlatBlobFrameworkSerializer.NULL_FLOAT_BITS;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+
 import com.netflix.zeno.fastblob.record.ByteData;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.VarInt;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.FrameworkDeserializer;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.util.collections.CollectionImplementation;
@@ -30,13 +37,6 @@ import com.netflix.zeno.util.collections.MinimizedUnmodifiableCollections;
 import com.netflix.zeno.util.collections.builder.ListBuilder;
 import com.netflix.zeno.util.collections.builder.MapBuilder;
 import com.netflix.zeno.util.collections.builder.SetBuilder;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
 
 public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlobDeserializationRecord>{
 
@@ -261,9 +261,27 @@ public class FlatBlobFrameworkDeserializer extends FrameworkDeserializer<FlatBlo
 
 
     @Override
+    public <T> T deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, Class<T> clazz) {
+        long position = rec.getPosition(fieldName);
+        if (position == -1)
+            return null;
+        return deserializeObject(rec, position, rec.getObjectType(fieldName));
+    }
+
+    /**
+     * @deprecated use instead deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, Class<T> clazz);
+     */
+    @Deprecated
+    @Override
     @SuppressWarnings("unchecked")
     public <T> T deserializeObject(FlatBlobDeserializationRecord rec, String fieldName, String typeName, Class<T> clazz) {
         long position = rec.getPosition(fieldName);
+        if (position == -1)
+            return null;
+        return deserializeObject(rec, position, typeName);
+    }
+
+    private <T> T deserializeObject(FlatBlobDeserializationRecord rec, long position, String typeName) {
         ByteData underlyingData = rec.getByteData();
 
         if (position == -1 || VarInt.readVNull(underlyingData, position))
