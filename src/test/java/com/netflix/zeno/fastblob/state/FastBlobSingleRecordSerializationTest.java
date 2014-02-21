@@ -125,7 +125,6 @@ public class FastBlobSingleRecordSerializationTest {
         @Override
         protected FastBlobSchema createSchema() {
             return schema(
-                    field("object"),
                     field("bool", FieldType.BOOLEAN),
                     field("int", FieldType.INT),
                     field("long", FieldType.LONG),

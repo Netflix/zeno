@@ -17,7 +17,8 @@
  */
 package com.netflix.zeno.examples.framework;
 
-import com.netflix.zeno.serializer.NFSerializationRecord;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
 
 /**
  * When implementing a SerializationFramework, we need to create some kind of "serialization record".<p/>
@@ -32,9 +33,13 @@ import com.netflix.zeno.serializer.NFSerializationRecord;
  * @author dkoszewnik
  *
  */
-public class IntSumRecord implements NFSerializationRecord {
+public class IntSumRecord extends AbstractNFSerializationRecord {
 
     private int sum;
+
+    public IntSumRecord(FastBlobSchema schema) {
+        super(schema);
+    }
 
     public void addValue(int value) {
         sum += value;

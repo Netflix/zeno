@@ -21,7 +21,7 @@ import com.netflix.zeno.examples.pojos.A;
 import com.netflix.zeno.examples.pojos.B;
 import com.netflix.zeno.examples.pojos.C;
 import com.netflix.zeno.examples.pojos.D;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
@@ -43,16 +43,16 @@ public class DSerializer extends NFTypeSerializer<D> {
 
     @Override
     public void doSerialize(D value, NFSerializationRecord rec) {
-        serializeObject(rec, "aList", "ListOfAs", value.getList());
-        serializeObject(rec, "bSet", "SetOfBs", value.getSet());
-        serializeObject(rec, "cMap", "MapOfCs", value.getMap());
+        serializeObject(rec, "aList", value.getList());
+        serializeObject(rec, "bSet", value.getSet());
+        serializeObject(rec, "cMap", value.getMap());
     }
 
     @Override
     protected D doDeserialize(NFDeserializationRecord rec) {
-        List<A> aList = deserializeObject(rec, "ListOfAs", "aList");
-        Set<B> bSet = deserializeObject(rec, "SetOfBs", "bSet");
-        Map<Integer, C> cMap = deserializeObject(rec, "MapOfCs", "cMap");
+        List<A> aList = deserializeObject(rec, "aList");
+        Set<B> bSet = deserializeObject(rec, "bSet");
+        Map<Integer, C> cMap = deserializeObject(rec, "cMap");
 
         return new D(aList, bSet, cMap);
     }
@@ -60,9 +60,9 @@ public class DSerializer extends NFTypeSerializer<D> {
     @Override
     protected FastBlobSchema createSchema() {
         return schema(
-                field("aList"),
-                field("bSet"),
-                field("cMap")
+                field("aList", "ListOfAs"),
+                field("bSet", "SetOfBs"),
+                field("cMap", "MapOfCs")
         );
     }
 

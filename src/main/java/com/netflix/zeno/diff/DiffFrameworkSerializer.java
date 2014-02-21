@@ -17,6 +17,7 @@
  */
 package com.netflix.zeno.diff;
 
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.FrameworkSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
 
@@ -49,7 +50,6 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
         rec.serializePrimitive(fieldName, new DiffByteArray(value));
     }
 
-    @Deprecated
     @Override
     @SuppressWarnings("unchecked")
     public void serializeObject(DiffRecord rec, String fieldName, String typeName, Object obj) {
@@ -58,11 +58,17 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
             return;
         }
 
+        FastBlobSchema objectSchema = rec.getSchema();
+        FastBlobSchema subTypeSchema = getSerializer(typeName).getFastBlobSchema();
+        rec.setSchema(subTypeSchema);
+
         rec.serializeObject(fieldName);
         getSerializer(typeName).serialize(obj, rec);
+
+        rec.setSchema(objectSchema);
         rec.finishedObject();
     }
-    
+
     @Override
     public void serializeObject(DiffRecord rec, String fieldName, Object obj) {
         serializeObject(rec, fieldName, rec.getSchema().getObjectType(fieldName), obj);
@@ -86,10 +92,15 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
 
         rec.serializeObject(fieldName);
 
+        FastBlobSchema collectionSchema = rec.getSchema();
+        FastBlobSchema elementSchema = getSerializer(typeName).getFastBlobSchema();
 
         for(T t : obj) {
-            serializeObject(new DiffRecord(getSerializer(typeName).getFastBlobSchema()), "element", t);
+            rec.setSchema(elementSchema);
+            serializeObject(rec, "element", typeName, t);
         }
+
+        rec.setSchema(collectionSchema);
 
         rec.finishedObject();
     }
@@ -103,10 +114,18 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
 
         rec.serializeObject(fieldName);
 
+        FastBlobSchema mapSchema = rec.getSchema();
+        FastBlobSchema keySchema = getSerializer(keyTypeName).getFastBlobSchema();
+        FastBlobSchema valueSchema = getSerializer(valueTypeName).getFastBlobSchema();
+
         for(Map.Entry<K, V> entry : obj.entrySet()) {
-            serializeObject(new DiffRecord(getSerializer(keyTypeName).getFastBlobSchema()), "key", entry.getKey());
-            serializeObject(new DiffRecord(getSerializer(valueTypeName).getFastBlobSchema()), "value", entry.getValue());
+            rec.setSchema(keySchema);
+            serializeObject(rec, "key", entry.getKey());
+            rec.setSchema(valueSchema);
+            serializeObject(rec, "value", entry.getValue());
         }
+
+        rec.setSchema(mapSchema);
 
         rec.finishedObject();
     }

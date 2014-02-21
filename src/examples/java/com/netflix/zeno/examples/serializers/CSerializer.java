@@ -18,8 +18,8 @@
 package com.netflix.zeno.examples.serializers;
 
 import com.netflix.zeno.examples.pojos.C;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;

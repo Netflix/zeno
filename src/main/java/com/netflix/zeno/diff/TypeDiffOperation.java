@@ -29,7 +29,7 @@ import org.apache.commons.lang.mutable.MutableInt;
 
 /**
  * This is the main interface for performing a diff between two arbitrary data states.<p/>
- * 
+ *
  * @author dkoszewnik
  *
  */
@@ -45,9 +45,11 @@ public class TypeDiffOperation<T> {
     public TypeDiff<T> performDiff(DiffSerializationFramework framework, Iterable<T> fromState, Iterable<T> toState) {
         TypeDiff<T> diff = new TypeDiff<T>(instruction.getTypeIdentifier());
         NFTypeSerializer<T> typeSerializer = (NFTypeSerializer<T>) framework.getSerializer(instruction.getSerializerName());
-        
-        DiffRecord fromRec = new DiffRecord(typeSerializer.getFastBlobSchema());
-        DiffRecord toRec = new DiffRecord(typeSerializer.getFastBlobSchema());
+
+        DiffRecord fromRec = new DiffRecord();
+        fromRec.setSchema(typeSerializer.getFastBlobSchema());
+        DiffRecord toRec = new DiffRecord();
+        toRec.setSchema(typeSerializer.getFastBlobSchema());
         fromRec.setTopLevelSerializerName(instruction.getSerializerName());
         toRec.setTopLevelSerializerName(instruction.getSerializerName());
 

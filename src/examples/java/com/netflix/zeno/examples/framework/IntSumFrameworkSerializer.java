@@ -17,6 +17,7 @@
  */
 package com.netflix.zeno.examples.framework;
 
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.FrameworkSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
 
@@ -49,8 +50,17 @@ public class IntSumFrameworkSerializer extends FrameworkSerializer<IntSumRecord>
     }
 
     @Override
+    public void serializeObject(IntSumRecord rec, String fieldName, Object obj) {
+        String typeName = rec.getSchema().getObjectType(fieldName);
+        serializeObject(rec, fieldName, typeName, obj);
+    }
+
+    @Override
     public void serializeObject(IntSumRecord rec, String fieldName, String typeName, Object obj) {
-        ((IntSumFramework)framework).getSum(typeName, obj, rec);
+        FastBlobSchema subTypeSchema = getSerializer(typeName).getFastBlobSchema();
+        IntSumRecord subRec = new IntSumRecord(subTypeSchema);
+        ((IntSumFramework)framework).getSum(typeName, obj, subRec);
+        rec.addValue(subRec.getSum());
     }
 
     @Override
@@ -70,9 +80,12 @@ public class IntSumFrameworkSerializer extends FrameworkSerializer<IntSumRecord>
     }
 
     private <T> void serializeCollection(IntSumRecord rec, Collection<T> coll, String elementTypeName) {
+        FastBlobSchema subTypeSchema = getSerializer(elementTypeName).getFastBlobSchema();
+        IntSumRecord subRec = new IntSumRecord(subTypeSchema);
         for(T t : coll) {
-            ((IntSumFramework)framework).getSum(elementTypeName, t, rec);
+            ((IntSumFramework)framework).getSum(elementTypeName, t, subRec);
         }
+        rec.addValue(subRec.getSum());
     }
 
     @Override

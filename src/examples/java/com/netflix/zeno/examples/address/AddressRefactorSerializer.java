@@ -18,8 +18,8 @@
 package com.netflix.zeno.examples.address;
 
 import com.netflix.zeno.examples.address.AddressRefactor.City;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
@@ -45,15 +45,15 @@ public class AddressRefactorSerializer extends NFTypeSerializer<AddressRefactor>
     @Override
     public void doSerialize(AddressRefactor value, NFSerializationRecord rec) {
         serializePrimitive(rec, "street", value.getStreetAddress());
-        serializeObject(rec, "city", "City", value.getCity());
-        serializeObject(rec, "postalCode", "PostalCodeString", value.getPostalCode());
+        serializeObject(rec, "city", value.getCity());
+        serializeObject(rec, "postalCode", value.getPostalCode());
     }
 
     @Override
     protected AddressRefactor doDeserialize(NFDeserializationRecord rec) {
         String streetAddress = deserializePrimitiveString(rec, "street");
-        City city = deserializeObject(rec, "City", "city");
-        String postalCode = deserializeObject(rec, "PostalCodeString", "postalCode");
+        City city = deserializeObject(rec, "city");
+        String postalCode = deserializeObject(rec, "postalCode");
 
         return new AddressRefactor(streetAddress, city, postalCode);
     }
@@ -62,8 +62,8 @@ public class AddressRefactorSerializer extends NFTypeSerializer<AddressRefactor>
     protected FastBlobSchema createSchema() {
         return schema(
                 field("street", FieldType.STRING),
-                field("city"),
-                field("postalCode")
+                field("city", "City"),
+                field("postalCode", "PostalCodeString")
         );
     }
 

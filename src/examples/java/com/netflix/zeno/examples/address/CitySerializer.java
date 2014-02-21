@@ -18,8 +18,8 @@
 package com.netflix.zeno.examples.address;
 
 import com.netflix.zeno.examples.address.AddressRefactor.City;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
@@ -45,13 +45,13 @@ public class CitySerializer extends NFTypeSerializer<City> {
     @Override
     public void doSerialize(City value, NFSerializationRecord rec) {
         serializePrimitive(rec, "city", value.getCity());
-        serializeObject(rec, "state", "StateString", value.getState());
+        serializeObject(rec, "state", value.getState());
     }
 
     @Override
     protected City doDeserialize(NFDeserializationRecord rec) {
         String city = deserializePrimitiveString(rec, "city");
-        String state = deserializeObject(rec, "StateString", "state");
+        String state = deserializeObject(rec, "state");
 
         return new City(city, state);
     }
@@ -60,7 +60,7 @@ public class CitySerializer extends NFTypeSerializer<City> {
     protected FastBlobSchema createSchema() {
         return schema(
                 field("city", FieldType.STRING),
-                field("state")
+                field("state", "StateString")
         );
     }
 

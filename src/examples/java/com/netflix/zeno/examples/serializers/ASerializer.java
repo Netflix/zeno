@@ -20,8 +20,8 @@ package com.netflix.zeno.examples.serializers;
 import com.netflix.zeno.examples.pojos.A;
 import com.netflix.zeno.examples.pojos.B;
 import com.netflix.zeno.examples.pojos.C;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
@@ -39,15 +39,15 @@ public class ASerializer extends NFTypeSerializer<A> {
 
     @Override
     public void doSerialize(A value, NFSerializationRecord rec) {
-        serializeObject(rec, "blist", "ListOfBs", value.getBList());
-        serializeObject(rec, "c", "C", value.getCValue());
+        serializeObject(rec, "blist", value.getBList());
+        serializeObject(rec, "c", value.getCValue());
         serializePrimitive(rec, "intVal", value.getIntValue());
     }
 
     @Override
     protected A doDeserialize(NFDeserializationRecord rec) {
-        List<B> bList = deserializeObject(rec, "ListOfBs", "blist");
-        C c = deserializeObject(rec, "C", "c");
+        List<B> bList = deserializeObject(rec, "blist");
+        C c = deserializeObject(rec, "c");
         int intValue = deserializeInteger(rec, "intVal");
 
         return new A(bList, c, intValue);
@@ -56,8 +56,8 @@ public class ASerializer extends NFTypeSerializer<A> {
     @Override
     protected FastBlobSchema createSchema() {
         return schema(
-                field("blist"),
-                field("c"),
+                field("blist", "ListOfBs"),
+                field("c", "C"),
                 field("intVal", FieldType.INT)
         );
     }

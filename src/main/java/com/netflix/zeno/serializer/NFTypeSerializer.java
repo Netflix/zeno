@@ -75,7 +75,7 @@ public abstract class NFTypeSerializer<T> {
         serializationFramework.getFrameworkSerializer().serializeBytes(rec, fieldName, value);
     }
 
-    /*
+    /**
      * @Deprecated instead use serializeObject(NFSerializationRecord rec, String fieldName, Object obj)
      */
     @Deprecated

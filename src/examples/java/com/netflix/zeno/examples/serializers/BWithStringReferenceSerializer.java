@@ -18,8 +18,8 @@
 package com.netflix.zeno.examples.serializers;
 
 import com.netflix.zeno.examples.pojos.B;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
@@ -37,13 +37,13 @@ public class BWithStringReferenceSerializer extends NFTypeSerializer<B> {
     @Override
     public void doSerialize(B value, NFSerializationRecord rec) {
         serializePrimitive(rec, "bInt", value.getBInt());
-        serializeObject(rec, "bString", StringSerializer.NAME, value.getBString());
+        serializeObject(rec, "bString", value.getBString());
     }
 
     @Override
     protected B doDeserialize(NFDeserializationRecord rec) {
         int bInt = deserializeInteger(rec, "bInt");
-        String bString = deserializeObject(rec, StringSerializer.NAME, "bString");
+        String bString = deserializeObject(rec, "bString");
 
         return new B(bInt, bString);
     }
@@ -52,7 +52,7 @@ public class BWithStringReferenceSerializer extends NFTypeSerializer<B> {
     protected FastBlobSchema createSchema() {
         return schema(
                 field("bInt", FieldType.INT),
-                field("bString")
+                field("bString", StringSerializer.NAME)
         );
     }
 

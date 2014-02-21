@@ -23,9 +23,9 @@ import com.netflix.zeno.serializer.SerializerFactory;
 /**
  * An example framework which sums all of the integers contained in an object instance (anywhere in the
  * hierarchy defined by the data model). <p/>
- * 
+ *
  * Follow along in the documentation page <a href="https://github.com/Netflix/zeno/wiki/Creating-new-operations">creating new operations</a>
- * 
+ *
  * @author dkoszewnik
  *
  */
@@ -37,7 +37,7 @@ public class IntSumFramework extends SerializationFramework {
     }
 
     public <T> int getSum(String type, T obj) {
-        IntSumRecord record = new IntSumRecord();
+        IntSumRecord record = new IntSumRecord(getSerializer(type).getFastBlobSchema());
         getSum(type, obj, record);
         return record.getSum();
     }

@@ -72,7 +72,9 @@ public class DiffHtmlCollectionLocker {
                 DiffRecord rec = getDiffRecord(field);
                 diffRecords.add(rec);
             } else {
-                diffRecords.add(new DiffRecord(from.getSchema()));
+                DiffRecord rec = new DiffRecord();
+                rec.setSchema(from.getSchema());
+                diffRecords.add(rec);
             }
         }
 
@@ -81,7 +83,8 @@ public class DiffHtmlCollectionLocker {
 
     private DiffRecord getDiffRecord(Field field) {
         GenericObject fieldValue = (GenericObject) field.getValue();
-        DiffRecord rec = new DiffRecord(fieldValue.getSchema());
+        DiffRecord rec = new DiffRecord();
+        rec.setSchema(fieldValue.getSchema());
         if (field.getValue() instanceof GenericObject) {
             rec.setTopLevelSerializerName(fieldValue.getObjectType());
             ((NFTypeSerializer<Object>) diffFramework.getSerializer(fieldValue.getObjectType())).serialize(fieldValue.getActualObject(), rec);
