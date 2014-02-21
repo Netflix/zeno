@@ -22,9 +22,9 @@ import com.netflix.zeno.fastblob.io.FastBlobHeaderReader;
 import com.netflix.zeno.fastblob.io.FastBlobReaderEventHandler;
 import com.netflix.zeno.fastblob.io.ZenoFastBlobHeaderReader;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
-import com.netflix.zeno.fastblob.record.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.StreamingByteData;
 import com.netflix.zeno.fastblob.record.VarInt;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 
 import java.io.DataInputStream;
 import java.io.IOException;
