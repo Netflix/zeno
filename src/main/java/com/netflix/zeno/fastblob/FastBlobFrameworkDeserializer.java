@@ -50,7 +50,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     private MinimizedUnmodifiableCollections minimizedCollections = new MinimizedUnmodifiableCollections(CollectionImplementation.JAVA_UTIL);
 
 
-    public FastBlobFrameworkDeserializer(FastBlobStateEngine framework) {
+    public FastBlobFrameworkDeserializer(FastBlobSerializationFramework framework) {
         super(framework);
     }
 

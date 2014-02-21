@@ -17,6 +17,15 @@
  */
 package com.netflix.zeno.fastblob;
 
+import com.netflix.zeno.fastblob.record.VarInt;
+import com.netflix.zeno.fastblob.state.ByteArrayOrdinalMap;
+import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
+import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
+import com.netflix.zeno.fastblob.state.TypeDeserializationStateListener;
+import com.netflix.zeno.serializer.NFTypeSerializer;
+import com.netflix.zeno.serializer.SerializerFactory;
+import com.netflix.zeno.util.SimultaneousExecutor;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -30,16 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-
-import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.fastblob.state.ByteArrayOrdinalMap;
-import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
-import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
-import com.netflix.zeno.fastblob.state.TypeDeserializationStateListener;
-import com.netflix.zeno.serializer.NFTypeSerializer;
-import com.netflix.zeno.serializer.SerializationFramework;
-import com.netflix.zeno.serializer.SerializerFactory;
-import com.netflix.zeno.util.SimultaneousExecutor;
 
 /**
  * This is the SerializationFramework for the second-generation blob.<p/>
@@ -76,7 +75,7 @@ import com.netflix.zeno.util.SimultaneousExecutor;
  * @author dkoszewnik
  *
  */
-public class FastBlobStateEngine extends SerializationFramework {
+public class FastBlobStateEngine extends FastBlobSerializationFramework {
 
     /// all serialization and deserialization states, keyed by their unique names
     private final Map<String, FastBlobTypeSerializationState<?>> serializationTypeStates;
