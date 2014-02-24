@@ -17,6 +17,7 @@
  */
 package com.netflix.zeno.genericobject;
 
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.genericobject.GenericObject.CollectionType;
 import com.netflix.zeno.serializer.FrameworkSerializer;
 import com.netflix.zeno.serializer.NFTypeSerializer;
@@ -87,7 +88,8 @@ public class GenericObjectFrameworkSerializer extends FrameworkSerializer<Generi
             serializePrimitive(rec, fieldName, obj);
             return;
         } else {
-            GenericObject subObject = new GenericObject(rec.getSchema(), typeName, obj);
+            FastBlobSchema childSchema = getSerializer(typeName).getFastBlobSchema();
+            GenericObject subObject = new GenericObject(childSchema, typeName, obj);
             getSerializer(typeName).serialize(obj, subObject);
             rec.add(fieldName, subObject);
         }
