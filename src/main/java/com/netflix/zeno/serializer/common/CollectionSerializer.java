@@ -37,11 +37,11 @@ public abstract class CollectionSerializer<E, T extends Collection<E>> extends N
 
     @SuppressWarnings({ "unchecked" })
     @Override
-    public void doSerialize(final T list, final NFSerializationRecord rec) {
+    public void doSerialize(T list, NFSerializationRecord rec) {
         serializationFramework.getFrameworkSerializer().serializeList(rec, ORDINALS_FIELD_NAME, elementSerializer.getName(), list);
     }
 
-    public CollectionSerializer(final String schemaName, final NFTypeSerializer<E> elementSerializer) {
+    public CollectionSerializer(String schemaName, NFTypeSerializer<E> elementSerializer) {
         super(schemaName);
         this.elementSerializer = elementSerializer;
     }
