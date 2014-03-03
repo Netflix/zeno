@@ -29,7 +29,7 @@ import com.netflix.zeno.serializer.NFTypeSerializer;
 * This is an abstract class, implemented by {@link ListSerializer} and {@link SetSerializer}
 *
 */
-abstract class CollectionSerializer<E, T extends Collection<E>> extends NFTypeSerializer<T> {
+public abstract class CollectionSerializer<E, T extends Collection<E>> extends NFTypeSerializer<T> {
 
     protected static final String ORDINALS_FIELD_NAME = "ordinals";
 
