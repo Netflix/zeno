@@ -17,6 +17,7 @@
  */
 package com.netflix.zeno.hash;
 
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.FrameworkSerializer;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
@@ -51,24 +52,25 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
 
     /*
      * @Deprecated instead use serializeObject(HashGenericRecord rec, String fieldName, Object obj)
-     * 
+     *
      */
-    @Deprecated
     @SuppressWarnings({ "unchecked" })
     @Override
     public void serializeObject(HashGenericRecord rec, String fieldName, String typeName, Object obj) {
         if (obj == null) {
             return;
         }
+        FastBlobSchema originalSchema = rec.getSchema();
+        rec.setSchema(getSerializer(typeName).getFastBlobSchema());
         getSerializer(typeName).serialize(obj, rec);
+        rec.setSchema(originalSchema);
     }
-    
+
     @Override
     public void serializeObject(HashGenericRecord rec, String fieldName, Object obj) {
         serializeObject(rec, fieldName, rec.getSchema().getObjectType(fieldName), obj);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public <T> void serializeList(HashGenericRecord rec, String fieldName, String typeName, Collection<T> list) {
         if (list == null) {
@@ -76,7 +78,7 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
         }
         rec.put(null, "[");
         for (T t : list) {
-            ((NFTypeSerializer) (framework.getSerializer(typeName))).serialize(t, rec);
+            serializeObject(rec, fieldName, typeName, t);
         }
         rec.put(null, "]");
     }
