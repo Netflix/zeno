@@ -21,7 +21,7 @@ import com.netflix.zeno.fastblob.FastBlobFrameworkSerializer;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
-import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
+import com.netflix.zeno.serializer.NFSerializationRecord;
 
 /**
  * An NFSerializationRecord for the FastBlobStateEngine serialization framework.<p/>
@@ -42,7 +42,7 @@ import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
  * @author dkoszewnik
  *
  */
-public class FastBlobSerializationRecord extends  AbstractNFSerializationRecord {
+public class FastBlobSerializationRecord extends NFSerializationRecord {
 
     private final ByteDataBuffer fieldData[];
     private final boolean isNonNull[];
@@ -53,12 +53,12 @@ public class FastBlobSerializationRecord extends  AbstractNFSerializationRecord 
      * Create a new FastBlobSerializationRecord which conforms to the given FastBlobSchema.
      */
     public FastBlobSerializationRecord(FastBlobSchema schema) {
-        super(schema);
         this.fieldData = new ByteDataBuffer[schema.numFields()];
         this.isNonNull = new boolean[schema.numFields()];
         for (int i = 0; i < fieldData.length; i++) {
             fieldData[i] = new ByteDataBuffer(32);
         }
+        setSchema(schema);
     }
 
     /**

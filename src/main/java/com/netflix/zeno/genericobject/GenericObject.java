@@ -17,8 +17,7 @@
  */
 package com.netflix.zeno.genericobject;
 
-import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
-import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
+import com.netflix.zeno.serializer.NFSerializationRecord;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +28,7 @@ import java.util.List;
  * @author dkoszewnik
  *
  */
-public class GenericObject extends AbstractNFSerializationRecord {
+public class GenericObject extends NFSerializationRecord {
 
     private final String type;
     private final CollectionType collectionType;
@@ -37,12 +36,11 @@ public class GenericObject extends AbstractNFSerializationRecord {
     private int collectionPosition;
     private List<Field> fields;
 
-    public GenericObject(FastBlobSchema schema, String objectType, Object actualObject) {
-        this(schema, objectType, CollectionType.NONE, actualObject);
+    public GenericObject(String objectType, Object actualObject) {
+        this(objectType, CollectionType.NONE, actualObject);
     }
 
-    public GenericObject(FastBlobSchema schema, String objectType, CollectionType collectionType, Object actualObject) {
-        super(schema);
+    public GenericObject(String objectType, CollectionType collectionType, Object actualObject) {
         this.type = objectType;
         this.collectionType = collectionType;
         this.actualObject = actualObject;

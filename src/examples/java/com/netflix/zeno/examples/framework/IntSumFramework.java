@@ -37,7 +37,7 @@ public class IntSumFramework extends SerializationFramework {
     }
 
     public <T> int getSum(String type, T obj) {
-        IntSumRecord record = new IntSumRecord(getSerializer(type).getFastBlobSchema());
+        IntSumRecord record = new IntSumRecord();
         getSum(type, obj, record);
         return record.getSum();
     }

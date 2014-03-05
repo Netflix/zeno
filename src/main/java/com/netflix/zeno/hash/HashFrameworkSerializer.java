@@ -17,7 +17,6 @@
  */
 package com.netflix.zeno.hash;
 
-import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.FrameworkSerializer;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
@@ -60,10 +59,8 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
         if (obj == null) {
             return;
         }
-        FastBlobSchema originalSchema = rec.getSchema();
-        rec.setSchema(getSerializer(typeName).getFastBlobSchema());
+
         getSerializer(typeName).serialize(obj, rec);
-        rec.setSchema(originalSchema);
     }
 
     @Override
@@ -91,9 +88,9 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
         }
         rec.put(null, "<");
         NFTypeSerializer elementSerializer = (NFTypeSerializer) (framework.getSerializer(typeName));
-        HashGenericRecord independent = new HashGenericRecord(rec.getSchema(), new HashOrderIndependent());
+        HashGenericRecord independent = new HashGenericRecord(new HashOrderIndependent());
         for (T t : set) {
-            HashGenericRecord dependent = new HashGenericRecord(elementSerializer.getFastBlobSchema(), new HashOrderDependent());
+            HashGenericRecord dependent = new HashGenericRecord(new HashOrderDependent());
             elementSerializer.serialize(t, dependent);
             independent.put(null, dependent.hash());
         }
@@ -110,9 +107,9 @@ public class HashFrameworkSerializer extends FrameworkSerializer<HashGenericReco
         rec.put(null, "{");
         NFTypeSerializer keySerializer = (NFTypeSerializer) (framework.getSerializer(keyTypeName));
         NFTypeSerializer valueSerializer = (NFTypeSerializer) (framework.getSerializer(valueTypeName));
-        HashGenericRecord independent = new HashGenericRecord(rec.getSchema(), new HashOrderIndependent());
+        HashGenericRecord independent = new HashGenericRecord(new HashOrderIndependent());
         for (Map.Entry<K, V> entry : map.entrySet()) {
-            HashGenericRecord dependent = new HashGenericRecord(rec.getSchema(), new HashOrderDependent());
+            HashGenericRecord dependent = new HashGenericRecord(new HashOrderDependent());
             keySerializer.serialize(entry.getKey(), dependent);
             valueSerializer.serialize(entry.getValue(), dependent);
             independent.put(null, dependent.hash());

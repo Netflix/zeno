@@ -275,7 +275,7 @@ public class FastBlobFrameworkSerializer extends FrameworkSerializer<FastBlobSer
     public void serializeObject(FastBlobSerializationRecord rec, String fieldName, Object obj) {
         int position = rec.getSchema().getPosition(fieldName);
         validateField(fieldName, position);
-        serializeObject(rec, position, fieldName, rec.getSchema().getObjectType(fieldName), obj);
+        serializeObject(rec, position, fieldName, rec.getObjectType(fieldName), obj);
     }
 
     /**

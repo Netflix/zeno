@@ -19,12 +19,12 @@ package com.netflix.zeno.flatblob;
 
 import com.netflix.zeno.fastblob.FastBlobFrameworkSerializer;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
+import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
-import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.serializer.AbstractNFSerializationRecord;
+import com.netflix.zeno.serializer.NFSerializationRecord;
 
-public class FlatBlobSerializationRecord extends AbstractNFSerializationRecord {
+public class FlatBlobSerializationRecord extends NFSerializationRecord {
 
     private final ByteDataBuffer fieldData[];
     private final boolean isNonNull[];
@@ -33,12 +33,12 @@ public class FlatBlobSerializationRecord extends AbstractNFSerializationRecord {
      * Create a new FlatBlobSerializationRecord which conforms to the given FastBlobSchema.
      */
     public FlatBlobSerializationRecord(FastBlobSchema schema) {
-        super(schema);
         this.fieldData = new ByteDataBuffer[schema.numFields()];
         this.isNonNull = new boolean[schema.numFields()];
         for (int i = 0; i < fieldData.length; i++) {
             fieldData[i] = new ByteDataBuffer(32);
         }
+        setSchema(schema);
     }
 
     /**

@@ -86,8 +86,8 @@ public class TypeDiffOperation<T> {
     }
 
     private int diffFields(TypeDiff<T> diff, DiffRecord fromRec, DiffRecord toRec, NFTypeSerializer<T> typeSerializer, T toObject, T fromObject) {
-        typeSerializer.doSerialize(toObject, toRec);
-        typeSerializer.doSerialize(fromObject, fromRec);
+        typeSerializer.serialize(toObject, toRec);
+        typeSerializer.serialize(fromObject, fromRec);
 
         int diffScore = incrementDiffFields(diff, toRec, fromRec, toObject, fromObject);
 

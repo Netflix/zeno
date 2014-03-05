@@ -36,7 +36,7 @@ public class GenericObjectSerializationFramework extends SerializationFramework 
     }
 
     public GenericObject serialize(Object obj, String serializerName) {
-        GenericObject diffObject = new GenericObject(getSerializer(serializerName).getFastBlobSchema(), serializerName, obj);
+        GenericObject diffObject = new GenericObject(serializerName, obj);
 
         getSerializer(serializerName).serialize(obj, diffObject);
 

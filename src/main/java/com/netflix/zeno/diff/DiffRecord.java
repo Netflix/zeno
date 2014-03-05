@@ -36,7 +36,7 @@ import com.netflix.zeno.serializer.NFTypeSerializer;
  * @author dkoszewnik
  *
  */
-public class DiffRecord implements NFSerializationRecord {
+public class DiffRecord extends NFSerializationRecord {
 
     private final DiffPropertyPath propertyPath;
     private final DiffRecordValueListMap fieldValues;

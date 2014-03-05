@@ -90,29 +90,27 @@ public class JsonSerializationTest {
         JsonSerializationFramework jsonFramework = new JsonSerializationFramework(typeCSerializerFactory);
         String json = jsonFramework.serializeAsJson("TypeC", createTestTypeC());
 
-        System.out.println(json);
-
         TypeC deserializedTypeC = jsonFramework.deserializeJson("TypeC", json);
 
         Assert.assertEquals(originalTypeC, deserializedTypeC);
     }
-    
+
     @Test
     public void roundTripJsonMap() throws IOException {
         Map<Integer, TypeA> map = new HashMap<Integer, TypeA>();
         map.put(1, new TypeA(0, 1));
         map.put(2, new TypeA(2, 3));
-        
+
         JsonSerializationFramework jsonFramework = new JsonSerializationFramework(new SerializerFactory() {
             public NFTypeSerializer<?>[] createSerializers() {
                 return new NFTypeSerializer<?>[] { new TypeASerializer(), new IntegerSerializer() };
             }
         });
-        
+
         String json = jsonFramework.serializeJsonMap(IntegerSerializer.NAME, "TypeA", map, true);
-        
+
         Map<Integer, TypeA> deserializedMap = jsonFramework.deserializeJsonMap(IntegerSerializer.NAME, "TypeA", json);
-        
+
         Assert.assertEquals(2, deserializedMap.size());
         Assert.assertEquals(new TypeA(0, 1), deserializedMap.get(1));
         Assert.assertEquals(new TypeA(2, 3), deserializedMap.get(2));
