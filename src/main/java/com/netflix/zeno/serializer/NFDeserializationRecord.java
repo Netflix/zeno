@@ -17,9 +17,25 @@
  */
 package com.netflix.zeno.serializer;
 
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+
 /**
  * Empty interface.  This is simply used to identify records which are used by the FrameworkDeserializer to deserialize.
  */
-public interface NFDeserializationRecord {
+public abstract class NFDeserializationRecord {
+
+    private final FastBlobSchema schema;
+
+    public NFDeserializationRecord(FastBlobSchema schema) {
+        this.schema = schema;
+    }
+
+    public FastBlobSchema getSchema() {
+        return schema;
+    }
+
+    public String getObjectType(String fieldName) {
+        return schema.getObjectType(fieldName);
+    }
 
 }

@@ -19,7 +19,7 @@ package com.netflix.zeno.fastblob.record;
 
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
-import com.netflix.zeno.serializer.AbstractNFDeserializationRecord;
+import com.netflix.zeno.serializer.NFDeserializationRecord;
 
 /**
  * Produces a set of offsets into the fields for a specific object.<p/>
@@ -31,7 +31,7 @@ import com.netflix.zeno.serializer.AbstractNFDeserializationRecord;
  * @author dkoszewnik
  *
  */
-public class FastBlobDeserializationRecord extends AbstractNFDeserializationRecord {
+public class FastBlobDeserializationRecord extends NFDeserializationRecord {
 
     private final ByteData byteData;
     private final long fieldPointers[];
