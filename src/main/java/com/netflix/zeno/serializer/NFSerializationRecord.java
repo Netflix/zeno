@@ -20,10 +20,10 @@ package com.netflix.zeno.serializer;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 
 /**
-* An NFSerializationRecord is responsible for tracking state during a SerializationFramework traversal.
-*
-* The minimum state required is the FastBlobSchema for types at a given level.
-*/
+ * An NFSerializationRecord is responsible for tracking state during traversal via a FrameworkSerializer.
+ *
+ * The minimum state to track is a FastBlobSchema for each level in the hierarchy, so that sub-object type names may be interrogated for each field.
+ */
 public abstract class NFSerializationRecord {
 
    private FastBlobSchema schema;

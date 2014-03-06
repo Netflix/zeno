@@ -20,7 +20,9 @@ package com.netflix.zeno.serializer;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 
 /**
- * Empty interface.  This is simply used to identify records which are used by the FrameworkDeserializer to deserialize.
+ * an NFDeserializationRecord is a record used to track state during traversal of an object's serialized representation via a FrameworkDeserializer.
+ *
+ * The minimum state to track is a FastBlobSchema for each level in the hierarchy, so that sub-object type names may be interrogated for each field.
  */
 public abstract class NFDeserializationRecord {
 
