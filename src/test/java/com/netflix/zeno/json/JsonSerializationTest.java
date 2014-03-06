@@ -25,6 +25,9 @@ import com.netflix.zeno.testpojos.TypeASerializer;
 import com.netflix.zeno.testpojos.TypeB;
 import com.netflix.zeno.testpojos.TypeC;
 import com.netflix.zeno.testpojos.TypeCSerializer;
+import com.netflix.zeno.testpojos.TypeD;
+import com.netflix.zeno.testpojos.TypeG;
+import com.netflix.zeno.testpojos.TypeGSerializer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,6 +43,7 @@ public class JsonSerializationTest {
 
     private SerializerFactory typeCSerializerFactory;
     private SerializerFactory typeASerializerFactory;
+    private SerializerFactory typeGSerializerFactory;
 
     @Before
     public void setUp() {
@@ -52,6 +56,12 @@ public class JsonSerializationTest {
         typeASerializerFactory = new SerializerFactory() {
             public NFTypeSerializer<?>[] createSerializers() {
                 return new NFTypeSerializer<?>[] { new TypeASerializer() };
+            }
+        };
+
+        typeGSerializerFactory = new SerializerFactory() {
+            public NFTypeSerializer<?>[] createSerializers() {
+                return new NFTypeSerializer<?>[] { new TypeGSerializer() };
             }
         };
 
@@ -114,6 +124,19 @@ public class JsonSerializationTest {
         Assert.assertEquals(2, deserializedMap.size());
         Assert.assertEquals(new TypeA(0, 1), deserializedMap.get(1));
         Assert.assertEquals(new TypeA(2, 3), deserializedMap.get(2));
+    }
+
+    @Test
+    public void roundTripJsonWithTwoHierarchicalLevels() throws IOException {
+        JsonSerializationFramework jsonFramework = new JsonSerializationFramework(typeGSerializerFactory);
+
+        String json = jsonFramework.serializeAsJson("TypeG", new TypeG(new TypeD(1, new TypeA(2, 3))));
+
+        try {
+            jsonFramework.deserializeJson("TypeG", json);
+        } catch(Exception e) {
+            Assert.fail("Exception was thrown");
+        }
     }
 
     private TypeC createTestTypeC() {
