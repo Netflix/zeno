@@ -38,7 +38,7 @@ public class FastBlobEngineTest {
     }
 
     @Test
-    public void copiesDataFromOneStateToAnother() throws Exception {
+    public void copiesDataFromOneStateEngineToAnother() throws Exception {
         /// initialize data in "from" state
         addData(srcEngine1, 1, true, true);
         addData(srcEngine1, 2, true, false);
@@ -53,7 +53,7 @@ public class FastBlobEngineTest {
     }
     
     @Test
-    public void copiesDataFromOneStateToAnotherWithIgnoreList() throws Exception {
+    public void copiesDataFromOneStateEngineToAnotherWithIgnoreList() throws Exception {
         /// initialize data in "from" state
         addData(srcEngine1, 1, true, true);
         addStringData(srcEngine1, "Two", true, false);
@@ -68,7 +68,7 @@ public class FastBlobEngineTest {
     }
     
     @Test
-    public void copiesDataFromOneStateToAnotherWithIgnoreListContainingUnknownSerializer() throws Exception {
+    public void copiesDataFromOneStateEngineToAnotherWithIgnoreListContainingUnknownSerializer() throws Exception {
         /// initialize data in "from" state
         addData(srcEngine1, 1, true, true);
         addStringData(srcEngine1, "Two", true, false);
@@ -83,7 +83,7 @@ public class FastBlobEngineTest {
     }
     
     @Test
-    public void copiesDataFromMultipleStatesToAnother() throws Exception {
+    public void copiesDataFromMultipleStateEnginesToAnother() throws Exception {
         /// initialize data in "from" state
         addData(srcEngine1, 1, true, true);
         addData(srcEngine1, 2, true, false);
