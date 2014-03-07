@@ -134,7 +134,7 @@ public class FastBlobEngineTest {
                 FastBlobStateEngine testStateEngine = new FastBlobStateEngine(factory);
                 fillDeserializationWithImage(stateEngine, testStateEngine, i);
                 
-                Assert.assertTrue(containsInteger(testStateEngine, data));
+                Assert.assertTrue(containsType(testStateEngine, data, "Integer"));
             }
         }
     }
@@ -147,22 +147,13 @@ public class FastBlobEngineTest {
                 FastBlobStateEngine testStateEngine = new FastBlobStateEngine(factory);
                 fillDeserializationWithImage(stateEngine, testStateEngine, i);
                 
-                Assert.assertFalse(containsString(testStateEngine, data));
+                Assert.assertFalse(containsType(testStateEngine, data, "Strings"));
             }
         }
     }
     
-    private boolean containsString(FastBlobStateEngine stateEngine, String value) {
-        FastBlobTypeDeserializationState<String> typeState = stateEngine.getTypeDeserializationState("Strings");
-        for(String i : typeState) {
-            if(i.equals(value))
-                return true;
-        }
-        return false;
-    }
-    
-    private boolean containsInteger(FastBlobStateEngine stateEngine, Integer value) {
-        FastBlobTypeDeserializationState<Integer> typeState = stateEngine.getTypeDeserializationState("Integer");
+    private <T> boolean containsType(FastBlobStateEngine stateEngine, T value, String serializerName) {
+        FastBlobTypeDeserializationState<Integer> typeState = stateEngine.getTypeDeserializationState(serializerName);
         for(Integer i : typeState) {
             if(i.equals(value))
                 return true;
