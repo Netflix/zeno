@@ -68,6 +68,21 @@ public class FastBlobEngineTest {
     }
     
     @Test
+    public void copiesDataFromOneStateToAnotherWithIgnoreListContainingUnknownSerializer() throws Exception {
+        /// initialize data in "from" state
+        addData(srcEngine1, 1, true, true);
+        addStringData(srcEngine1, "Two", true, false);
+        addData(srcEngine1, 3, false, true);
+
+        srcEngine1.copyTo(destEngine, Arrays.asList("Strings", "Foo"));
+
+        /// assert data was copied
+        assertData(destEngine, 1, true, true);
+        assertNoStringData(destEngine, "Two", true, true);
+        assertData(destEngine, 3, false, true);
+    }
+    
+    @Test
     public void copiesDataFromMultipleStatesToAnother() throws Exception {
         /// initialize data in "from" state
         addData(srcEngine1, 1, true, true);

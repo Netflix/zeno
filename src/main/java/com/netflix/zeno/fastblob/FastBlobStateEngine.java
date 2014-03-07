@@ -333,9 +333,19 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
 
         SimultaneousExecutor executor = new SimultaneousExecutor(4.0d);
 
-        CountDownLatch latch = new CountDownLatch(executor.getMaximumPoolSize() * (getTopLevelSerializers().length - topLevelSerializersToIgnore.size()));
+        List<String> topLevelSerializersToCopy = new ArrayList<String>();
+        for(NFTypeSerializer<?> serializer : getTopLevelSerializers()) {
+            String serializerName = serializer.getName();
+            if(!topLevelSerializersToIgnore.contains(serializerName)) {
+                topLevelSerializersToCopy.add(serializer.getName());
+            }
+        }
+        
+        CountDownLatch latch = new CountDownLatch(executor.getMaximumPoolSize() * topLevelSerializersToCopy.size());
 
-        fillSerializationStates(otherStateEngine, topLevelSerializersToIgnore, executor, latch);
+        for(String serializerizerName : topLevelSerializersToCopy) {
+            executor.submit(getFillSerializationStateRunnable(otherStateEngine, serializerizerName, executor, latch));
+        }
 
         try {
             latch.await();
@@ -343,16 +353,6 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
             ie.printStackTrace();
         }
         executor.shutdown();
-    }
-
-    private void fillSerializationStates(FastBlobStateEngine otherStateEngine, Collection<String> topLevelSerializersToIgnore, 
-            final SimultaneousExecutor executor, CountDownLatch latch) {
-        for(NFTypeSerializer<?> serializer : getTopLevelSerializers()) {
-            String serializerName = serializer.getName();
-            if(!topLevelSerializersToIgnore.contains(serializerName)) {
-                executor.submit(getFillSerializationStateRunnable(otherStateEngine, serializerName, executor, latch));
-            }
-        }
     }
 
     private Runnable getFillSerializationStateRunnable(final FastBlobStateEngine otherStateEngine,
