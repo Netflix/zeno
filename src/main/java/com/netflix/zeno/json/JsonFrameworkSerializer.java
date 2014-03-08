@@ -95,8 +95,7 @@ public class JsonFrameworkSerializer extends FrameworkSerializer<JsonWriteGeneri
             record.getGenerator().writeStartObject();
 
             NFTypeSerializer fieldSerializer = getSerializer(typeName);
-            JsonWriteGenericRecord fieldRecord = new JsonWriteGenericRecord(fieldSerializer.getFastBlobSchema(), 
-                    record.getGenerator());
+            JsonWriteGenericRecord fieldRecord = new JsonWriteGenericRecord(record.getGenerator());
             fieldSerializer.serialize(obj, fieldRecord);
             record.getGenerator().writeEndObject();
         } catch (Exception ex) {
@@ -128,9 +127,8 @@ public class JsonFrameworkSerializer extends FrameworkSerializer<JsonWriteGeneri
             }
             record.getGenerator().writeArrayFieldStart(fieldName);
             NFTypeSerializer elemSerializer = getSerializer(typeName);
-            JsonWriteGenericRecord elemRecord = new JsonWriteGenericRecord(elemSerializer.getFastBlobSchema(), 
-                    record.getGenerator());
-            
+            JsonWriteGenericRecord elemRecord = new JsonWriteGenericRecord(record.getGenerator());
+
             for (T t : obj) {
                 record.getGenerator().writeStartObject();
                 elemSerializer.serialize(t, elemRecord);

@@ -35,8 +35,8 @@ public class HashSerializationFramework extends SerializationFramework
 
     public <T> byte[] getHash(String objectType, T object) {
         NFTypeSerializer<T> serializer = getSerializer(objectType);
-        HashGenericRecord rec = new HashGenericRecord(serializer.getFastBlobSchema());
-        serializer.doSerialize(object, rec);
+        HashGenericRecord rec = new HashGenericRecord();
+        serializer.serialize(object, rec);
         return rec.hash();
     }
 }

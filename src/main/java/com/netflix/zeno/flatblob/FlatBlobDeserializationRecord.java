@@ -18,12 +18,12 @@
 package com.netflix.zeno.flatblob;
 
 import com.netflix.zeno.fastblob.record.ByteData;
+import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
-import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.serializer.AbstractNFDeserializationRecord;
+import com.netflix.zeno.serializer.NFDeserializationRecord;
 
-public class FlatBlobDeserializationRecord extends AbstractNFDeserializationRecord {
+public class FlatBlobDeserializationRecord extends NFDeserializationRecord {
 
     private final long fieldPointers[];
     private ByteData byteData;

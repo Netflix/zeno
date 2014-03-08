@@ -17,7 +17,6 @@
  */
 package com.netflix.zeno.diff;
 
-import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.FrameworkSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
 
@@ -58,14 +57,10 @@ public class DiffFrameworkSerializer extends FrameworkSerializer<DiffRecord> {
             return;
         }
 
-        FastBlobSchema objectSchema = rec.getSchema();
-        FastBlobSchema subTypeSchema = getSerializer(typeName).getFastBlobSchema();
-        rec.setSchema(subTypeSchema);
-
         rec.serializeObject(fieldName);
+
         getSerializer(typeName).serialize(obj, rec);
 
-        rec.setSchema(objectSchema);
         rec.finishedObject();
     }
 

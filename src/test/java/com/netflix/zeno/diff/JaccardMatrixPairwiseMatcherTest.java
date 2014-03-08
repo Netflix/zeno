@@ -64,7 +64,7 @@ public class JaccardMatrixPairwiseMatcherTest {
         DiffRecord rec = new DiffRecord();
         rec.setSchema(serializer.getFastBlobSchema());
         rec.setTopLevelSerializerName(serializerName);
-        serializer.doSerialize(obj, rec);
+        serializer.serialize(obj, rec);
 
         objs.add(new Field("obj", obj));
         recs.add(rec);

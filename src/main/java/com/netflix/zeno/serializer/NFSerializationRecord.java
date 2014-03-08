@@ -17,9 +17,26 @@
  */
 package com.netflix.zeno.serializer;
 
-/**
- * Empty interface.  This is simply used to identify records which are used by the FrameworkSerializer to serialize.
- */
-public interface NFSerializationRecord {
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 
+/**
+ * An NFSerializationRecord is responsible for tracking state during traversal via a FrameworkSerializer.
+ *
+ * The minimum state to track is a FastBlobSchema for each level in the hierarchy, so that sub-object type names may be interrogated for each field.
+ */
+public abstract class NFSerializationRecord {
+
+   private FastBlobSchema schema;
+
+   public void setSchema(FastBlobSchema schema) {
+       this.schema = schema;
+   }
+
+   public FastBlobSchema getSchema() {
+       return schema;
+   }
+
+   public String getObjectType(String schemaField) {
+       return schema.getObjectType(schemaField);
+   }
 }

@@ -32,9 +32,9 @@ import java.util.Map;
  *
  * Serializes and deserializes JSON based on object instance contents.<p/>
  *
- * Usage is detailed in the <a href="https://github.com/Netflix/zeno/wiki">documentation</a> 
+ * Usage is detailed in the <a href="https://github.com/Netflix/zeno/wiki">documentation</a>
  * on the page <a href="https://github.com/Netflix/zeno/wiki/Creating-json-data">creating json data</a>.<p/>
- * 
+ *
  * Please see JSONSerializationExample in the source folder src/examples/java for example usage.
  *
  * @author tvaliulin
@@ -55,7 +55,7 @@ public class JsonSerializationFramework extends SerializationFramework {
     public <T> String serializeAsJson(String type, T object, boolean pretty) {
         StringWriter writer = new StringWriter();
 
-        JsonWriteGenericRecord record = new JsonWriteGenericRecord(getSerializer(type).getFastBlobSchema(), writer, pretty);
+        JsonWriteGenericRecord record = new JsonWriteGenericRecord(writer, pretty);
 
         record.open();
         getSerializer(type).serialize(object, record);
@@ -68,13 +68,13 @@ public class JsonSerializationFramework extends SerializationFramework {
     public <K, V> String serializeJsonMap(String keyType, String valueType, Map<K, V> map, boolean pretty) {
         NFTypeSerializer<K> keySerializer = getSerializer(keyType);
         NFTypeSerializer<V> valueSerializer = getSerializer(valueType);
-        
+
         MapSerializer<K, V> mapSerializer = new MapSerializer<K, V>(keyType + "To" + valueType + "Map", keySerializer, valueSerializer);
         mapSerializer.setSerializationFramework(this);
-        
+
         StringWriter writer = new StringWriter();
-        JsonWriteGenericRecord record = new JsonWriteGenericRecord(mapSerializer.getFastBlobSchema(), writer, pretty);
-        
+        JsonWriteGenericRecord record = new JsonWriteGenericRecord(writer, pretty);
+
         record.open();
         mapSerializer.serialize(map, record);
         record.close();
@@ -92,14 +92,14 @@ public class JsonSerializationFramework extends SerializationFramework {
 
         return object;
     }
-    
+
     public <K, V> Map<K, V> deserializeJsonMap(String keyType, String valueType, String json) throws IOException {
         NFTypeSerializer<K> keySerializer = getSerializer(keyType);
         NFTypeSerializer<V> valueSerializer = getSerializer(valueType);
-        
+
         MapSerializer<K, V> mapSerializer = new MapSerializer<K, V>(keyType + "To" + valueType + "Map", keySerializer, valueSerializer);
         mapSerializer.setSerializationFramework(this);
-        
+
         JsonNode node = new ObjectMapper().readTree(json);
         JsonReadGenericRecord readRecord = new JsonReadGenericRecord(mapSerializer.getFastBlobSchema(), node);
         return mapSerializer.deserialize(readRecord);

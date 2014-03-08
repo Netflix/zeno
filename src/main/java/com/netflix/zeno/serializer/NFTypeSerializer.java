@@ -50,14 +50,18 @@ public abstract class NFTypeSerializer<T> {
     }
 
     public void serialize(T value, NFSerializationRecord rec) {
+        /// automatically track the schemas.
+        FastBlobSchema existingSchema = rec.getSchema();
+        rec.setSchema(getFastBlobSchema());
         doSerialize(value, rec);
+        rec.setSchema(existingSchema);
     }
 
     public T deserialize(NFDeserializationRecord rec) {
         return doDeserialize(rec);
     }
 
-    public abstract void doSerialize(T value, NFSerializationRecord rec);
+    protected abstract void doSerialize(T value, NFSerializationRecord rec);
 
     protected abstract T doDeserialize(NFDeserializationRecord rec);
 
