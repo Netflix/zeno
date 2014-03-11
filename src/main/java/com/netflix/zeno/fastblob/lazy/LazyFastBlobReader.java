@@ -130,6 +130,11 @@ public class LazyFastBlobReader {
 
             byteData.incrementStreamPosition(objectSize);
         }
+
+        if(typeDeserializationState != null) {
+            typeDeserializationState.setFastBlobSchema(schema);
+            typeDeserializationState.finalizePointers();
+        }
     }
 
 }

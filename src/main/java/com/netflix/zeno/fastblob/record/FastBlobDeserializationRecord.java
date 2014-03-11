@@ -82,10 +82,25 @@ public class FastBlobDeserializationRecord extends NFDeserializationRecord {
     }
 
     /**
+     * get the offset into the byte data for the field at the given fieldPosition.
+     */
+    public long getPosition(int fieldPosition) {
+        return fieldPointers[fieldPosition];
+    }
+
+    /**
      * get the length of the specified field for this record
      */
     public int getFieldLength(String fieldName) {
         int fieldPosition = getSchema().getPosition(fieldName);
+
+        return getFieldLength(fieldPosition);
+    }
+
+    /**
+     * Get the length of the field at the specified fieldPosition for this record
+     */
+    public int getFieldLength(int fieldPosition) {
         FieldType fieldType = getSchema().getFieldType(fieldPosition);
 
         return fieldLength(fieldPointers[fieldPosition], fieldType);

@@ -92,7 +92,7 @@ public class MinimizedUnmodifiableCollections {
             return Collections.emptyList();
         }
         if (list.size() == 1) {
-            return Collections.singletonList(list.iterator().next());
+            return Collections.singletonList(list.get(0));
         }
         return list;
     }

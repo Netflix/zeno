@@ -23,7 +23,7 @@ import static com.netflix.zeno.fastblob.FastBlobFrameworkSerializer.NULL_FLOAT_B
 import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
+import com.netflix.zeno.fastblob.state.TypeDeserializationState;
 import com.netflix.zeno.serializer.FrameworkDeserializer;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.util.collections.CollectionImplementation;
@@ -32,6 +32,7 @@ import com.netflix.zeno.util.collections.builder.ListBuilder;
 import com.netflix.zeno.util.collections.builder.MapBuilder;
 import com.netflix.zeno.util.collections.builder.SetBuilder;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -303,7 +304,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
 
         int ordinal = VarInt.readVInt(byteData, fieldPosition);
 
-        FastBlobTypeDeserializationState<T> deserializationState = ((FastBlobStateEngine) framework).getTypeDeserializationState(typeName);
+        TypeDeserializationState<T> deserializationState = ((FastBlobSerializationFramework) framework).getTypeDeserializationState(typeName);
 
         return deserializationState.get(ordinal);
     }
@@ -330,7 +331,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
         ListBuilder<T> list = minimizedCollections.createListBuilder();
         list.builderInit(numElements);
 
-        FastBlobTypeDeserializationState<T> elementDeserializationState = ((FastBlobStateEngine) framework).getTypeDeserializationState(itemSerializer.getName());
+        TypeDeserializationState<T> elementDeserializationState = ((FastBlobSerializationFramework) framework).getTypeDeserializationState(itemSerializer.getName());
 
         for(int i=0;i<numElements;i++) {
             if(VarInt.readVNull(byteData, fieldPosition)) {
@@ -346,7 +347,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
             }
         }
 
-        return minimizedCollections.minimizeList(list.builderFinish());
+        return list.builderFinish();
     }
 
     /**
@@ -371,7 +372,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
         SetBuilder<T> set = minimizedCollections.createSetBuilder();
         set.builderInit(numElements);
 
-        FastBlobTypeDeserializationState<T> elementDeserializationState = ((FastBlobStateEngine) framework).getTypeDeserializationState(itemSerializer.getName());
+        TypeDeserializationState<T> elementDeserializationState = ((FastBlobSerializationFramework) framework).getTypeDeserializationState(itemSerializer.getName());
 
         int previousOrdinal = 0;
 
@@ -420,8 +421,8 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
         MapBuilder<K, V> map = minimizedCollections.createMapBuilder();
         map.builderInit(numElements);
 
-        FastBlobTypeDeserializationState<K> keyDeserializationState = ((FastBlobStateEngine) framework).getTypeDeserializationState(keySerializer.getName());
-        FastBlobTypeDeserializationState<V> valueDeserializationState = ((FastBlobStateEngine) framework).getTypeDeserializationState(valueSerializer.getName());
+        TypeDeserializationState<K> keyDeserializationState = ((FastBlobSerializationFramework) framework).getTypeDeserializationState(keySerializer.getName());
+        TypeDeserializationState<V> valueDeserializationState = ((FastBlobSerializationFramework) framework).getTypeDeserializationState(valueSerializer.getName());
 
         populateMap(byteData, fieldPosition, numElements, map, keyDeserializationState, valueDeserializationState);
 
@@ -452,8 +453,8 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
         MapBuilder<K, V> map = minimizedCollections.createSortedMapBuilder();
         map.builderInit(numElements);
 
-        FastBlobTypeDeserializationState<K> keyDeserializationState = ((FastBlobStateEngine) framework).getTypeDeserializationState(keySerializer.getName());
-        FastBlobTypeDeserializationState<V> valueDeserializationState = ((FastBlobStateEngine) framework).getTypeDeserializationState(valueSerializer.getName());
+        TypeDeserializationState<K> keyDeserializationState = ((FastBlobSerializationFramework) framework).getTypeDeserializationState(keySerializer.getName());
+        TypeDeserializationState<V> valueDeserializationState = ((FastBlobSerializationFramework) framework).getTypeDeserializationState(valueSerializer.getName());
 
         populateMap(byteData, fieldPosition, numElements, map, keyDeserializationState, valueDeserializationState);
 
@@ -461,7 +462,7 @@ public class FastBlobFrameworkDeserializer extends FrameworkDeserializer<FastBlo
     }
 
 
-    private <K, V> void populateMap(ByteData byteData, long fieldPosition, int numElements, MapBuilder<K, V> mapToPopulate, FastBlobTypeDeserializationState<K> keyState, FastBlobTypeDeserializationState<V> valueState) {
+    private <K, V> void populateMap(ByteData byteData, long fieldPosition, int numElements, MapBuilder<K, V> mapToPopulate, TypeDeserializationState<K> keyState, TypeDeserializationState<V> valueState) {
         int previousValueOrdinal = 0;
 
         for(int i=0;i<numElements;i++) {

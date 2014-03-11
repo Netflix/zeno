@@ -119,6 +119,8 @@ public class JsonSerializationTest {
 
         String json = jsonFramework.serializeJsonMap(IntegerSerializer.NAME, "TypeA", map, true);
 
+        System.out.println(json);
+
         Map<Integer, TypeA> deserializedMap = jsonFramework.deserializeJsonMap(IntegerSerializer.NAME, "TypeA", json);
 
         Assert.assertEquals(2, deserializedMap.size());

@@ -99,14 +99,18 @@ public class FastBlobSerializationRecord extends NFSerializationRecord {
                     VarInt.writeVInt(buf, (int)fieldData[i].length());
                 fieldData[i].copyTo(buf);
             } else {
-                if(getSchema().getFieldType(i) == FieldType.FLOAT) {
-                    FastBlobFrameworkSerializer.writeNullFloat(buf);
-                } else if(getSchema().getFieldType(i) == FieldType.DOUBLE) {
-                    FastBlobFrameworkSerializer.writeNullDouble(buf);
-                } else {
-                    VarInt.writeVNull(buf);
-                }
+                writeNullField(buf, getSchema(), i);
             }
+        }
+    }
+
+    public static void writeNullField(ByteDataBuffer buf, FastBlobSchema schema, int schemaFieldPosition) {
+        if(schema.getFieldType(schemaFieldPosition) == FieldType.FLOAT) {
+            FastBlobFrameworkSerializer.writeNullFloat(buf);
+        } else if(schema.getFieldType(schemaFieldPosition) == FieldType.DOUBLE) {
+            FastBlobFrameworkSerializer.writeNullDouble(buf);
+        } else {
+            VarInt.writeVNull(buf);
         }
     }
 
