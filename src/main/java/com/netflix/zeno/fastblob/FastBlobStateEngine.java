@@ -417,7 +417,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
         fillDeserializationStatesFromSerializedData(Collections.<String> emptyList());
     }
     
-    public void fillDeserializationStatesFromSerializedData(List<String> includeSerializers) {
+    public void fillDeserializationStatesFromSerializedData(Collection<String> includeSerializers) {
         for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
             String serializer = serializationState.getSchema().getName();
             if(includeSerializers.contains(serializer)) {
