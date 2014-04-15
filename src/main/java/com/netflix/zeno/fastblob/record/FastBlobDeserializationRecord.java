@@ -42,6 +42,10 @@ public class FastBlobDeserializationRecord extends NFDeserializationRecord {
         this.byteData = byteData;
     }
 
+    public long position() {
+        return fieldPointers[0];
+    }
+    
     /**
      * Position this record to the byte at index <code>objectBeginOffset</code>.
      *

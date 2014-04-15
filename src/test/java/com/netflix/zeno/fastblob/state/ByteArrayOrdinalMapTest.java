@@ -167,9 +167,9 @@ public class ByteArrayOrdinalMapTest {
         shutdown(executor);
 
         /// serialize then deserialize the map
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        /*ByteArrayOutputStream os = new ByteArrayOutputStream();
         map.serializeTo(os);
-        ByteArrayOrdinalMap deserializedMap = ByteArrayOrdinalMap.deserializeFrom(new ByteArrayInputStream(os.toByteArray()));
+        ByteArrayOrdinalMap deserializedMap = ByteArrayOrdinalMap.deserializeFrom(new ByteArrayInputStream(os.toByteArray()));*/
 
         ByteDataBuffer buf = new ByteDataBuffer();
 
@@ -180,7 +180,7 @@ public class ByteArrayOrdinalMapTest {
             buf.reset();
             VarInt.writeVLong(buf, value.longValue());
 
-            int actual = deserializedMap.getOrAssignOrdinal(buf);
+            int actual = map.getOrAssignOrdinal(buf);
 
             Assert.assertEquals(actual, expected.intValue());
         }

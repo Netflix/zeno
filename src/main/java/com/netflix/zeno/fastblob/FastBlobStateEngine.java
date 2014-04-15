@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -317,6 +318,26 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
             }
         }
     }
+    
+    /**
+     * Copy the serialization states into the provided State Engine.<p/>
+     *
+     * This is used during FastBlobStateEngine combination.<p/>
+     *
+     * Thread safety:  This cannot be safely called concurrently with add() operations to *this* state engine.<p/>
+     *
+     * @param otherStateEngine
+     * @param list 
+     */
+    public void copySerializationStatesTo(FastBlobStateEngine otherStateEngine, List<String> ignoreSerializers) {
+        ConcurrentHashMap<String, Map<Integer, Integer>> stateOrdinalMappers = new ConcurrentHashMap<String, Map<Integer, Integer>>(); 
+        for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
+            String serializerName = serializationState.serializer.getName();
+            if(!ignoreSerializers.contains(serializerName)) {
+                serializationState.copyTo(otherStateEngine.getTypeSerializationState(serializerName), stateOrdinalMappers);
+            }
+        }
+    }    
 
     /*
      * Copy all the serialization states to provided state engine
@@ -392,9 +413,16 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
      *
      * @param otherStateEngineSystem.out.println("#######Copied Serialization states in " + (System.currentTimeMillis() - startTime) + "ms");
      */
-    private void fillDeserializationStatesFromSerializedData() {
+    public void fillDeserializationStatesFromSerializedData() {
+        fillDeserializationStatesFromSerializedData(Collections.<String> emptyList());
+    }
+    
+    public void fillDeserializationStatesFromSerializedData(List<String> includeSerializers) {
         for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
-            serializationState.fillDeserializationState(getTypeDeserializationState(serializationState.getSchema().getName()));
+            String serializer = serializationState.getSchema().getName();
+            if(includeSerializers.contains(serializer)) {
+                serializationState.fillDeserializationState(getTypeDeserializationState(serializer));
+            }
         }
     }
 

@@ -3,6 +3,7 @@ package com.netflix.zeno.fastblob;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -59,7 +60,7 @@ public class FastBlobEngineTest {
         addStringData(srcEngine1, "Two", true, false);
         addData(srcEngine1, 3, false, true);
 
-        srcEngine1.copyTo(destEngine, Arrays.asList("Strings"));
+        srcEngine1.copySerializationStatesTo(destEngine, Arrays.asList("Strings"));
 
         /// assert data was copied
         assertData(destEngine, 1, true, true);
@@ -74,7 +75,7 @@ public class FastBlobEngineTest {
         addStringData(srcEngine1, "Two", true, false);
         addData(srcEngine1, 3, false, true);
 
-        srcEngine1.copyTo(destEngine, Arrays.asList("Strings", "Foo"));
+        srcEngine1.copySerializationStatesTo(destEngine, Arrays.asList("Strings", "Foo"));
 
         /// assert data was copied
         assertData(destEngine, 1, true, true);
@@ -130,7 +131,7 @@ public class FastBlobEngineTest {
 //    }    
 
     private void copyEngine(FastBlobStateEngine srcStateEngine, FastBlobStateEngine destStateEngine) {
-        srcStateEngine.copyTo(destStateEngine);
+        srcStateEngine.copySerializationStatesTo(destStateEngine, Collections.<String> emptyList());
     }
 
     private void addData(FastBlobStateEngine stateEngine, Integer data, boolean... images) {
@@ -149,7 +150,7 @@ public class FastBlobEngineTest {
                 FastBlobStateEngine testStateEngine = new FastBlobStateEngine(factory);
                 fillDeserializationWithImage(stateEngine, testStateEngine, i);
                 
-                Assert.assertTrue(containsType(testStateEngine, data, "Integer"));
+                Assert.assertTrue(containsData(testStateEngine, data, "Integer"));
             }
         }
     }
@@ -162,12 +163,12 @@ public class FastBlobEngineTest {
                 FastBlobStateEngine testStateEngine = new FastBlobStateEngine(factory);
                 fillDeserializationWithImage(stateEngine, testStateEngine, i);
                 
-                Assert.assertFalse(containsType(testStateEngine, data, "Strings"));
+                Assert.assertFalse(containsData(testStateEngine, data, "Strings"));
             }
         }
     }
     
-    private <T> boolean containsType(FastBlobStateEngine stateEngine, T value, String serializerName) {
+    private <T> boolean containsData(FastBlobStateEngine stateEngine, T value, String serializerName) {
         FastBlobTypeDeserializationState<Integer> typeState = stateEngine.getTypeDeserializationState(serializerName);
         for(Integer i : typeState) {
             if(i.equals(value))

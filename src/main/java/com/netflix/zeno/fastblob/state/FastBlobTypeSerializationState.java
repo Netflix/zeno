@@ -21,6 +21,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.netflix.zeno.fastblob.FastBlobStateEngine;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
@@ -144,6 +146,21 @@ public class FastBlobTypeSerializationState<T> {
 
         return ordinal;
     }
+    
+    /**
+     * Copy the state data into the provided FastBlobTypeSerializationState.<p/>
+     *
+     * This is used during FastBlobStateEngine combination.<p/>
+     *
+     * Thread safety:  This cannot be safely called concurrently with add() operations to *this* state engine.<p/>
+     *
+     * @param otherState
+     * @param stateOrdinalMappers 
+     */
+    public void copyTo(FastBlobTypeSerializationState<?> otherState, ConcurrentHashMap<String, Map<Integer, Integer>> stateOrdinalMappers) {
+        ordinalMap.copySerializedObjectData(otherState, imageMemberships, stateOrdinalMappers);
+    }
+    
 
     /**
      * Fill the data from this serialization state into the provided FastBlobTypeDeserializationState<p/>

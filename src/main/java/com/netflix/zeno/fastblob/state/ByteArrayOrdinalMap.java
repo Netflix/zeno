@@ -21,8 +21,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLongArray;
 
+import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.SegmentedByteArray;
@@ -382,7 +386,61 @@ public class ByteArrayOrdinalMap {
         }
 
         executor.awaitUninterruptibly();
- }
+    }
+    
+    /**
+     * Copy all of the data from this ByteArrayOrdinalMap to the provided FastBlobTypeSerializationState.
+     * 
+     * Image memberships for each ordinal are determined via the provided array of ThreadSafeBitSets.
+     * 
+     * @param destState
+     * @param imageMemberships
+     * @param stateOrdinalMappers 
+     */
+    void copySerializedObjectData(final FastBlobTypeSerializationState<?> destState, final ThreadSafeBitSet imageMemberships[], 
+            final ConcurrentHashMap<String, Map<Integer, Integer>> stateOrdinalMappers) {
+        stateOrdinalMappers.putIfAbsent(destState.getSchema().getName(), new ConcurrentHashMap<Integer, Integer>());
+        SimultaneousExecutor executor = new SimultaneousExecutor(8);
+        final int numThreads = executor.getMaximumPoolSize();
+
+        for(int i=0;i<numThreads;i++) {
+            final int threadNumber = i;
+            executor.submit( new Runnable() {
+                public void run() {
+                    final ByteDataBuffer mappedBuffer = new ByteDataBuffer();
+                    final FastBlobDeserializationRecord rec = new FastBlobDeserializationRecord(destState.getSchema(), byteData.getUnderlyingArray());
+                    final boolean imageMembershipsFlags[] = new boolean[imageMemberships.length];
+                    final OrdinalRemapper remapper = new OrdinalRemapper(stateOrdinalMappers);
+                    
+                    for(int j = threadNumber;j < pointersAndOrdinals.length();j += numThreads) {
+                        long pointerAndOrdinal = pointersAndOrdinals.get(j);
+                        if(pointerAndOrdinal != EMPTY_BUCKET_VALUE) {
+                            long pointer = pointerAndOrdinal & 0xFFFFFFFFFL;
+                            int ordinal = (int)(pointerAndOrdinal >> 36);
+                            
+                            for(int imageIndex=0;imageIndex<imageMemberships.length;imageIndex++) {
+                                imageMembershipsFlags[imageIndex] = imageMemberships[imageIndex].get(ordinal);
+                            }
+                            
+                            int sizeOfData = VarInt.readVInt(byteData.getUnderlyingArray(), pointer);
+                            pointer += VarInt.sizeOfVInt(sizeOfData);
+                            
+                            rec.position(pointer);
+                            remapper.remapOrdinals(rec, mappedBuffer);
+                            
+                            int newOrdinal = destState.addData(mappedBuffer, imageMembershipsFlags);
+                            stateOrdinalMappers.get(destState.getSchema().getName()).put(ordinal, newOrdinal);
+                            
+                            mappedBuffer.reset();
+                        }
+                    }
+                }
+            });
+        }
+        
+        executor.awaitUninterruptibly();
+    }
+    
 
     public int maxOrdinal() {
         int maxOrdinal = 0;

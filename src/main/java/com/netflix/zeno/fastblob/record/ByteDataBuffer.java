@@ -58,6 +58,21 @@ public class ByteDataBuffer {
         other.buf.copy(buf, 0, other.position, position);
         other.position += position;
     }
+    
+    public void copyFrom(ByteDataBuffer other) {
+        buf.copy(other.buf, 0, position, other.position);
+        position += other.position;
+    }
+    
+    public void copyFrom(ByteData data, long startPosition, int length) {
+        buf.copy(data, startPosition, position, length);
+        position += length;
+    }
+
+    public void copyFrom(SegmentedByteArray data, long startPosition, int length) {
+        buf.copy(data, startPosition, position, length);
+        position += length;
+    }    
 
     public byte get(long index) {
         return buf.get(index);
