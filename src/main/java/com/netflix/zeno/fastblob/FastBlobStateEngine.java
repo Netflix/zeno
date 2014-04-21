@@ -327,9 +327,9 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
      * Thread safety:  This cannot be safely called concurrently with add() operations to *this* state engine.<p/>
      *
      * @param otherStateEngine
-     * @param list 
+     * @param ignoreSerializers 
      */
-    public void copySerializationStatesTo(FastBlobStateEngine otherStateEngine, List<String> ignoreSerializers) {
+    public void copySerializationStatesTo(FastBlobStateEngine otherStateEngine, Collection<String> ignoreSerializers) {
         ConcurrentHashMap<String, Map<Integer, Integer>> stateOrdinalMappers = new ConcurrentHashMap<String, Map<Integer, Integer>>(); 
         for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
             String serializerName = serializationState.serializer.getName();
@@ -347,7 +347,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
     }
 
     /*
-     * Copy serialization states whose serializer's name doesn't match the ones provided in the ignore list
+     * Copy serialization states whose serializer's name doesn't match the ones provided in the ignore collection
      */
     public void copyTo(FastBlobStateEngine otherStateEngine, Collection<String> topLevelSerializersToIgnore) {
         fillDeserializationStatesFromSerializedData();
@@ -411,12 +411,21 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
      *
      * This is used during FastBlobStateEngine combination.<p/>
      *
-     * @param otherStateEngineSystem.out.println("#######Copied Serialization states in " + (System.currentTimeMillis() - startTime) + "ms");
      */
     public void fillDeserializationStatesFromSerializedData() {
-        fillDeserializationStatesFromSerializedData(Collections.<String> emptyList());
+        for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
+            String serializer = serializationState.getSchema().getName();
+            serializationState.fillDeserializationState(getTypeDeserializationState(serializer));
+        }
     }
-    
+
+    /**
+     * Explode the data from the serialization states into the deserialization states for the specified serializers.<p/>
+     *
+     * This is used during FastBlobStateEngine combination.<p/>
+     *
+     * @param includeSerializers
+     */
     public void fillDeserializationStatesFromSerializedData(Collection<String> includeSerializers) {
         for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
             String serializer = serializationState.getSchema().getName();

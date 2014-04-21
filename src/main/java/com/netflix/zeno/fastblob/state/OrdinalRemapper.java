@@ -191,7 +191,7 @@ public class OrdinalRemapper {
             readBytesCounter += sizeOfKeyOrdinal + sizeOfValueOrdinalDelta;
         }
 
-        Arrays.sort(mapEntries);
+        Arrays.sort(mapEntries, 0, readMapEntries);
 
         currentValueOrdinal = 0;
 

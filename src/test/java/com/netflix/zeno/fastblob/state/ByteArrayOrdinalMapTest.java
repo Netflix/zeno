@@ -126,9 +126,9 @@ public class ByteArrayOrdinalMapTest {
 
     @Test
     public void testThreadSafety() throws IOException {
-        int numThreads = 10;
-        final int numUniqueValues = 10000;
-        final int numIterationsPerThread = 10000;
+        int numThreads = 100;
+        final int numUniqueValues = 1000000;
+        final int numIterationsPerThread = 200000;
 
         ThreadPoolExecutor executor = new ThreadPoolExecutor(numThreads, numThreads, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 

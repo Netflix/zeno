@@ -1,6 +1,7 @@
 package com.netflix.zeno.fastblob;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +20,7 @@ import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.schema.FieldDefinition;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.MapFieldDefinition;
 import com.netflix.zeno.fastblob.record.schema.TypedFieldDefinition;
 import com.netflix.zeno.fastblob.state.OrdinalRemapper;
 import com.netflix.zeno.serializer.NFTypeSerializer;
@@ -94,6 +96,8 @@ public class OrdinalRemapperTest {
         hashMap.put(4, 0);
         hashMap.put(5, 6);
         hashMap.put(6, 5);
+        
+        
 
         ordinalRemapper = new OrdinalRemapper(stateOrdinalMappers);
     }
@@ -141,9 +145,6 @@ public class OrdinalRemapperTest {
             
             int numElements = rand.nextInt(1000);
             
-            
-            Map<String, Map<Integer, Integer>> ordinalMapping = new HashMap<String, Map<Integer, Integer>>();
-            
             ByteDataBuffer buf = new ByteDataBuffer();
 
             Map<Integer, Integer> elementOrdinalMap = new HashMap<Integer, Integer>();
@@ -151,21 +152,8 @@ public class OrdinalRemapperTest {
                 elementOrdinalMap.put(j, rand.nextInt(10000));
                 VarInt.writeVInt(buf, j);
             }
-            
-            ordinalMapping.put("ElementType", elementOrdinalMap);
-            
 
-            ByteDataBuffer fromDataBuffer = new ByteDataBuffer();
-            VarInt.writeVInt(fromDataBuffer, 100);
-            VarInt.writeVInt(fromDataBuffer, (int)buf.length());
-            
-            fromDataBuffer.copyFrom(buf);
-            
-            FastBlobDeserializationRecord rec = new FastBlobDeserializationRecord(schema, fromDataBuffer.getUnderlyingArray());
-            rec.position(0);
-            
-            ByteDataBuffer toDataBuffer = new ByteDataBuffer();
-            new OrdinalRemapper(ordinalMapping).remapOrdinals(rec, toDataBuffer);
+            ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, elementOrdinalMap);
             
             Assert.assertEquals(100, VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 0));
             
@@ -180,11 +168,143 @@ public class OrdinalRemapperTest {
                 int encoded = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), position);
                 position += VarInt.sizeOfVInt(encoded);
                 Assert.assertEquals(encoded, elementOrdinalMap.get(counter).intValue());
-                System.out.println(counter + ": " + elementOrdinalMap.get(counter).intValue());
                 counter++;
             }
         }
     }
+    
+    @Test
+    public void remapsMapFieldOrdinals() {
+        FastBlobSchema schema = new FastBlobSchema("Test", 2);
+        schema.addField("intField", new FieldDefinition(FieldType.INT));
+        schema.addField("mapField", new MapFieldDefinition("ElementType", "ElementType"));
+        
+        Random rand = new Random();
+        
+        for(int i=0;i<1000;i++) {
+            
+            int numElements = rand.nextInt(1000);
+            
+            ByteDataBuffer buf = new ByteDataBuffer();
+
+            BitSet usedMappings = new BitSet();
+            
+            Map<Integer, Integer> expectedMap = new HashMap<Integer, Integer>();
+            
+            Map<Integer, Integer> elementOrdinalMap = new HashMap<Integer, Integer>();
+            for(int j=0;j<numElements;j++) {
+                
+                int mapping = getRandomMapping(rand, usedMappings);
+                
+                elementOrdinalMap.put(j, mapping);
+                VarInt.writeVInt(buf, j);
+                VarInt.writeVInt(buf, j == 0 ? 0 : 1);
+                
+                expectedMap.put(mapping, mapping);
+            }
+
+            ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, elementOrdinalMap);
+            
+            Assert.assertEquals(100, VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 0));
+            
+            Map<Integer, Integer> actualMap = new HashMap<Integer, Integer>();
+            
+            int listDataSize = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 1);
+
+            long position = VarInt.sizeOfVInt(listDataSize) + 1;
+            long endPosition = position + listDataSize;
+            
+            int prevValue = 0;
+            while(position < endPosition) {
+                int key = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), position);
+                position += VarInt.sizeOfVInt(key);
+                int delta = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), position);
+                int value = prevValue + delta;
+                prevValue = value;
+                position += VarInt.sizeOfVInt(delta);
+                
+                actualMap.put(key, value);
+            }
+            
+            Assert.assertEquals(expectedMap, actualMap);
+        }
+    }
+    
+    @Test
+    public void remapsSetFieldOrdinals() {
+        FastBlobSchema schema = new FastBlobSchema("Test", 2);
+        schema.addField("intField", new FieldDefinition(FieldType.INT));
+        schema.addField("setField", new TypedFieldDefinition(FieldType.SET, "ElementType"));
+        
+        Random rand = new Random();
+        
+        for(int i=0;i<1000;i++) {
+            
+            int numElements = rand.nextInt(1000);
+            
+            ByteDataBuffer buf = new ByteDataBuffer();
+            
+            Set<Integer> expectedSet = new HashSet<Integer>();
+            BitSet usedMappings = new BitSet();
+
+            Map<Integer, Integer> elementOrdinalMap = new HashMap<Integer, Integer>();
+            for(int j=0;j<numElements;j++) {
+                int mapping = getRandomMapping(rand, usedMappings);
+                elementOrdinalMap.put(j, mapping);
+                VarInt.writeVInt(buf, j == 0 ? 0 : 1);
+                expectedSet.add(mapping);
+            }
+
+            ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, elementOrdinalMap);
+            
+            Assert.assertEquals(100, VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 0));
+            
+            int listDataSize = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 1);
+
+            long position = VarInt.sizeOfVInt(listDataSize) + 1;
+            long endPosition = position + listDataSize;
+            
+            Set<Integer> actualSet = new HashSet<Integer>();
+            int prevOrdinal = 0;
+            while(position < endPosition) {
+                int deltaOrdinal = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), position);
+                position += VarInt.sizeOfVInt(deltaOrdinal);
+                int currentOrdinal = prevOrdinal + deltaOrdinal;
+                prevOrdinal = currentOrdinal;
+                actualSet.add(currentOrdinal);
+            }
+            Assert.assertEquals(expectedSet, actualSet);
+        }
+    }
+
+
+    private ByteDataBuffer copyToBufferAndRemapOrdinals(FastBlobSchema schema,
+            ByteDataBuffer buf, Map<Integer, Integer> elementOrdinalMap) {
+        Map<String, Map<Integer, Integer>> ordinalMapping = new HashMap<String, Map<Integer, Integer>>();
+        ordinalMapping.put("ElementType", elementOrdinalMap);
+
+        ByteDataBuffer fromDataBuffer = new ByteDataBuffer();
+        VarInt.writeVInt(fromDataBuffer, 100);
+        VarInt.writeVInt(fromDataBuffer, (int)buf.length());
+        
+        fromDataBuffer.copyFrom(buf);
+        
+        FastBlobDeserializationRecord rec = new FastBlobDeserializationRecord(schema, fromDataBuffer.getUnderlyingArray());
+        rec.position(0);
+        
+        ByteDataBuffer toDataBuffer = new ByteDataBuffer();
+        new OrdinalRemapper(ordinalMapping).remapOrdinals(rec, toDataBuffer);
+        return toDataBuffer;
+    }
+
+
+    private int getRandomMapping(Random rand, BitSet usedMappings) {
+        int mapping = rand.nextInt(10000);
+        while(usedMappings.get(mapping))
+            mapping = rand.nextInt(10000);
+        usedMappings.set(mapping);
+        return mapping;
+    }    
 
     @Test
     public void remapsSetOrdinals() {
