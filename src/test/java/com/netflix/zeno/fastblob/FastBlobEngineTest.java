@@ -139,7 +139,6 @@ public class FastBlobEngineTest {
         assertData(destEngine, 2, true, false);
         assertData(destEngine, 3, false, true);
         assertData(destEngine, 4, false, true);
-        f.delete();
     }
 
     private void copyEngine(FastBlobStateEngine srcStateEngine, FastBlobStateEngine destStateEngine) {
