@@ -122,6 +122,7 @@ public class FastBlobTypeSerializationState<T> {
         Class<? extends Object> clazz = data.getClass();
         int existingOrdinal = objectOrdinalMap.get(data);
         if (existingOrdinal != -1) {
+            addOrdinalToImages(imageMembershipsFlags, existingOrdinal);
             return existingOrdinal;
         }
 
