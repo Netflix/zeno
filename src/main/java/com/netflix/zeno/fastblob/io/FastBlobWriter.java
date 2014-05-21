@@ -87,7 +87,7 @@ public class FastBlobWriter {
         }
     }
 
-    public void writeSnapshotFromStates(DataOutputStream os) throws IOException {
+    public void writeNonImageSpecificSnapshot(DataOutputStream os) throws IOException {
         writeHeader(os);
 
         for(FastBlobTypeSerializationState<?> typeState : stateEngine.getOrderedSerializationStates()) {
