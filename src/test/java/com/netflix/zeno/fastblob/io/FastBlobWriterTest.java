@@ -53,7 +53,7 @@ public class FastBlobWriterTest {
 
         final File f = File.createTempFile("pre", "suf");
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(f));
-        fastBlobWriter.writeSnapshotFromStates(dos);
+        fastBlobWriter.writeNonImageSpecificSnapshot(dos);
         dos.close();
 
         fastBlobReader = new FastBlobReader(destEngine);
