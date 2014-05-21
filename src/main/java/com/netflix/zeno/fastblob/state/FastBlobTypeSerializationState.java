@@ -17,18 +17,17 @@
  */
 package com.netflix.zeno.fastblob.state;
 
+import com.netflix.zeno.fastblob.FastBlobStateEngine;
+import com.netflix.zeno.fastblob.record.ByteDataBuffer;
+import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
+import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.serializer.NFTypeSerializer;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.netflix.zeno.fastblob.FastBlobStateEngine;
-import com.netflix.zeno.fastblob.record.ByteDataBuffer;
-import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
-import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
-import com.netflix.zeno.serializer.NFTypeSerializer;
 
 /**
  * This class represents the "serialization state" for a single type at some level of the object
@@ -69,6 +68,7 @@ public class FastBlobTypeSerializationState<T> {
 
     private ThreadSafeBitSet imageMemberships[];
     private ThreadSafeBitSet previousCycleImageMemberships[];
+    private WeakObjectOrdinalMap objectOrdinalMap = new WeakObjectOrdinalMap(8);
 
     /**
      *
@@ -84,6 +84,10 @@ public class FastBlobTypeSerializationState<T> {
 
         this.imageMemberships = initializeImageMembershipBitSets(numImages);
         this.previousCycleImageMemberships = initializeImageMembershipBitSets(numImages);
+    }
+
+    public String getName() {
+        return serializer.getName();
     }
 
     public FastBlobSchema getSchema() {
@@ -115,6 +119,12 @@ public class FastBlobTypeSerializationState<T> {
         if(!ordinalMap.isReadyForAddingObjects())
             throw new RuntimeException("The FastBlobStateEngine is not ready to add more Objects.  Did you remember to call stateEngine.prepareForNextCycle()?");
 
+        Class<? extends Object> clazz = data.getClass();
+        int existingOrdinal = objectOrdinalMap.get(data);
+        if (existingOrdinal != -1) {
+            return existingOrdinal;
+        }
+
         FastBlobSerializationRecord rec = record();
 
         rec.setImageMembershipsFlags(imageMembershipsFlags);
@@ -129,6 +139,7 @@ public class FastBlobTypeSerializationState<T> {
         scratch.reset();
         rec.reset();
 
+        objectOrdinalMap.put(data, ordinal);
         return ordinal;
     }
 
@@ -146,7 +157,7 @@ public class FastBlobTypeSerializationState<T> {
 
         return ordinal;
     }
-    
+
     /**
      * Copy the state data into the provided FastBlobTypeSerializationState.<p/>
      *
@@ -155,12 +166,12 @@ public class FastBlobTypeSerializationState<T> {
      * Thread safety:  This cannot be safely called concurrently with add() operations to *this* state engine.<p/>
      *
      * @param otherState
-     * @param stateOrdinalMappers 
+     * @param stateOrdinalMappers
      */
     public void copyTo(FastBlobTypeSerializationState<?> otherState, ConcurrentHashMap<String, Map<Integer, Integer>> stateOrdinalMappers) {
         ordinalMap.copySerializedObjectData(otherState, imageMemberships, stateOrdinalMappers);
     }
-    
+
 
     /**
      * Fill the data from this serialization state into the provided FastBlobTypeDeserializationState<p/>
@@ -346,4 +357,11 @@ public class FastBlobTypeSerializationState<T> {
             ThreadSafeBitSet.deserializeFrom(is);
     }
 
+    public long getOrdinalsAdded() {
+        return ordinalMap.getOrdinalsAdded();
+    }
+
+    public long getOrdinalsReused() {
+        return ordinalMap.getOrdinalsReused();
+    }
 }

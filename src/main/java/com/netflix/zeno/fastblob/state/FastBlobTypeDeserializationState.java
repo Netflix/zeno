@@ -17,12 +17,6 @@
  */
 package com.netflix.zeno.fastblob.state;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLongArray;
-
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
@@ -30,6 +24,11 @@ import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.util.CollectionUnwrapper;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 /**
  * This class represents the "deserialization state" for a single type at some level of the object
@@ -62,6 +61,7 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T>,TypeDese
         this.objects = new ArrayList<T>();
     }
 
+    @Override
     public T get(int ordinal) {
         return objects.get(ordinal);
     }
@@ -121,7 +121,7 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T>,TypeDese
         ByteDataBuffer byteData = ordinalMap.getByteData();
         AtomicLongArray pointersAndOrdinals = ordinalMap.getPointersAndOrdinals();
         FastBlobDeserializationRecord rec = new FastBlobDeserializationRecord(getSchema(), byteData.getUnderlyingArray());
-        for(int i=0;i<pointersAndOrdinals.length();i++) {
+        for (int i = 0; i < pointersAndOrdinals.length(); i++) {
             long pointerAndOrdinal = pointersAndOrdinals.get(i);
             if(!ByteArrayOrdinalMap.isPointerAndOrdinalEmpty(pointerAndOrdinal)) {
                 long pointer = ByteArrayOrdinalMap.getPointer(pointerAndOrdinal);

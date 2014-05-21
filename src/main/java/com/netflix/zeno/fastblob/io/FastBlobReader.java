@@ -28,7 +28,6 @@ import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.state.ByteArrayOrdinalMap;
 import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
 import com.netflix.zeno.serializer.NFTypeSerializer;
-
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;

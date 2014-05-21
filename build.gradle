@@ -1,4 +1,6 @@
 // Establish version and status
+apply plugin: 'eclipse'
+
 ext.githubProjectName = 'zeno'
 group = "com.netflix.zeno"
 
