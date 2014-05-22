@@ -17,11 +17,9 @@
  */
 package com.netflix.zeno.fastblob;
 
-import com.netflix.zeno.fastblob.FastBlobStateEngine;
 import com.netflix.zeno.fastblob.io.FastBlobReader;
 import com.netflix.zeno.fastblob.io.FastBlobWriter;
 import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -70,7 +68,7 @@ public abstract class BlobSerializationAbstract {
     }
 
     protected void cache(final String cacheName, Object obj) {
-        serializationState.add(cacheName, obj, new boolean[] { true });
+        serializationState.add(cacheName, obj, FastBlobUtils.ONE_TRUE);
     }
 
     protected <T> List<T> getAll(final String cacheName) {

@@ -25,14 +25,12 @@ import com.netflix.zeno.fastblob.state.TypeDeserializationStateListener;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializerFactory;
 import com.netflix.zeno.util.SimultaneousExecutor;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -93,7 +91,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
 
     private int maxSingleObjectLength;
 
-    private final boolean[] addToAllImagesFlags;
+    private final int addToAllImagesFlags;
 
     public FastBlobStateEngine(SerializerFactory factory) {
         this(factory, 1);
@@ -110,9 +108,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
 
         this.numberOfConfigurations = numberOfConfigurations;
 
-        addToAllImagesFlags = new boolean[numberOfConfigurations];
-        Arrays.fill(addToAllImagesFlags, true);
-
+        addToAllImagesFlags = FastBlobUtils.ALL_TRUE.get(numberOfConfigurations);
         createSerializationStates();
     }
 
@@ -158,7 +154,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
      * then the boolean[] passed into this method should be {false, true, false}.
      *
      */
-    public void add(String type, Object obj, boolean addToImageFlags[]) {
+    public void add(String type, Object obj, int addToImageFlags) {
         FastBlobTypeSerializationState<Object> typeSerializationState = getTypeSerializationState(type);
         if(typeSerializationState == null) {
             throw new RuntimeException("Unable to find type.  Ensure there exists an NFTypeSerializer with the name: "  + type);
@@ -200,6 +196,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
         return (FastBlobTypeSerializationState<T>) serializationTypeStates.get(name);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <T> FastBlobTypeDeserializationState<T> getTypeDeserializationState(String name) {
         return (FastBlobTypeDeserializationState<T>) deserializationTypeStates.get(name);
@@ -318,7 +315,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
             }
         }
     }
-    
+
     /**
      * Copy the serialization states into the provided State Engine.<p/>
      *
@@ -327,17 +324,17 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
      * Thread safety:  This cannot be safely called concurrently with add() operations to *this* state engine.<p/>
      *
      * @param otherStateEngine
-     * @param ignoreSerializers 
+     * @param ignoreSerializers
      */
     public void copySerializationStatesTo(FastBlobStateEngine otherStateEngine, Collection<String> ignoreSerializers) {
-        ConcurrentHashMap<String, Map<Integer, Integer>> stateOrdinalMappers = new ConcurrentHashMap<String, Map<Integer, Integer>>(); 
+        ConcurrentHashMap<String, Map<Integer, Integer>> stateOrdinalMappers = new ConcurrentHashMap<String, Map<Integer, Integer>>();
         for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
             String serializerName = serializationState.serializer.getName();
             if(!ignoreSerializers.contains(serializerName)) {
                 serializationState.copyTo(otherStateEngine.getTypeSerializationState(serializerName), stateOrdinalMappers);
             }
         }
-    }    
+    }
 
     /*
      * Copy all the serialization states to provided state engine
@@ -361,7 +358,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
                 topLevelSerializersToCopy.add(serializer.getName());
             }
         }
-        
+
         CountDownLatch latch = new CountDownLatch(executor.getMaximumPoolSize() * topLevelSerializersToCopy.size());
 
         for(String serializerizerName : topLevelSerializersToCopy) {
@@ -394,7 +391,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
         }
     }
 
-    private Runnable getFillSerializationStatesRunnable(final FastBlobStateEngine otherStateEngine, 
+    private Runnable getFillSerializationStatesRunnable(final FastBlobStateEngine otherStateEngine,
             final String serializerName, final int numThreads, final CountDownLatch latch, final int threadNumber) {
         return new Runnable() {
             @Override
@@ -447,12 +444,12 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
 
     private void copyObjects(final FastBlobStateEngine otherStateEngine, final String serializerName,
             final int numThreads, final int threadNumber) {
-        FastBlobTypeDeserializationState<?> typeDeserializationState = getTypeDeserializationState(serializerName);       
+        FastBlobTypeDeserializationState<?> typeDeserializationState = getTypeDeserializationState(serializerName);
         int maxOrdinal = typeDeserializationState.maxOrdinal() + 1;
         if(maxOrdinal < threadNumber) {
             return;
         }
-        
+
         FastBlobTypeSerializationState<?> typeSerializationState = getTypeSerializationState(serializerName);
         boolean imageMembershipsFlags[] = new boolean[numberOfConfigurations];
 
@@ -462,7 +459,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
                 for(int imageIndex=0;imageIndex<numberOfConfigurations;imageIndex++) {
                     imageMembershipsFlags[imageIndex] = typeSerializationState.getImageMembershipBitSet(imageIndex).get(i);
                 }
-                otherStateEngine.add(typeSerializationState.getSchema().getName(), obj, imageMembershipsFlags);
+                otherStateEngine.add(typeSerializationState.getSchema().getName(), obj, FastBlobUtils.toInteger(imageMembershipsFlags));
             }
         }
     }

@@ -21,6 +21,7 @@ import com.netflix.zeno.fastblob.FastBlobStateEngine;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
+import com.netflix.zeno.fastblob.state.WeakObjectOrdinalMap.Entry;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -115,15 +116,16 @@ public class FastBlobTypeSerializationState<T> {
      * @param data
      * @param imageMembershipsFlags
      */
-    public int add(T data, boolean imageMembershipsFlags[]) {
+    public int add(T data, int imageMembershipsFlags) {
         if(!ordinalMap.isReadyForAddingObjects())
             throw new RuntimeException("The FastBlobStateEngine is not ready to add more Objects.  Did you remember to call stateEngine.prepareForNextCycle()?");
 
         Class<? extends Object> clazz = data.getClass();
-        int existingOrdinal = objectOrdinalMap.get(data);
-        if (existingOrdinal != -1) {
-            addOrdinalToImages(imageMembershipsFlags, existingOrdinal);
-            return existingOrdinal;
+        Entry existingEntry = objectOrdinalMap.getEntry(data);
+        if (existingEntry != null) {
+            if ((existingEntry.getImageMembershipsFlags() | imageMembershipsFlags) == existingEntry.getImageMembershipsFlags()) {
+                return existingEntry.getOrdinal();
+            }
         }
 
         FastBlobSerializationRecord rec = record();
@@ -140,7 +142,7 @@ public class FastBlobTypeSerializationState<T> {
         scratch.reset();
         rec.reset();
 
-        objectOrdinalMap.put(data, ordinal);
+        objectOrdinalMap.put(data, ordinal, imageMembershipsFlags);
         return ordinal;
     }
 
@@ -151,7 +153,7 @@ public class FastBlobTypeSerializationState<T> {
      * @param imageMembershipsFlags
      * @return
      */
-    public int addData(ByteDataBuffer data, boolean imageMembershipsFlags[]) {
+    public int addData(ByteDataBuffer data, int imageMembershipsFlags) {
         int ordinal = ordinalMap.getOrAssignOrdinal(data);
 
         addOrdinalToImages(imageMembershipsFlags, ordinal);
@@ -260,10 +262,14 @@ public class FastBlobTypeSerializationState<T> {
      * @param imageMembershipsFlags
      * @param ordinal
      */
-    private void addOrdinalToImages(boolean[] imageMembershipsFlags, int ordinal) {
-        for(int i=0;i<imageMembershipsFlags.length;i++) {
-            if(imageMembershipsFlags[i])
-                imageMemberships[i].set(ordinal);
+    private void addOrdinalToImages(int imageMembershipsFlags, int ordinal) {
+        int count = 0;
+        while (imageMembershipsFlags != 0) {
+            if ((imageMembershipsFlags & 1) != 0) {
+                imageMemberships[count].set(ordinal);
+            }
+            imageMembershipsFlags = imageMembershipsFlags >>> 1;
+            count++;
         }
     }
 

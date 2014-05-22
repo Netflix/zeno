@@ -17,6 +17,7 @@
  */
 package com.netflix.zeno.fastblob.state;
 
+import com.netflix.zeno.fastblob.FastBlobUtils;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.SegmentedByteArray;
@@ -428,7 +429,7 @@ public class ByteArrayOrdinalMap {
                             rec.position(pointer);
                             remapper.remapOrdinals(rec, mappedBuffer);
 
-                            int newOrdinal = destState.addData(mappedBuffer, imageMembershipsFlags);
+                            int newOrdinal = destState.addData(mappedBuffer, FastBlobUtils.toInteger(imageMembershipsFlags));
                             stateOrdinalMappers.get(destState.getSchema().getName()).put(ordinal, newOrdinal);
 
                             mappedBuffer.reset();

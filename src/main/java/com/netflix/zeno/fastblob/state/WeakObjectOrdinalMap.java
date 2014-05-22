@@ -34,22 +34,33 @@ public class WeakObjectOrdinalMap {
     /**
      * Hashmap entry
      */
-    private static class Entry extends WeakReference<Object> {
+    public static class Entry extends WeakReference<Object> {
         // identity hashcode
-        int hash;
+        private int hash;
         // ordinal
-        int ordinal;
+        private int ordinal;
+        // membership flags
+        private int imageMembershipsFlags;
         // linked list pointer
-        Entry next;
+        private Entry next;
 
         /**
          * Creates new entry.
          */
-        Entry(Object key, ReferenceQueue<Object> queue, int hash, int ordinal, Entry next) {
+        Entry(Object key, ReferenceQueue<Object> queue, int hash, int ordinal, int imageMembershipsFlags, Entry next) {
             super(key, queue);
             this.hash  = hash;
             this.ordinal = ordinal;
+            this.imageMembershipsFlags = imageMembershipsFlags;
             this.next  = next;
+        }
+
+        public int getOrdinal() {
+            return ordinal;
+        }
+
+        public int getImageMembershipsFlags() {
+            return imageMembershipsFlags;
         }
 
         @Override
@@ -76,7 +87,7 @@ public class WeakObjectOrdinalMap {
             resize(MINIMUM_CAPACITY);
         }
 
-        public synchronized void put(Object object, int hashCode, int ordinal) {
+        public synchronized void put(Object object, int hashCode, int ordinal, int imageMembershipsFlags) {
             removeGarbageCollectedEntities();
             int index = index(hashCode, entries.length);
             Entry current = entries[index];
@@ -89,6 +100,7 @@ public class WeakObjectOrdinalMap {
                         current = current.next;
                         continue;
                     } else if (currentObject == object) {
+                        current.imageMembershipsFlags = (current.imageMembershipsFlags | imageMembershipsFlags);
                         return;
                     }
                 }
@@ -97,14 +109,14 @@ public class WeakObjectOrdinalMap {
             }
             count++;
             Entry first = entries[index];
-            Entry entry = new Entry(object, queue, hashCode, ordinal, first);
+            Entry entry = new Entry(object, queue, hashCode, ordinal, imageMembershipsFlags, first);
             entries[index] = entry;
             entry.next = first;
             checkSize();
             return;
         }
 
-        public synchronized int get(Object object, int hashCode) {
+        public synchronized Entry get(Object object, int hashCode) {
             removeGarbageCollectedEntities();
             int index = index(hashCode, entries.length);
             Entry current = entries[index];
@@ -117,13 +129,13 @@ public class WeakObjectOrdinalMap {
                         current = current.next;
                         continue;
                     } else if (currentObject == object) {
-                        return current.ordinal;
+                        return current;
                     }
                 }
                 prev = current;
                 current = current.next;
             }
-            return -1;
+            return null;
         }
 
         private void checkSize() {
@@ -224,19 +236,13 @@ public class WeakObjectOrdinalMap {
      * @param obj
      * @param ordinal
      */
-    public void put(Object obj, int ordinal) {
+    public void put(Object obj, int ordinal, int imageMembershipsFlags) {
         int hashCode = System.identityHashCode(obj);
         int segment = segment(hashCode);
-        segments[segment].put(obj, hashCode, ordinal);
+        segments[segment].put(obj, hashCode, ordinal, imageMembershipsFlags);
     }
 
-    /**
-     * Retrieving the ordinal associated with an obj
-     * 
-     * @param obj
-     * @return ordinal or -1 if there is no ordinal associated with it
-     */
-    public int get(Object obj) {
+    public Entry getEntry(Object obj) {
         int hashCode = System.identityHashCode(obj);
         int segment = segment(hashCode);
         return segments[segment].get(obj, hashCode);

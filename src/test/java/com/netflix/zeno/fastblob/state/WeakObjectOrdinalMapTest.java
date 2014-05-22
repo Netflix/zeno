@@ -34,12 +34,18 @@ public class WeakObjectOrdinalMapTest {
         MyClass i1 = new MyClass();
         MyClass i2 = new MyClass();
         MyClass i3 = new MyClass();
-        map.put(i1, 1);
-        map.put(i2, 2);
-        map.put(i3, 3);
-        Assert.assertEquals(1, map.get(i1));
-        Assert.assertEquals(2, map.get(i2));
-        Assert.assertEquals(3, map.get(i3));
+        map.put(i1, 1, 4);
+        map.put(i2, 2, 5);
+        map.put(i3, 3, 6);
+        WeakObjectOrdinalMap.Entry entry1 = map.getEntry(i1);
+        Assert.assertEquals(1, entry1.getOrdinal());
+        Assert.assertEquals(4, entry1.getImageMembershipsFlags());
+        WeakObjectOrdinalMap.Entry entry2 = map.getEntry(i2);
+        Assert.assertEquals(2, entry2.getOrdinal());
+        Assert.assertEquals(5, entry2.getImageMembershipsFlags());
+        WeakObjectOrdinalMap.Entry entry3 = map.getEntry(i3);
+        Assert.assertEquals(3, entry3.getOrdinal());
+        Assert.assertEquals(6, entry3.getImageMembershipsFlags());
         Assert.assertEquals(3, map.size());
 
         i2 = null;
@@ -47,7 +53,9 @@ public class WeakObjectOrdinalMapTest {
         System.gc();
         Thread.sleep(5000);
         Assert.assertEquals(1, map.size());
-        Assert.assertEquals(1, map.get(i1));
+        entry1 = map.getEntry(i1);
+        Assert.assertEquals(1, entry1.getOrdinal());
+        Assert.assertEquals(4, entry1.getImageMembershipsFlags());
 
         i1 = null;
         System.gc();

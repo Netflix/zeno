@@ -1,25 +1,12 @@
 package com.netflix.zeno.fastblob;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
 import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
-import com.netflix.zeno.fastblob.record.schema.FieldDefinition;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.FieldDefinition;
 import com.netflix.zeno.fastblob.record.schema.MapFieldDefinition;
 import com.netflix.zeno.fastblob.record.schema.TypedFieldDefinition;
 import com.netflix.zeno.fastblob.state.OrdinalRemapper;
@@ -32,6 +19,17 @@ import com.netflix.zeno.testpojos.TypeA;
 import com.netflix.zeno.testpojos.TypeASerializer;
 import com.netflix.zeno.testpojos.TypeD;
 import com.netflix.zeno.testpojos.TypeDSerializer;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /*
  * This test validates only the ordinal remapping functionality.
@@ -62,6 +60,7 @@ public class OrdinalRemapperTest {
     @Before
     public void setUp() {
         stateEngine = new FastBlobStateEngine(new SerializerFactory() {
+            @Override
             public NFTypeSerializer<?>[] createSerializers() {
                 return new NFTypeSerializer<?> [] {
                         new ListSerializer<TypeA>("ListOfTypeA", new TypeASerializer()),
@@ -85,7 +84,7 @@ public class OrdinalRemapperTest {
 
 
         ByteDataBuffer buf = new ByteDataBuffer();
-        
+
         Map<String, Map<Integer, Integer>> stateOrdinalMappers = new HashMap<String, Map<Integer, Integer>>();
         HashMap<Integer, Integer> hashMap = new HashMap<Integer, Integer>();
         stateOrdinalMappers.put("TypeA", hashMap);
@@ -96,8 +95,8 @@ public class OrdinalRemapperTest {
         hashMap.put(4, 0);
         hashMap.put(5, 6);
         hashMap.put(6, 5);
-        
-        
+
+
 
         ordinalRemapper = new OrdinalRemapper(stateOrdinalMappers);
     }
@@ -108,7 +107,7 @@ public class OrdinalRemapperTest {
         NFTypeSerializer<List<TypeA>> listSerializer = stateEngine.getSerializer("ListOfTypeA");
         FastBlobSchema listSchema = listSerializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(listSchema);
-        rec.setImageMembershipsFlags(new boolean[] { true });
+        rec.setImageMembershipsFlags(FastBlobUtils.ONE_TRUE);
 
         List<TypeA> list = new ArrayList<TypeA>();
         list.add(new TypeA(3, 3));
@@ -132,19 +131,19 @@ public class OrdinalRemapperTest {
         Assert.assertNull(typeAs.get(2));
         Assert.assertEquals(new TypeA(2, 2), typeAs.get(3));
     }
-    
+
     @Test
     public void remapsListFieldOrdinals() {
         FastBlobSchema schema = new FastBlobSchema("Test", 2);
         schema.addField("intField", new FieldDefinition(FieldType.INT));
         schema.addField("listField", new TypedFieldDefinition(FieldType.LIST, "ElementType"));
-        
+
         Random rand = new Random();
-        
+
         for(int i=0;i<1000;i++) {
-            
+
             int numElements = rand.nextInt(1000);
-            
+
             ByteDataBuffer buf = new ByteDataBuffer();
 
             Map<Integer, Integer> elementOrdinalMap = new HashMap<Integer, Integer>();
@@ -154,16 +153,16 @@ public class OrdinalRemapperTest {
             }
 
             ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, elementOrdinalMap);
-            
+
             Assert.assertEquals(100, VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 0));
-            
+
             int listDataSize = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 1);
 
             long position = VarInt.sizeOfVInt(listDataSize) + 1;
             long endPosition = position + listDataSize;
-            
+
             int counter = 0;
-            
+
             while(position < endPosition) {
                 int encoded = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), position);
                 position += VarInt.sizeOfVInt(encoded);
@@ -172,48 +171,48 @@ public class OrdinalRemapperTest {
             }
         }
     }
-    
+
     @Test
     public void remapsMapFieldOrdinals() {
         FastBlobSchema schema = new FastBlobSchema("Test", 2);
         schema.addField("intField", new FieldDefinition(FieldType.INT));
         schema.addField("mapField", new MapFieldDefinition("ElementType", "ElementType"));
-        
+
         Random rand = new Random();
-        
+
         for(int i=0;i<1000;i++) {
-            
+
             int numElements = rand.nextInt(1000);
-            
+
             ByteDataBuffer buf = new ByteDataBuffer();
 
             BitSet usedMappings = new BitSet();
-            
+
             Map<Integer, Integer> expectedMap = new HashMap<Integer, Integer>();
-            
+
             Map<Integer, Integer> elementOrdinalMap = new HashMap<Integer, Integer>();
             for(int j=0;j<numElements;j++) {
-                
+
                 int mapping = getRandomMapping(rand, usedMappings);
-                
+
                 elementOrdinalMap.put(j, mapping);
                 VarInt.writeVInt(buf, j);
                 VarInt.writeVInt(buf, j == 0 ? 0 : 1);
-                
+
                 expectedMap.put(mapping, mapping);
             }
 
             ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, elementOrdinalMap);
-            
+
             Assert.assertEquals(100, VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 0));
-            
+
             Map<Integer, Integer> actualMap = new HashMap<Integer, Integer>();
-            
+
             int listDataSize = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 1);
 
             long position = VarInt.sizeOfVInt(listDataSize) + 1;
             long endPosition = position + listDataSize;
-            
+
             int prevValue = 0;
             while(position < endPosition) {
                 int key = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), position);
@@ -222,28 +221,28 @@ public class OrdinalRemapperTest {
                 int value = prevValue + delta;
                 prevValue = value;
                 position += VarInt.sizeOfVInt(delta);
-                
+
                 actualMap.put(key, value);
             }
-            
+
             Assert.assertEquals(expectedMap, actualMap);
         }
     }
-    
+
     @Test
     public void remapsSetFieldOrdinals() {
         FastBlobSchema schema = new FastBlobSchema("Test", 2);
         schema.addField("intField", new FieldDefinition(FieldType.INT));
         schema.addField("setField", new TypedFieldDefinition(FieldType.SET, "ElementType"));
-        
+
         Random rand = new Random();
-        
+
         for(int i=0;i<1000;i++) {
-            
+
             int numElements = rand.nextInt(1000);
-            
+
             ByteDataBuffer buf = new ByteDataBuffer();
-            
+
             Set<Integer> expectedSet = new HashSet<Integer>();
             BitSet usedMappings = new BitSet();
 
@@ -256,14 +255,14 @@ public class OrdinalRemapperTest {
             }
 
             ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, elementOrdinalMap);
-            
+
             Assert.assertEquals(100, VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 0));
-            
+
             int listDataSize = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 1);
 
             long position = VarInt.sizeOfVInt(listDataSize) + 1;
             long endPosition = position + listDataSize;
-            
+
             Set<Integer> actualSet = new HashSet<Integer>();
             int prevOrdinal = 0;
             while(position < endPosition) {
@@ -286,12 +285,12 @@ public class OrdinalRemapperTest {
         ByteDataBuffer fromDataBuffer = new ByteDataBuffer();
         VarInt.writeVInt(fromDataBuffer, 100);
         VarInt.writeVInt(fromDataBuffer, (int)buf.length());
-        
+
         fromDataBuffer.copyFrom(buf);
-        
+
         FastBlobDeserializationRecord rec = new FastBlobDeserializationRecord(schema, fromDataBuffer.getUnderlyingArray());
         rec.position(0);
-        
+
         ByteDataBuffer toDataBuffer = new ByteDataBuffer();
         new OrdinalRemapper(ordinalMapping).remapOrdinals(rec, toDataBuffer);
         return toDataBuffer;
@@ -304,14 +303,14 @@ public class OrdinalRemapperTest {
             mapping = rand.nextInt(10000);
         usedMappings.set(mapping);
         return mapping;
-    }    
+    }
 
     @Test
     public void remapsSetOrdinals() {
         NFTypeSerializer<Set<TypeA>> setSerializer = stateEngine.getSerializer("SetOfTypeA");
         FastBlobSchema setSchema = setSerializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(setSchema);
-        rec.setImageMembershipsFlags(new boolean[] { true });
+        rec.setImageMembershipsFlags(FastBlobUtils.ONE_TRUE);
 
         Set<TypeA> set = new HashSet<TypeA>();
         set.add(new TypeA(1, 1));
@@ -337,7 +336,7 @@ public class OrdinalRemapperTest {
         NFTypeSerializer<Map<TypeA, TypeA>> mapSerializer = stateEngine.getSerializer("MapOfTypeA");
         FastBlobSchema mapSchema = mapSerializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(mapSchema);
-        rec.setImageMembershipsFlags(new boolean[] { true });
+        rec.setImageMembershipsFlags(FastBlobUtils.ONE_TRUE);
 
         Map<TypeA, TypeA> map = new HashMap<TypeA, TypeA>();
         map.put(new TypeA(1, 1), new TypeA(4, 4));
@@ -365,7 +364,7 @@ public class OrdinalRemapperTest {
         NFTypeSerializer<TypeD> serializer = stateEngine.getSerializer("TypeD");
         FastBlobSchema typeDSchema = serializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(typeDSchema);
-        rec.setImageMembershipsFlags(new boolean[] { true });
+        rec.setImageMembershipsFlags(FastBlobUtils.ONE_TRUE);
 
         TypeD typeD = new TypeD(100, new TypeA(3, 3));
 

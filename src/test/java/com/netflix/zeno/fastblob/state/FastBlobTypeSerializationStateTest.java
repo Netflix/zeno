@@ -1,17 +1,16 @@
 package com.netflix.zeno.fastblob.state;
 
+import com.netflix.zeno.fastblob.FastBlobUtils;
+import com.netflix.zeno.fastblob.record.ByteDataBuffer;
+import com.netflix.zeno.serializer.common.IntegerSerializer;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.netflix.zeno.fastblob.record.ByteDataBuffer;
-import com.netflix.zeno.serializer.common.IntegerSerializer;
 
 public class FastBlobTypeSerializationStateTest {
 
@@ -35,7 +34,7 @@ public class FastBlobTypeSerializationStateTest {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(f));
         srcState.serializeTo(dos);
         dos.close();
-        
+
         DataInputStream dis = new DataInputStream(new FileInputStream(f));
         destState.deserializeFrom(dis, 2);
         dis.close();
@@ -45,16 +44,16 @@ public class FastBlobTypeSerializationStateTest {
         assertData(destState, new byte[] { 3, 4, 5 }, true, false);
         assertData(destState, new byte[] { 6, 7, 8, 9 }, false, true);
         f.delete();
-    }    
+    }
 
     private void addData(FastBlobTypeSerializationState<Integer> srcState, byte data[], boolean... images) {
         ByteDataBuffer buf = createBuffer(data);
-        srcState.addData(buf, images);
+        srcState.addData(buf, FastBlobUtils.toInteger(images));
     }
 
     private void assertData(FastBlobTypeSerializationState<Integer> destState, byte data[], boolean... images) {
         /// get the ordinal for the data, but don't add it to any images
-        int ordinal = destState.addData(createBuffer(data), new boolean[] { false, false });
+        int ordinal = destState.addData(createBuffer(data), FastBlobUtils.toInteger(false, false));
         /// see which images this data was added to
         Assert.assertEquals(images[0], destState.getImageMembershipBitSet(0).get(ordinal));
         Assert.assertEquals(images[1], destState.getImageMembershipBitSet(1).get(ordinal));

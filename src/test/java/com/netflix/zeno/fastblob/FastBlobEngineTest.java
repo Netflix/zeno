@@ -1,14 +1,5 @@
 package com.netflix.zeno.fastblob;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
-import java.util.Collections;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.netflix.zeno.fastblob.io.FastBlobReader;
 import com.netflix.zeno.fastblob.io.FastBlobWriter;
 import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
@@ -16,17 +7,24 @@ import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializerFactory;
 import com.netflix.zeno.serializer.common.IntegerSerializer;
 import com.netflix.zeno.serializer.common.StringSerializer;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class FastBlobEngineTest {
 
     SerializerFactory factory = new SerializerFactory() {
-        
+
         @Override
         public NFTypeSerializer<?>[] createSerializers() {
             return new NFTypeSerializer<?>[] { new IntegerSerializer(), new StringSerializer() };
         }
     };
-    
+
     FastBlobStateEngine srcEngine1;
     FastBlobStateEngine srcEngine2;
     FastBlobStateEngine destEngine;
@@ -52,7 +50,7 @@ public class FastBlobEngineTest {
         assertData(destEngine, 2, true, false);
         assertData(destEngine, 3, false, true);
     }
-    
+
     @Test
     public void copiesDataFromOneStateEngineToAnotherWithIgnoreList() throws Exception {
         /// initialize data in "from" state
@@ -67,7 +65,7 @@ public class FastBlobEngineTest {
         assertNoStringData(destEngine, "Two", true, true);
         assertData(destEngine, 3, false, true);
     }
-    
+
     @Test
     public void copiesDataFromOneStateEngineToAnotherWithIgnoreListContainingUnknownSerializer() throws Exception {
         /// initialize data in "from" state
@@ -82,7 +80,7 @@ public class FastBlobEngineTest {
         assertNoStringData(destEngine, "Two", true, true);
         assertData(destEngine, 3, false, true);
     }
-    
+
     @Test
     public void copiesDataFromMultipleStateEnginesToAnother() throws Exception {
         /// initialize data in "from" state
@@ -106,7 +104,7 @@ public class FastBlobEngineTest {
         assertData(destEngine, 5, false, true);
 
     }
-    
+
 //    @Test
 //    public void serializeAndDeserialize() throws Exception{
 //        /// initialize data in "from" state
@@ -118,7 +116,7 @@ public class FastBlobEngineTest {
 //        DataOutputStream dos = new DataOutputStream(new FileOutputStream(f));
 //        srcState1.serializeTo(dos);
 //        dos.close();
-//        
+//
 //        DataInputStream dis = new DataInputStream(new FileInputStream(f));
 //        destState.deserializeFrom(dis, 2);
 //        dis.close();
@@ -128,46 +126,46 @@ public class FastBlobEngineTest {
 //        assertData(destState, new byte[] { 3, 4, 5 }, true, false);
 //        assertData(destState, new byte[] { 6, 7, 8, 9 }, false, true);
 //        f.delete();
-//    }    
+//    }
 
     private void copyEngine(FastBlobStateEngine srcStateEngine, FastBlobStateEngine destStateEngine) {
         srcStateEngine.copySerializationStatesTo(destStateEngine, Collections.<String> emptyList());
     }
 
     private void addData(FastBlobStateEngine stateEngine, Integer data, boolean... images) {
-        stateEngine.add("Integer", data, images);
+        stateEngine.add("Integer", data, FastBlobUtils.toInteger(images));
     }
-    
+
     private void addStringData(FastBlobStateEngine stateEngine, String data, boolean... images) {
-        stateEngine.add("Strings", data, images);
+        stateEngine.add("Strings", data, FastBlobUtils.toInteger(images));
     }
 
     private void assertData(FastBlobStateEngine stateEngine, Integer data, boolean... images) throws Exception {
         stateEngine.prepareForWrite();
-        
+
         for(int i=0;i<images.length;i++) {
             if(images[i]) {
                 FastBlobStateEngine testStateEngine = new FastBlobStateEngine(factory);
                 fillDeserializationWithImage(stateEngine, testStateEngine, i);
-                
+
                 Assert.assertTrue(containsData(testStateEngine, data, "Integer"));
             }
         }
     }
-    
+
     private void assertNoStringData(FastBlobStateEngine stateEngine, String data, boolean... images) throws Exception {
         stateEngine.prepareForWrite();
-        
+
         for(int i=0;i<images.length;i++) {
             if(images[i]) {
                 FastBlobStateEngine testStateEngine = new FastBlobStateEngine(factory);
                 fillDeserializationWithImage(stateEngine, testStateEngine, i);
-                
+
                 Assert.assertFalse(containsData(testStateEngine, data, "Strings"));
             }
         }
     }
-    
+
     private <T> boolean containsData(FastBlobStateEngine stateEngine, T value, String serializerName) {
         FastBlobTypeDeserializationState<Integer> typeState = stateEngine.getTypeDeserializationState(serializerName);
         for(Integer i : typeState) {
@@ -177,12 +175,12 @@ public class FastBlobEngineTest {
         return false;
     }
 
-    private void fillDeserializationWithImage(FastBlobStateEngine serverStateEngine, FastBlobStateEngine clientStateEngine, 
+    private void fillDeserializationWithImage(FastBlobStateEngine serverStateEngine, FastBlobStateEngine clientStateEngine,
             int imageIndex) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         FastBlobWriter writer = new FastBlobWriter(serverStateEngine, imageIndex);
         writer.writeSnapshot(baos);
-        
+
         FastBlobReader reader = new FastBlobReader(clientStateEngine);
         reader.readSnapshot(new ByteArrayInputStream(baos.toByteArray()));
     }

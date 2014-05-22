@@ -47,7 +47,7 @@ public class FastBlobSerializationRecord extends NFSerializationRecord {
     private final ByteDataBuffer fieldData[];
     private final boolean isNonNull[];
 
-    private boolean imageMembershipsFlags[];
+    private int imageMembershipsFlags;
 
     /**
      * Create a new FastBlobSerializationRecord which conforms to the given FastBlobSchema.
@@ -127,11 +127,11 @@ public class FastBlobSerializationRecord extends NFSerializationRecord {
      *
      * @param imageMembershipsFlags
      */
-    public void setImageMembershipsFlags(boolean imageMembershipsFlags[]) {
+    public void setImageMembershipsFlags(int imageMembershipsFlags) {
         this.imageMembershipsFlags = imageMembershipsFlags;
     }
 
-    public boolean[] getImageMembershipsFlags() {
+    public int getImageMembershipsFlags() {
         return imageMembershipsFlags;
     }
 
