@@ -58,7 +58,7 @@ public class UndefinedNullCollectionElementSerializerTest {
         });
 
         List<Integer> inList = Arrays.asList(1, 2, 3, null, 4);
-        stateEngine.add("FakeIntList", inList, FastBlobImageUtils.toInteger(true));
+        stateEngine.add("FakeIntList", inList, FastBlobImageUtils.ONE_TRUE);
 
         serializeAndDeserialize(stateEngine);
 
