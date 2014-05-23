@@ -206,6 +206,7 @@ public class WeakObjectOrdinalMap {
             for (int i = 0; i < entries.length; i++) {
                 entries[i] = null;
             }
+            resize(MINIMUM_CAPACITY);
         }
 
         public synchronized int size() {

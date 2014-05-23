@@ -222,6 +222,7 @@ public class FastBlobTypeSerializationState<T> {
         for(ThreadSafeBitSet bitSet : imageMemberships) {
             bitSet.clearAll();
         }
+        objectOrdinalMap.clear();
     }
 
     /**
