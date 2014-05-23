@@ -84,6 +84,8 @@ public class FastBlobEngineTest {
     @Test
     public void copiesDataFromMultipleStateEnginesToAnother() throws Exception {
         /// initialize data in "from" state
+        addData(srcEngine1, 1, false, true);
+        // Repetitive addition with different image flags
         addData(srcEngine1, 1, true, true);
         addData(srcEngine1, 2, true, false);
         addData(srcEngine1, 3, false, true);
