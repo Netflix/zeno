@@ -19,6 +19,7 @@ package com.netflix.zeno.fastblob.state;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 
 /**
  * Weak hash lookup map associate object references to already seen ordinals.
@@ -207,10 +208,17 @@ public class WeakObjectOrdinalMap {
         }
 
         public synchronized void clear() {
-            for (int i = 0; i < entries.length; i++) {
-                entries[i] = null;
-            }
+
+            while (queue.poll() != null)
+                ;
+
+            Arrays.fill(entries, null);
+
             resize(MINIMUM_CAPACITY);
+
+            while (queue.poll() != null)
+                ;
+
         }
 
         public synchronized int size() {
