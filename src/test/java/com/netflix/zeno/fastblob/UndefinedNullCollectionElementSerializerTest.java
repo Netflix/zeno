@@ -58,7 +58,7 @@ public class UndefinedNullCollectionElementSerializerTest {
         });
 
         List<Integer> inList = Arrays.asList(1, 2, 3, null, 4);
-        stateEngine.add("FakeIntList", inList, FastBlobUtils.toInteger(true));
+        stateEngine.add("FakeIntList", inList, FastBlobImageUtils.toInteger(true));
 
         serializeAndDeserialize(stateEngine);
 
@@ -89,9 +89,9 @@ public class UndefinedNullCollectionElementSerializerTest {
         Set<Integer> inSet3 = new HashSet<Integer>(Arrays.asList(1, 2, 3, null, 4));
 
 
-        stateEngine.add("FakeIntSet", inSet, FastBlobUtils.ONE_TRUE);
-        stateEngine.add("FakeIntSet", inSet2, FastBlobUtils.ONE_TRUE);
-        stateEngine.add("FakeIntSet", inSet3, FastBlobUtils.ONE_TRUE);
+        stateEngine.add("FakeIntSet", inSet, FastBlobImageUtils.ONE_TRUE);
+        stateEngine.add("FakeIntSet", inSet2, FastBlobImageUtils.ONE_TRUE);
+        stateEngine.add("FakeIntSet", inSet3, FastBlobImageUtils.ONE_TRUE);
 
 
         serializeAndDeserialize(stateEngine);
@@ -138,7 +138,7 @@ public class UndefinedNullCollectionElementSerializerTest {
         inMap.put(2, 3);
         inMap.put(3, 4);
 
-        stateEngine.add("FakeIntMap", inMap, FastBlobUtils.ONE_TRUE);
+        stateEngine.add("FakeIntMap", inMap, FastBlobImageUtils.ONE_TRUE);
 
         serializeAndDeserialize(stateEngine);
 

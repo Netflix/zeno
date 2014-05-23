@@ -108,7 +108,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
 
         this.numberOfConfigurations = numberOfConfigurations;
 
-        addToAllImagesFlags = FastBlobUtils.ALL_TRUE.get(numberOfConfigurations);
+        addToAllImagesFlags = FastBlobImageUtils.getAllTrue(numberOfConfigurations);
         createSerializationStates();
     }
 
@@ -459,7 +459,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
                 for(int imageIndex=0;imageIndex<numberOfConfigurations;imageIndex++) {
                     imageMembershipsFlags[imageIndex] = typeSerializationState.getImageMembershipBitSet(imageIndex).get(i);
                 }
-                otherStateEngine.add(typeSerializationState.getSchema().getName(), obj, FastBlobUtils.toInteger(imageMembershipsFlags));
+                otherStateEngine.add(typeSerializationState.getSchema().getName(), obj, FastBlobImageUtils.toInteger(imageMembershipsFlags));
             }
         }
     }

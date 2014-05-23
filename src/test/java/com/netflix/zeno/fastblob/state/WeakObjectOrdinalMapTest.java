@@ -30,6 +30,24 @@ public class WeakObjectOrdinalMapTest {
     @Test
     public void map() throws Exception {
         WeakObjectOrdinalMap map = new WeakObjectOrdinalMap(8);
+        //
+        // {
+        // List<MyClass> sample = new ArrayList<MyClass>();
+        // int number = 100000;
+        // for (int i = 0; i < number; i++) {
+        // MyClass i1 = new MyClass();
+        // map.put(i1, number + i, 2 * number + i);
+        // sample.add(i1);
+        // }
+        // Assert.assertEquals(number, map.size());
+        // sample.clear();
+        // sample = null;
+        // }
+        //
+        // Thread.sleep(5000);
+        // System.gc();
+        //
+        // Assert.assertEquals(0, map.size());
 
         MyClass i1 = new MyClass();
         MyClass i2 = new MyClass();
@@ -37,6 +55,7 @@ public class WeakObjectOrdinalMapTest {
         map.put(i1, 1, 4);
         map.put(i2, 2, 5);
         map.put(i3, 3, 6);
+
         WeakObjectOrdinalMap.Entry entry1 = map.getEntry(i1);
         Assert.assertEquals(1, entry1.getOrdinal());
         Assert.assertEquals(4, entry1.getImageMembershipsFlags());

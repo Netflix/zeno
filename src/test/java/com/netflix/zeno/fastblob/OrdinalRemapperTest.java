@@ -107,7 +107,7 @@ public class OrdinalRemapperTest {
         NFTypeSerializer<List<TypeA>> listSerializer = stateEngine.getSerializer("ListOfTypeA");
         FastBlobSchema listSchema = listSerializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(listSchema);
-        rec.setImageMembershipsFlags(FastBlobUtils.ONE_TRUE);
+        rec.setImageMembershipsFlags(FastBlobImageUtils.ONE_TRUE);
 
         List<TypeA> list = new ArrayList<TypeA>();
         list.add(new TypeA(3, 3));
@@ -310,7 +310,7 @@ public class OrdinalRemapperTest {
         NFTypeSerializer<Set<TypeA>> setSerializer = stateEngine.getSerializer("SetOfTypeA");
         FastBlobSchema setSchema = setSerializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(setSchema);
-        rec.setImageMembershipsFlags(FastBlobUtils.ONE_TRUE);
+        rec.setImageMembershipsFlags(FastBlobImageUtils.ONE_TRUE);
 
         Set<TypeA> set = new HashSet<TypeA>();
         set.add(new TypeA(1, 1));
@@ -336,7 +336,7 @@ public class OrdinalRemapperTest {
         NFTypeSerializer<Map<TypeA, TypeA>> mapSerializer = stateEngine.getSerializer("MapOfTypeA");
         FastBlobSchema mapSchema = mapSerializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(mapSchema);
-        rec.setImageMembershipsFlags(FastBlobUtils.ONE_TRUE);
+        rec.setImageMembershipsFlags(FastBlobImageUtils.ONE_TRUE);
 
         Map<TypeA, TypeA> map = new HashMap<TypeA, TypeA>();
         map.put(new TypeA(1, 1), new TypeA(4, 4));
@@ -364,7 +364,7 @@ public class OrdinalRemapperTest {
         NFTypeSerializer<TypeD> serializer = stateEngine.getSerializer("TypeD");
         FastBlobSchema typeDSchema = serializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(typeDSchema);
-        rec.setImageMembershipsFlags(FastBlobUtils.ONE_TRUE);
+        rec.setImageMembershipsFlags(FastBlobImageUtils.ONE_TRUE);
 
         TypeD typeD = new TypeD(100, new TypeA(3, 3));
 

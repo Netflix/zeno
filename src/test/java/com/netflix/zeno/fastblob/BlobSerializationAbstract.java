@@ -68,7 +68,7 @@ public abstract class BlobSerializationAbstract {
     }
 
     protected void cache(final String cacheName, Object obj) {
-        serializationState.add(cacheName, obj, FastBlobUtils.ONE_TRUE);
+        serializationState.add(cacheName, obj, FastBlobImageUtils.ONE_TRUE);
     }
 
     protected <T> List<T> getAll(final String cacheName) {

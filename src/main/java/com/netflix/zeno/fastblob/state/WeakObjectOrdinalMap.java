@@ -34,7 +34,7 @@ public class WeakObjectOrdinalMap {
     /**
      * Hashmap entry
      */
-    public static class Entry extends WeakReference<Object> {
+    public static final class Entry extends WeakReference<Object> {
         // identity hashcode
         private int hash;
         // ordinal
@@ -61,6 +61,10 @@ public class WeakObjectOrdinalMap {
 
         public int getImageMembershipsFlags() {
             return imageMembershipsFlags;
+        }
+
+        public boolean hasImageMembershipsFlags(int newImageMembershipsFlags) {
+            return (imageMembershipsFlags | newImageMembershipsFlags) == imageMembershipsFlags;
         }
 
         @Override

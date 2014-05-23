@@ -120,10 +120,9 @@ public class FastBlobTypeSerializationState<T> {
         if(!ordinalMap.isReadyForAddingObjects())
             throw new RuntimeException("The FastBlobStateEngine is not ready to add more Objects.  Did you remember to call stateEngine.prepareForNextCycle()?");
 
-        Class<? extends Object> clazz = data.getClass();
         Entry existingEntry = objectOrdinalMap.getEntry(data);
         if (existingEntry != null) {
-            if ((existingEntry.getImageMembershipsFlags() | imageMembershipsFlags) == existingEntry.getImageMembershipsFlags()) {
+            if (existingEntry.hasImageMembershipsFlags(imageMembershipsFlags)) {
                 return existingEntry.getOrdinal();
             }
         }
@@ -258,12 +257,16 @@ public class FastBlobTypeSerializationState<T> {
     }
 
     /**
-     * Update the bit sets for image membership to indicate that the specified ordinal was referenced.
+     * Update the bit sets for image membership to indicate that the specified
+     * ordinal was referenced.
+     *
+     * @see com.netflix.zeno.fastblob.FastBlobImageUtils.toInteger
      *
      * @param imageMembershipsFlags
      * @param ordinal
      */
     private void addOrdinalToImages(int imageMembershipsFlags, int ordinal) {
+        // This code is tightly related to FastBlobImageUtils packing order
         int count = 0;
         while (imageMembershipsFlags != 0) {
             if ((imageMembershipsFlags & 1) != 0) {
@@ -363,13 +366,5 @@ public class FastBlobTypeSerializationState<T> {
         ByteArrayOrdinalMap.deserializeFrom(is);
         for(int i=0;i<numConfigs*2;i++)
             ThreadSafeBitSet.deserializeFrom(is);
-    }
-
-    public long getOrdinalsAdded() {
-        return ordinalMap.getOrdinalsAdded();
-    }
-
-    public long getOrdinalsReused() {
-        return ordinalMap.getOrdinalsReused();
     }
 }

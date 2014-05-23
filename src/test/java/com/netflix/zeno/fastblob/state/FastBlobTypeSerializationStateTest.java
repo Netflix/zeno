@@ -1,6 +1,6 @@
 package com.netflix.zeno.fastblob.state;
 
-import com.netflix.zeno.fastblob.FastBlobUtils;
+import com.netflix.zeno.fastblob.FastBlobImageUtils;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.serializer.common.IntegerSerializer;
 import java.io.DataInputStream;
@@ -48,12 +48,12 @@ public class FastBlobTypeSerializationStateTest {
 
     private void addData(FastBlobTypeSerializationState<Integer> srcState, byte data[], boolean... images) {
         ByteDataBuffer buf = createBuffer(data);
-        srcState.addData(buf, FastBlobUtils.toInteger(images));
+        srcState.addData(buf, FastBlobImageUtils.toInteger(images));
     }
 
     private void assertData(FastBlobTypeSerializationState<Integer> destState, byte data[], boolean... images) {
         /// get the ordinal for the data, but don't add it to any images
-        int ordinal = destState.addData(createBuffer(data), FastBlobUtils.toInteger(false, false));
+        int ordinal = destState.addData(createBuffer(data), FastBlobImageUtils.toInteger(false, false));
         /// see which images this data was added to
         Assert.assertEquals(images[0], destState.getImageMembershipBitSet(0).get(ordinal));
         Assert.assertEquals(images[1], destState.getImageMembershipBitSet(1).get(ordinal));

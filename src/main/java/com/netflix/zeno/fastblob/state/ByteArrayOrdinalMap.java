@@ -17,7 +17,7 @@
  */
 package com.netflix.zeno.fastblob.state;
 
-import com.netflix.zeno.fastblob.FastBlobUtils;
+import com.netflix.zeno.fastblob.FastBlobImageUtils;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.SegmentedByteArray;
@@ -30,7 +30,6 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 /**
@@ -429,7 +428,7 @@ public class ByteArrayOrdinalMap {
                             rec.position(pointer);
                             remapper.remapOrdinals(rec, mappedBuffer);
 
-                            int newOrdinal = destState.addData(mappedBuffer, FastBlobUtils.toInteger(imageMembershipsFlags));
+                            int newOrdinal = destState.addData(mappedBuffer, FastBlobImageUtils.toInteger(imageMembershipsFlags));
                             stateOrdinalMappers.get(destState.getSchema().getName()).put(ordinal, newOrdinal);
 
                             mappedBuffer.reset();
@@ -643,16 +642,4 @@ public class ByteArrayOrdinalMap {
     public static int getOrdinal(long pointerAndOrdinal) {
         return (int)(pointerAndOrdinal >> 36);
     }
-
-    private AtomicLong ordinalsAdded = new AtomicLong(0);
-    private AtomicLong ordinalsReused = new AtomicLong(0);
-
-    public long getOrdinalsAdded() {
-        return ordinalsAdded.get();
-    }
-
-    public long getOrdinalsReused() {
-        return ordinalsReused.get();
-    }
-
 }
