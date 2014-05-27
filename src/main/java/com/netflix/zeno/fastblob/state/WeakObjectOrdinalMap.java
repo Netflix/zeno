@@ -79,8 +79,13 @@ public class WeakObjectOrdinalMap {
      * The map is divided into segments to increase concurrency
      */
     private class Segment {
+
+        // The same concept as in HashMap. If the entry array is becoming too
+        // dense, it should be increased
+        private static final int LOAD_FACTOR_PERCENT = 75;
         private static final int MINIMUM_CAPACITY = 256;
         private static final int MAXIMUM_CAPACITY = (1<<30);
+
         private int count = 0;
         private int maxThreshold = 0;
         private int minThreshold = 0;
@@ -154,6 +159,11 @@ public class WeakObjectOrdinalMap {
                 newCapacity = Math.min(MAXIMUM_CAPACITY, entries.length << 1);
             }
 
+            // nothing should be done, since capacity is not changed
+            if (newCapacity == entries.length) {
+                return;
+            }
+
             resize(newCapacity);
         }
 
@@ -171,8 +181,8 @@ public class WeakObjectOrdinalMap {
                     }
                 }
             }
-            minThreshold = ( newEntries.length == MINIMUM_CAPACITY ) ? 0 : ( newEntries.length * 75 / 200 );
-            maxThreshold = ( newEntries.length == MAXIMUM_CAPACITY ) ? Integer.MAX_VALUE : newEntries.length * 75 / 100;
+            minThreshold = (newEntries.length == MINIMUM_CAPACITY) ? 0 : (newEntries.length * LOAD_FACTOR_PERCENT / 200);
+            maxThreshold = (newEntries.length == MAXIMUM_CAPACITY) ? Integer.MAX_VALUE : newEntries.length * LOAD_FACTOR_PERCENT / 100;
             entries = newEntries;
         }
 
