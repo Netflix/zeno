@@ -17,6 +17,7 @@
  */
 package com.netflix.zeno.fastblob.state;
 
+import com.netflix.zeno.fastblob.FastBlobStateEngine;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
@@ -249,6 +250,12 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T>,TypeDese
     void ensureCapacity(int size) {
         while(objects.size() < size) {
             objects.add(null);
+        }
+    }
+
+    public void fillSerializationState(FastBlobStateEngine engine) {
+        for (T t : this) {
+            engine.add(serializer.getName(), t);
         }
     }
 

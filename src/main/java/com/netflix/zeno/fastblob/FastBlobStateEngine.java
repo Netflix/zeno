@@ -458,6 +458,15 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
             }
         }
     }
+    
+    public void fillSerializationStatesFromDeserializedData() {
+        for(NFTypeSerializer<?> serializer : getTopLevelSerializers()) {
+            FastBlobTypeDeserializationState<?> state = getTypeDeserializationState(serializer.getName());
+            
+            state.fillSerializationState(this);
+        }
+        
+    }
 
     public void prepareForDoubleSnapshotRefresh() {
         this.frameworkSerializer = new FastBlobHeapFriendlyClientFrameworkSerializer(this);
