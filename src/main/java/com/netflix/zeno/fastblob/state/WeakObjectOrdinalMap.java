@@ -41,14 +41,14 @@ public class WeakObjectOrdinalMap {
         // ordinal
         private int ordinal;
         // membership flags
-        private int imageMembershipsFlags;
+        private long imageMembershipsFlags;
         // linked list pointer
         private Entry next;
 
         /**
          * Creates new entry.
          */
-        Entry(Object key, ReferenceQueue<Object> queue, int hash, int ordinal, int imageMembershipsFlags, Entry next) {
+        Entry(Object key, ReferenceQueue<Object> queue, int hash, int ordinal, long imageMembershipsFlags, Entry next) {
             super(key, queue);
             this.hash  = hash;
             this.ordinal = ordinal;
@@ -60,11 +60,11 @@ public class WeakObjectOrdinalMap {
             return ordinal;
         }
 
-        public int getImageMembershipsFlags() {
+        public long getImageMembershipsFlags() {
             return imageMembershipsFlags;
         }
 
-        public boolean hasImageMembershipsFlags(int newImageMembershipsFlags) {
+        public boolean hasImageMembershipsFlags(long newImageMembershipsFlags) {
             return (imageMembershipsFlags | newImageMembershipsFlags) == imageMembershipsFlags;
         }
 
@@ -97,7 +97,7 @@ public class WeakObjectOrdinalMap {
             resize(MINIMUM_CAPACITY);
         }
 
-        public synchronized void put(Object object, int hashCode, int ordinal, int imageMembershipsFlags) {
+        public synchronized void put(Object object, int hashCode, int ordinal, long imageMembershipsFlags) {
             removeGarbageCollectedEntities();
             int index = index(hashCode, entries.length);
             Entry current = entries[index];
@@ -223,6 +223,7 @@ public class WeakObjectOrdinalMap {
                 ;
 
             Arrays.fill(entries, null);
+            count = 0;
 
             resize(MINIMUM_CAPACITY);
 
@@ -259,7 +260,7 @@ public class WeakObjectOrdinalMap {
      * @param obj
      * @param ordinal
      */
-    public void put(Object obj, int ordinal, int imageMembershipsFlags) {
+    public void put(Object obj, int ordinal, long imageMembershipsFlags) {
         int hashCode = System.identityHashCode(obj);
         int segment = segment(hashCode);
         segments[segment].put(obj, hashCode, ordinal, imageMembershipsFlags);

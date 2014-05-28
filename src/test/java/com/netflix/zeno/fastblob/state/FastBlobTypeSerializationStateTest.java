@@ -48,12 +48,12 @@ public class FastBlobTypeSerializationStateTest {
 
     private void addData(FastBlobTypeSerializationState<Integer> srcState, byte data[], boolean... images) {
         ByteDataBuffer buf = createBuffer(data);
-        srcState.addData(buf, FastBlobImageUtils.toInteger(images));
+        srcState.addData(buf, FastBlobImageUtils.toLong(images));
     }
 
     private void assertData(FastBlobTypeSerializationState<Integer> destState, byte data[], boolean... images) {
         /// get the ordinal for the data, but don't add it to any images
-        int ordinal = destState.addData(createBuffer(data), FastBlobImageUtils.toInteger(false, false));
+        int ordinal = destState.addData(createBuffer(data), FastBlobImageUtils.toLong(false, false));
         /// see which images this data was added to
         Assert.assertEquals(images[0], destState.getImageMembershipBitSet(0).get(ordinal));
         Assert.assertEquals(images[1], destState.getImageMembershipBitSet(1).get(ordinal));

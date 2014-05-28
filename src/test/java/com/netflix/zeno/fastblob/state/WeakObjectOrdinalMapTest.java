@@ -56,6 +56,14 @@ public class WeakObjectOrdinalMapTest {
         map.put(i2, 2, 5);
         map.put(i3, 3, 6);
 
+        Assert.assertEquals(3, map.size());
+        map.clear();
+        Assert.assertEquals(0, map.size());
+
+        map.put(i1, 1, 4);
+        map.put(i2, 2, 5);
+        map.put(i3, 3, 6);
+
         WeakObjectOrdinalMap.Entry entry1 = map.getEntry(i1);
         Assert.assertEquals(1, entry1.getOrdinal());
         Assert.assertEquals(4, entry1.getImageMembershipsFlags());
@@ -69,16 +77,19 @@ public class WeakObjectOrdinalMapTest {
 
         i2 = null;
         i3 = null;
-        System.gc();
-        Thread.sleep(5000);
+        doGC();
         Assert.assertEquals(1, map.size());
         entry1 = map.getEntry(i1);
         Assert.assertEquals(1, entry1.getOrdinal());
         Assert.assertEquals(4, entry1.getImageMembershipsFlags());
 
         i1 = null;
-        System.gc();
-        Thread.sleep(5000);
+        doGC();
         Assert.assertEquals(0, map.size());
+    }
+
+    private void doGC() throws InterruptedException {
+        System.gc();
+        Thread.sleep(1000);
     }
 }

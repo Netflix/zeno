@@ -428,7 +428,7 @@ public class ByteArrayOrdinalMap {
                             rec.position(pointer);
                             remapper.remapOrdinals(rec, mappedBuffer);
 
-                            int newOrdinal = destState.addData(mappedBuffer, FastBlobImageUtils.toInteger(imageMembershipsFlags));
+                            int newOrdinal = destState.addData(mappedBuffer, FastBlobImageUtils.toLong(imageMembershipsFlags));
                             stateOrdinalMappers.get(destState.getSchema().getName()).put(ordinal, newOrdinal);
 
                             mappedBuffer.reset();

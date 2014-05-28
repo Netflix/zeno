@@ -17,8 +17,6 @@
  */
 package com.netflix.zeno.fastblob;
 
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Utils for packing boolean arrays to integer, this is typically used for
@@ -36,8 +34,8 @@ public class FastBlobImageUtils {
      * @param a
      * @return
      */
-    public static int toInteger(boolean... a) {
-        if (a.length > 32) {
+    public static long toLong(boolean... a) {
+        if (a.length >= 64) {
             throw new IllegalArgumentException("while packing boolean array in int, the array length should be less than 32");
         }
 
@@ -48,16 +46,16 @@ public class FastBlobImageUtils {
         return n;
     }
 
-    public static final int ONE_TRUE = toInteger(true);
+    public static final long ONE_TRUE = toLong(true);
 
-    private static final Map<Integer, Integer> ALL_TRUE_PRIVATE = new HashMap<Integer, Integer>();
+    private static final long[] ALL_TRUE_PRIVATE = new long[64];
     static {
-        for (int i = 0; i < 32; i++) {
+        for (int i = 0; i < 64; i++) {
             boolean[] a = new boolean[i];
             for (int j = 0; j < i; j++) {
                 a[j] = true;
             }
-            ALL_TRUE_PRIVATE.put(i, toInteger(a));
+            ALL_TRUE_PRIVATE[i] = toLong(a);
         }
     }
 
@@ -68,11 +66,11 @@ public class FastBlobImageUtils {
      * @param count
      * @return
      */
-    public static final int getAllTrue(int count) {
-        if (count > 32) {
+    public static final long getAllTrue(int count) {
+        if (count >= 64) {
             throw new IllegalArgumentException("while packing boolean array in int, the array length should be less than 32");
         }
-        return ALL_TRUE_PRIVATE.get(count);
+        return ALL_TRUE_PRIVATE[count];
     }
 
 }

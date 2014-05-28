@@ -17,6 +17,7 @@
  */
 package com.netflix.zeno.fastblob.state;
 
+import com.netflix.zeno.fastblob.FastBlobImageUtils;
 import com.netflix.zeno.fastblob.FastBlobStateEngine;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
@@ -69,14 +70,27 @@ public class FastBlobTypeSerializationState<T> {
 
     private ThreadSafeBitSet imageMemberships[];
     private ThreadSafeBitSet previousCycleImageMemberships[];
-    private WeakObjectOrdinalMap objectOrdinalMap = new WeakObjectOrdinalMap(8);
+
+    private WeakObjectOrdinalMap objectOrdinalMap;
+
+    /**
+     *
+     * @param serializer
+     *            The NFTypeSerializer for this state's type.
+     * @param numImages
+     *            The number of blob images which will be produced by the
+     *            {@link FastBlobStateEngine}.
+     */
+    public FastBlobTypeSerializationState(NFTypeSerializer<T> serializer, int numImages) {
+        this(serializer, numImages, true);
+    }
 
     /**
      *
      * @param serializer The NFTypeSerializer for this state's type.
      * @param numImages The number of blob images which will be produced by the {@link FastBlobStateEngine}.
      */
-    public FastBlobTypeSerializationState(NFTypeSerializer<T> serializer, int numImages) {
+    public FastBlobTypeSerializationState(NFTypeSerializer<T> serializer, int numImages, boolean shouldUseObjectIdentityOrdinalCaching) {
         this.serializer = serializer;
         this.typeSchema = serializer.getFastBlobSchema();
         this.serializationRecord = new ThreadLocal<FastBlobSerializationRecord>();
@@ -85,6 +99,9 @@ public class FastBlobTypeSerializationState<T> {
 
         this.imageMemberships = initializeImageMembershipBitSets(numImages);
         this.previousCycleImageMemberships = initializeImageMembershipBitSets(numImages);
+        if (shouldUseObjectIdentityOrdinalCaching) {
+            objectOrdinalMap = new WeakObjectOrdinalMap(8);
+        }
     }
 
     public String getName() {
@@ -105,6 +122,27 @@ public class FastBlobTypeSerializationState<T> {
     }
 
     /**
+     * Add an object to this state. We will create a serialized representation
+     * of this object, then assign or retrieve the ordinal for this serialized
+     * representation in our {@link ByteArrayOrdinalMap}
+     * <p/>
+     *
+     * Because the FastBlobStateEngine can represent multiple images, it must be
+     * specified in *which* images this object should be included. This is
+     * accomplished with a boolean array. If the object is included in a
+     * specific image, then the imageMembershipsFlag array will contain the
+     * boolean value "true", at the index in which that image appears in the
+     * list returned by {@link FastBlobStateEngine}.getImageConfigurations()
+     *
+     * @param data
+     * @param imageMembershipsFlags
+     */
+    @Deprecated
+    public int add(T data, boolean[] imageMembershipsFlags) {
+        return add(data, FastBlobImageUtils.toLong(imageMembershipsFlags));
+    }
+
+    /**
      * Add an object to this state.  We will create a serialized representation of this object, then
      * assign or retrieve the ordinal for this serialized representation in our {@link ByteArrayOrdinalMap}<p/>
      *
@@ -116,14 +154,16 @@ public class FastBlobTypeSerializationState<T> {
      * @param data
      * @param imageMembershipsFlags
      */
-    public int add(T data, int imageMembershipsFlags) {
+    public int add(T data, long imageMembershipsFlags) {
         if(!ordinalMap.isReadyForAddingObjects())
             throw new RuntimeException("The FastBlobStateEngine is not ready to add more Objects.  Did you remember to call stateEngine.prepareForNextCycle()?");
 
-        Entry existingEntry = objectOrdinalMap.getEntry(data);
-        if (existingEntry != null) {
-            if (existingEntry.hasImageMembershipsFlags(imageMembershipsFlags)) {
-                return existingEntry.getOrdinal();
+        if (objectOrdinalMap != null) {
+            Entry existingEntry = objectOrdinalMap.getEntry(data);
+            if (existingEntry != null) {
+                if (existingEntry.hasImageMembershipsFlags(imageMembershipsFlags)) {
+                    return existingEntry.getOrdinal();
+                }
             }
         }
 
@@ -141,8 +181,23 @@ public class FastBlobTypeSerializationState<T> {
         scratch.reset();
         rec.reset();
 
-        objectOrdinalMap.put(data, ordinal, imageMembershipsFlags);
+        if (objectOrdinalMap != null) {
+            objectOrdinalMap.put(data, ordinal, imageMembershipsFlags);
+        }
         return ordinal;
+    }
+
+    /**
+     * Hook to add raw data. This is used during FastBlobStateEngine
+     * combination. PreviousState
+     *
+     * @param data
+     * @param imageMembershipsFlags
+     * @return
+     */
+    @Deprecated
+    public int addData(ByteDataBuffer data, boolean[] imageMembershipsFlags) {
+        return addData(data, FastBlobImageUtils.toLong(imageMembershipsFlags));
     }
 
     /**
@@ -152,7 +207,7 @@ public class FastBlobTypeSerializationState<T> {
      * @param imageMembershipsFlags
      * @return
      */
-    public int addData(ByteDataBuffer data, int imageMembershipsFlags) {
+    public int addData(ByteDataBuffer data, long imageMembershipsFlags) {
         int ordinal = ordinalMap.getOrAssignOrdinal(data);
 
         addOrdinalToImages(imageMembershipsFlags, ordinal);
@@ -221,7 +276,9 @@ public class FastBlobTypeSerializationState<T> {
         for(ThreadSafeBitSet bitSet : imageMemberships) {
             bitSet.clearAll();
         }
-        objectOrdinalMap.clear();
+        if (objectOrdinalMap != null) {
+            objectOrdinalMap.clear();
+        }
     }
 
     /**
@@ -265,7 +322,7 @@ public class FastBlobTypeSerializationState<T> {
      * @param imageMembershipsFlags
      * @param ordinal
      */
-    private void addOrdinalToImages(int imageMembershipsFlags, int ordinal) {
+    private void addOrdinalToImages(long imageMembershipsFlags, int ordinal) {
         // This code is tightly related to FastBlobImageUtils packing order
         int count = 0;
         while (imageMembershipsFlags != 0) {

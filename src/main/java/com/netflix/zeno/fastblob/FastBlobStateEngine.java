@@ -84,6 +84,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
     /// The serialization states, ordered such that all dependencies come *before* their dependents
     public final List<FastBlobTypeSerializationState<?>> orderedSerializationStates;
 
+    private final boolean shouldUseObjectIdentityOrdinalCaching;
     private final int numberOfConfigurations;
 
     private String latestVersion;
@@ -91,14 +92,19 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
 
     private int maxSingleObjectLength;
 
-    private final int addToAllImagesFlags;
+    private final long addToAllImagesFlags;
 
     public FastBlobStateEngine(SerializerFactory factory) {
-        this(factory, 1);
+        this(factory, 1, true);
     }
 
     public FastBlobStateEngine(SerializerFactory factory, int numberOfConfigurations) {
+        this(factory, numberOfConfigurations, true);
+    }
+
+    public FastBlobStateEngine(SerializerFactory factory, int numberOfConfigurations, boolean shouldUseObjectIdentityOrdinalCaching) {
         super(factory);
+        this.shouldUseObjectIdentityOrdinalCaching = shouldUseObjectIdentityOrdinalCaching;
         this.frameworkSerializer = new FastBlobFrameworkSerializer(this);
         this.frameworkDeserializer = new FastBlobFrameworkDeserializer(this);
 
@@ -119,7 +125,8 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
     }
 
     private <T> void createSerializationState(NFTypeSerializer<T> serializer) {
-        FastBlobTypeSerializationState<T> serializationState = new FastBlobTypeSerializationState<T>(serializer, numberOfConfigurations);
+        FastBlobTypeSerializationState<T> serializationState = new FastBlobTypeSerializationState<T>(serializer, numberOfConfigurations,
+                shouldUseObjectIdentityOrdinalCaching);
         serializationTypeStates.put(serializer.getName(), serializationState);
         orderedSerializationStates.add(serializationState);
         deserializationTypeStates.put(serializer.getName(), new FastBlobTypeDeserializationState<T>(serializer));
@@ -146,6 +153,26 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
     }
 
     /**
+     * Add an object to this state engine. The images to which this object
+     * should be added are specified with the addToImageFlags[] array of
+     * booleans.
+     * <p/>
+     *
+     * For example, if the FastBlobStateEngine can produce 3 images,
+     * getImageConfigurations() will return a List of size 3.
+     * <p/>
+     *
+     * If an object added to this state engine should be contained in the images
+     * at index 1, but not at index 0 and 2, then the boolean[] passed into this
+     * method should be {false, true, false}.
+     *
+     */
+    @Deprecated
+    public void add(String type, Object obj, boolean[] addToImageFlags) {
+        add(type, obj, FastBlobImageUtils.toLong(addToImageFlags));
+    }
+
+    /**
      * Add an object to this state engine.  The images to which this object should be added are specified with the addToImageFlags[] array of booleans.<p/>
      *
      * For example, if the FastBlobStateEngine can produce 3 images, getImageConfigurations() will return a List of size 3.<p/>
@@ -154,7 +181,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
      * then the boolean[] passed into this method should be {false, true, false}.
      *
      */
-    public void add(String type, Object obj, int addToImageFlags) {
+    public void add(String type, Object obj, long addToImageFlags) {
         FastBlobTypeSerializationState<Object> typeSerializationState = getTypeSerializationState(type);
         if(typeSerializationState == null) {
             throw new RuntimeException("Unable to find type.  Ensure there exists an NFTypeSerializer with the name: "  + type);
@@ -459,7 +486,7 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
                 for(int imageIndex=0;imageIndex<numberOfConfigurations;imageIndex++) {
                     imageMembershipsFlags[imageIndex] = typeSerializationState.getImageMembershipBitSet(imageIndex).get(i);
                 }
-                otherStateEngine.add(typeSerializationState.getSchema().getName(), obj, FastBlobImageUtils.toInteger(imageMembershipsFlags));
+                otherStateEngine.add(typeSerializationState.getSchema().getName(), obj, FastBlobImageUtils.toLong(imageMembershipsFlags));
             }
         }
     }

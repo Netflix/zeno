@@ -135,11 +135,11 @@ public class FastBlobEngineTest {
     }
 
     private void addData(FastBlobStateEngine stateEngine, Integer data, boolean... images) {
-        stateEngine.add("Integer", data, FastBlobImageUtils.toInteger(images));
+        stateEngine.add("Integer", data, FastBlobImageUtils.toLong(images));
     }
 
     private void addStringData(FastBlobStateEngine stateEngine, String data, boolean... images) {
-        stateEngine.add("Strings", data, FastBlobImageUtils.toInteger(images));
+        stateEngine.add("Strings", data, FastBlobImageUtils.toLong(images));
     }
 
     private void assertData(FastBlobStateEngine stateEngine, Integer data, boolean... images) throws Exception {
