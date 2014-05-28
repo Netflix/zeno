@@ -9,6 +9,11 @@ import com.netflix.zeno.serializer.common.IntegerSerializer;
 import com.netflix.zeno.serializer.common.StringSerializer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.Assert;
@@ -107,28 +112,34 @@ public class FastBlobEngineTest {
 
     }
 
-//    @Test
-//    public void serializeAndDeserialize() throws Exception{
-//        /// initialize data in "from" state
-//        addData(srcState1, new byte[] { 1, 2 }, true, true);
-//        addData(srcState1, new byte[] { 3, 4, 5 }, true, false);
-//        addData(srcState1, new byte[] { 6, 7, 8, 9 }, false, true);
-//
-//        final File f = File.createTempFile("pre", "suf");
-//        DataOutputStream dos = new DataOutputStream(new FileOutputStream(f));
-//        srcState1.serializeTo(dos);
-//        dos.close();
-//
-//        DataInputStream dis = new DataInputStream(new FileInputStream(f));
-//        destState.deserializeFrom(dis, 2);
-//        dis.close();
-//
-//        /// assert data was deserialized
-//        assertData(destState, new byte[] { 1, 2 }, true, true);
-//        assertData(destState, new byte[] { 3, 4, 5 }, true, false);
-//        assertData(destState, new byte[] { 6, 7, 8, 9 }, false, true);
-//        f.delete();
-//    }
+    @Test
+    public void serializeAndDeserialize() throws Exception{
+        addData(srcEngine1, 1, true, true);
+        addData(srcEngine1, 2, true, false);
+        addData(srcEngine1, 3, false, true);
+        addData(srcEngine1, 1, true, true);
+        addData(srcEngine1, 2, true, false);
+        addData(srcEngine1, 4, false, true);
+
+        final File f = File.createTempFile("pre", "suf");
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(f));
+        DataInputStream dis = new DataInputStream(new FileInputStream(f));
+        try {
+            srcEngine1.setLatestVersion("foo");
+            srcEngine1.serializeTo(dos);
+            destEngine.deserializeFrom(dis);
+        }finally {
+            dos.close();
+            dis.close();
+            f.delete();
+        }
+
+        /// assert data was deserialized
+        assertData(destEngine, 1, true, true);
+        assertData(destEngine, 2, true, false);
+        assertData(destEngine, 3, false, true);
+        assertData(destEngine, 4, false, true);
+    }
 
     private void copyEngine(FastBlobStateEngine srcStateEngine, FastBlobStateEngine destStateEngine) {
         srcStateEngine.copySerializationStatesTo(destStateEngine, Collections.<String> emptyList());

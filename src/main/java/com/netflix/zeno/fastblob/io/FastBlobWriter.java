@@ -17,14 +17,15 @@
  */
 package com.netflix.zeno.fastblob.io;
 
-import com.netflix.zeno.fastblob.FastBlobStateEngine;
-import com.netflix.zeno.fastblob.record.VarInt;
-import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
-import com.netflix.zeno.fastblob.state.ThreadSafeBitSet;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import com.netflix.zeno.fastblob.FastBlobStateEngine;
+import com.netflix.zeno.fastblob.record.VarInt;
+import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
+import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
+import com.netflix.zeno.fastblob.state.ThreadSafeBitSet;
 
 /**
  * Writes FastBlob images to streams.
@@ -83,6 +84,24 @@ public class FastBlobWriter {
 
             ThreadSafeBitSet imageMembershipBitSet = typeState.getImageMembershipBitSet(imageIndex);
             serializeTypeStateObjects(os, typeState, imageMembershipBitSet);
+        }
+    }
+
+    public void writeNonImageSpecificSnapshot(DataOutputStream os) throws IOException {
+        writeHeader(os);
+
+        for(FastBlobTypeSerializationState<?> typeState : stateEngine.getOrderedSerializationStates()) {
+            if(!typeState.isReadyForWriting())
+                throw new RuntimeException("This state engine is not ready for writing! Have you remembered to call stateEngine.prepareForWrite()?");
+
+            FastBlobTypeDeserializationState<?> typeDeserializationState = stateEngine.getTypeDeserializationState(typeState.getSchema().getName());
+
+            /// type flags byte -- reserved for later use
+            os.write(0);
+            /// write the schema
+            typeState.getSchema().writeTo(os);
+
+            serializeTypeStateObjects(os, typeState, typeDeserializationState);
         }
     }
 
@@ -184,6 +203,26 @@ public class FastBlobWriter {
 
         for(int i=0;i<currentBitSetCapacity;i++) {
             if(includeOrdinals.get(i)) {
+                /// gap-encoded ordinals
+                VarInt.writeVInt(os, i - currentOrdinal);
+                currentOrdinal = i;
+
+                /// typeState will use the ByteArrayOrdinalMap to write the length and
+                /// serialized representation of the object.
+                typeState.writeObjectTo(os, i);
+            }
+        }
+    }
+
+    private void serializeTypeStateObjects(DataOutputStream os, FastBlobTypeSerializationState<?> typeState,
+            FastBlobTypeDeserializationState<?> typeDeserializationState) throws IOException {
+        /// write the number of objects
+        VarInt.writeVInt(os, typeDeserializationState.countObjects());
+        int currentOrdinal = 0;
+
+        for(int i=0;i<=typeDeserializationState.maxOrdinal();i++) {
+            Object obj = typeDeserializationState.get(i);
+            if(obj != null) {
                 /// gap-encoded ordinals
                 VarInt.writeVInt(os, i - currentOrdinal);
                 currentOrdinal = i;
