@@ -60,8 +60,6 @@ public class RestoreServerAfterSchemaChangeTest {
         new FastBlobWriter(stateEngine1, 0).writeSnapshot(new DataOutputStream(serializedSnapshotState1));
 
         /// serialize the state engine
-        stateEngine1.prepareForNextCycle();
-
         ByteArrayOutputStream serializedStateEngine1 = new ByteArrayOutputStream();
 
         stateEngine1.serializeTo(serializedStateEngine1);
@@ -71,6 +69,7 @@ public class RestoreServerAfterSchemaChangeTest {
 
         /// deserialize the state engine from the previous server (with the old serializers)
         stateEngine2.deserializeFrom(new ByteArrayInputStream(serializedStateEngine1.toByteArray()));
+        stateEngine2.prepareForNextCycle();
 
         /// add new data to the state engine, with some overlap
         TypeC c1 = new TypeC(1);
