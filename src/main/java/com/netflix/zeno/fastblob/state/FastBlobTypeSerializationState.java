@@ -17,6 +17,13 @@
  */
 package com.netflix.zeno.fastblob.state;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.netflix.zeno.fastblob.FastBlobImageUtils;
 import com.netflix.zeno.fastblob.FastBlobStateEngine;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
@@ -24,12 +31,6 @@ import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.state.WeakObjectOrdinalMap.Entry;
 import com.netflix.zeno.serializer.NFTypeSerializer;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class represents the "serialization state" for a single type at some level of the object
@@ -60,7 +61,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FastBlobTypeSerializationState<T> {
 
     public final NFTypeSerializer<T> serializer;
-    private final FastBlobSchema typeSchema;
+    private FastBlobSchema typeSchema;
     private FastBlobSchema previousStateTypeSchema;
 
     private final ThreadLocal<FastBlobSerializationRecord> serializationRecord;
@@ -272,6 +273,7 @@ public class FastBlobTypeSerializationState<T> {
         imageMemberships = temp;
 
         previousStateTypeSchema = typeSchema;
+        typeSchema = serializer.getFastBlobSchema();
 
         for(ThreadSafeBitSet bitSet : imageMemberships) {
             bitSet.clearAll();
@@ -374,33 +376,20 @@ public class FastBlobTypeSerializationState<T> {
      * Serialize this FastBlobTypeSerializationState to an OutputStream
      */
     public void serializeTo(DataOutputStream os) throws IOException {
-//        boolean isPreviousSchemaExist = previousStateTypeSchema != null;
-//        os.writeBoolean(isPreviousSchemaExist);
-//
-//        if(isPreviousSchemaExist) {
-//            previousStateTypeSchema.writeTo(os);
-//        }
+        typeSchema.writeTo(os);
 
         ordinalMap.serializeTo(os);
 
         for(ThreadSafeBitSet bitSet : imageMemberships) {
             bitSet.serializeTo(os);
         }
-
-//        for(ThreadSafeBitSet bitSet : previousCycleImageMemberships) {
-//            bitSet.serializeTo(os);
-//        }
     }
 
     /**
      * Deserialize this FastBlobTypeSerializationState from an InputStream
      */
     public void deserializeFrom(DataInputStream is, int numConfigs) throws IOException {
-//        boolean isPreviousSchemaSerialized = is.readBoolean();
-//
-//        if(isPreviousSchemaSerialized) {
-//            previousStateTypeSchema = FastBlobSchema.readFrom(is);
-//        }
+        typeSchema = FastBlobSchema.readFrom(is);
 
         ordinalMap = ByteArrayOrdinalMap.deserializeFrom(is);
 
@@ -408,11 +397,6 @@ public class FastBlobTypeSerializationState<T> {
             ThreadSafeBitSet bitSet = ThreadSafeBitSet.deserializeFrom(is);
             imageMemberships[i] = bitSet;
         }
-
-//        for(int i=0;i<numConfigs;i++) {
-//            ThreadSafeBitSet bitSet = ThreadSafeBitSet.deserializeFrom(is);
-//            previousCycleImageMemberships[i] = bitSet;
-//        }
     }
 
     /**
