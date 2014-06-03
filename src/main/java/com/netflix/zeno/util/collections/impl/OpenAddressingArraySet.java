@@ -17,6 +17,7 @@
  */
 package com.netflix.zeno.util.collections.impl;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 
@@ -32,6 +33,7 @@ public class OpenAddressingArraySet<E> extends AbstractArraySet<E> {
 
     private Object hashTable;
     private Object elements[];
+    private int size;
 
     public OpenAddressingArraySet() {
         super();
@@ -43,7 +45,7 @@ public class OpenAddressingArraySet<E> extends AbstractArraySet<E> {
 
     @Override
     public int size() {
-        return elements.length;
+        return size;
     }
 
     // 70% load factor
@@ -88,11 +90,14 @@ public class OpenAddressingArraySet<E> extends AbstractArraySet<E> {
 
     @Override
     public void builderSet(int index, E element) {
-        elements[index] = element;
+        elements[size++] = element;
     }
 
     @Override
     public Set<E> builderFinish() {
+        if(elements.length > size)
+            elements = Arrays.copyOf(elements, size);
+
         // Math.abs(x % n) is the same as (x & n-1) when n is a power of 2
         int hashModMask = OpenAddressing.hashTableLength(hashTable) - 1;
 

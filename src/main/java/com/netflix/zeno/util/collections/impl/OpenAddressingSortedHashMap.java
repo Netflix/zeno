@@ -23,6 +23,7 @@ import com.netflix.zeno.util.collections.algorithms.ArrayQuickSort;
 import com.netflix.zeno.util.collections.algorithms.BinarySearch;
 import com.netflix.zeno.util.collections.builder.MapBuilder;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
@@ -57,6 +58,9 @@ public class OpenAddressingSortedHashMap<K, V> extends OpenAddressingHashMap<K, 
 
     @Override
     public SortedMap<K, V> builderFinish() {
+        if(keysAndValues.length > size * 2)
+            keysAndValues = Arrays.copyOf(keysAndValues, size * 2);
+
         if (comparator() != null) {
             ArrayQuickSort.sort(this, comparator());
         }

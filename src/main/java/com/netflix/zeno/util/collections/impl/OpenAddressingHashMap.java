@@ -19,6 +19,7 @@ package com.netflix.zeno.util.collections.impl;
 
 import com.netflix.zeno.util.collections.builder.MapBuilder;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
@@ -42,6 +43,8 @@ public class OpenAddressingHashMap<K, V> extends AbstractArrayMap<K, V> implemen
     // even array indices.
     // the value for a given key is located at entries[keyIndex + 1];
     protected Object keysAndValues[];
+
+    protected int size;
 
     public OpenAddressingHashMap() {
         setMap(Collections.<K, V> emptyMap());
@@ -72,14 +75,18 @@ public class OpenAddressingHashMap<K, V> extends AbstractArrayMap<K, V> implemen
 
     @Override
     public void builderPut(int index, K key, V value) {
-        keysAndValues[index * 2] = key;
-        keysAndValues[(index * 2) + 1] = value;
+        keysAndValues[size * 2] = key;
+        keysAndValues[(size * 2) + 1] = value;
+        size++;
     }
 
     @Override
     public Map<K, V> builderFinish() {
         // / Math.abs(x % n) is the same as (x & n-1) when n is a power of 2
         int hashModMask = OpenAddressing.hashTableLength(hashTable) - 1;
+
+        if(keysAndValues.length > size * 2)
+            keysAndValues = Arrays.copyOf(keysAndValues, size * 2);
 
         for (int i = 0; i < keysAndValues.length; i += 2) {
             int hash = hashCode(keysAndValues[i]);
@@ -102,7 +109,7 @@ public class OpenAddressingHashMap<K, V> extends AbstractArrayMap<K, V> implemen
 
     @Override
     public int size() {
-        return keysAndValues.length / 2;
+        return size;
     }
 
     @Override
