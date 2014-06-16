@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
  * @author dkoszewnik
  *
  */
-public class FastBlobTypeDeserializationState<T> implements Iterable<T>,TypeDeserializationState<T> {
+public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
 
     private final NFTypeSerializer<T> serializer;
 
@@ -62,7 +62,6 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T>,TypeDese
         this.objects = new ArrayList<T>();
     }
 
-    @Override
     public T get(int ordinal) {
         return objects.get(ordinal);
     }

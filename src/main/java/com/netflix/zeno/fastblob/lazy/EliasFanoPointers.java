@@ -33,6 +33,7 @@ public class EliasFanoPointers {
     private long previousValue;
 
     private final long skipIndex[];
+    private final int numPointers;
 
     private final SegmentedLongArray highBits;
     private long previousHighBitValue;
@@ -43,9 +44,10 @@ public class EliasFanoPointers {
     private final long lowBitsMask;
 
     public EliasFanoPointers(long maxPointer, int numPointers){
+        this.numPointers = numPointers;
         this.skipIndex = new long[((numPointers-1) / 64) + 2];
         this.highBits = new SegmentedLongArray(5);
-        this.numLowBits = 31 - Integer.numberOfLeadingZeros((int) (maxPointer / numPointers));
+        this.numLowBits = Math.max(0, 31 - Integer.numberOfLeadingZeros((int) (maxPointer / numPointers)));
         this.lowBitsMask = (1 << numLowBits) - 1;
         this.lowBits = new long[((numPointers * numLowBits) / 64) + 1];
         this.previousValue = -1;
@@ -53,6 +55,9 @@ public class EliasFanoPointers {
     }
 
     public long get(int index) {
+        if(index >= numPointers)
+            return -1;
+
         long highBit = skipIndex[(index >>> 7) * 2];
         long previousValue = skipIndex[((index >>> 7) * 2) + 1];
 

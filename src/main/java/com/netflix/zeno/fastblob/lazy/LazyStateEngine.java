@@ -17,9 +17,9 @@
  */
 package com.netflix.zeno.fastblob.lazy;
 
-import com.netflix.zeno.fastblob.FastBlobFrameworkDeserializer;
-import com.netflix.zeno.fastblob.FastBlobSerializationFramework;
+import com.netflix.zeno.fastblob.lazy.hollow.HollowObject;
 import com.netflix.zeno.serializer.NFTypeSerializer;
+import com.netflix.zeno.serializer.SerializationFramework;
 import com.netflix.zeno.serializer.SerializerFactory;
 
 import java.util.HashMap;
@@ -27,7 +27,7 @@ import java.util.Map;
 
 /**
  * LazyStateEngine is currently an experiment, the goal of this is to keep the FastBlob data in memory,
- * then deserialize on demand from memory.
+ * then read on demand from memory.
  *
  * This keeps the memory footprint low, but is more scalable than over-the-network calls and much
  * more performant than reaching to disk (e.g. for a flat blob).
@@ -35,9 +35,9 @@ import java.util.Map;
  * @author dkoszewnik
  *
  */
-public class LazyStateEngine extends FastBlobSerializationFramework {
+public class LazyStateEngine extends SerializationFramework {
 
-    private final Map<String, LazyTypeDeserializationState<?>> typeDeserializationStates;
+    private final Map<String, LazyTypeDataState<?>> typeDataStates;
 
     private String latestVersion;
     private final Map<String,String> headerTags = new HashMap<String, String>();
@@ -45,26 +45,32 @@ public class LazyStateEngine extends FastBlobSerializationFramework {
 
     public LazyStateEngine(SerializerFactory serializerFactory) {
         super(serializerFactory);
-        this.frameworkDeserializer = new FastBlobFrameworkDeserializer(this);
-        this.typeDeserializationStates = new HashMap<String, LazyTypeDeserializationState<?>>();
+        this.typeDataStates = new HashMap<String, LazyTypeDataState<?>>();
 
         createTypeDeserializationStates();
     }
 
+    public HollowObject getHollowObject(String type, int ordinal) {
+        return typeDataStates.get(type).get(ordinal);
+    }
+
+    public boolean positionHollowObject(String type, int ordinal, HollowObject objectToPosition) {
+        return typeDataStates.get(type).position(objectToPosition, ordinal);
+    }
+
     private void createTypeDeserializationStates() {
         for(NFTypeSerializer<?>serializer : getOrderedSerializers()) {
-            typeDeserializationStates.put(serializer.getName(), createTypeDeserializationState(serializer));
+            typeDataStates.put(serializer.getName(), createTypeDeserializationState(serializer));
         }
     }
 
-    private <T> LazyTypeDeserializationState<T> createTypeDeserializationState(NFTypeSerializer<T>serializer) {
-        return new LazyTypeDeserializationState<T>(serializer);
+    private <T> LazyTypeDataState<T> createTypeDeserializationState(NFTypeSerializer<T>serializer) {
+        return new LazyTypeDataState<T>(serializer, this);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
-    public <T> LazyTypeDeserializationState<T> getTypeDeserializationState(String name) {
-        return (LazyTypeDeserializationState<T>) typeDeserializationStates.get(name);
+    public <T> LazyTypeDataState<T> getTypeDataState(String name) {
+        return (LazyTypeDataState<T>) typeDataStates.get(name);
     }
 
     public String getLatestVersion() {

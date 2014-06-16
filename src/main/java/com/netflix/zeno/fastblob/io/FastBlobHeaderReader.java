@@ -17,12 +17,10 @@
  */
 package com.netflix.zeno.fastblob.io;
 
-import com.netflix.zeno.fastblob.FastBlobSerializationFramework;
-
 import java.io.IOException;
 import java.io.InputStream;
 
 public interface FastBlobHeaderReader {
 
-    public FastBlobHeader readHeader(InputStream is, FastBlobSerializationFramework stateEngine) throws IOException,FastBlobMalformedDataException;
+    public FastBlobHeader readHeader(InputStream is) throws IOException,FastBlobMalformedDataException;
 }

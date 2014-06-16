@@ -17,7 +17,6 @@
  */
 package com.netflix.zeno.fastblob.io;
 
-import com.netflix.zeno.fastblob.FastBlobSerializationFramework;
 import com.netflix.zeno.fastblob.record.VarInt;
 
 import java.io.DataInputStream;
@@ -29,7 +28,7 @@ import java.util.Map;
 public class ZenoFastBlobHeaderReader implements FastBlobHeaderReader {
 
     @Override
-    public FastBlobHeader readHeader(InputStream is, FastBlobSerializationFramework stateEngine) throws IOException, FastBlobMalformedDataException {
+    public FastBlobHeader readHeader(InputStream is) throws IOException, FastBlobMalformedDataException {
         FastBlobHeader header = new FastBlobHeader();
         DataInputStream dis = new DataInputStream(is);
 

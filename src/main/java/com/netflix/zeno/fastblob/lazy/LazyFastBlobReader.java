@@ -85,8 +85,6 @@ public class LazyFastBlobReader {
 
             FastBlobSchema schema = FastBlobSchema.readFrom(dis);
 
-            System.out.println(schema.getName());
-
             readTypeStateObjects(byteData, schema);
         }
     }
@@ -95,7 +93,7 @@ public class LazyFastBlobReader {
      * Read the header and return the version
      */
     private FastBlobHeader readHeader(InputStream is) throws IOException {
-        FastBlobHeader header = headerReader.readHeader(is, stateEngine);
+        FastBlobHeader header = headerReader.readHeader(is);
         stateEngine.addHeaderTags(header.getHeaderTags());
         return header;
     }
@@ -107,7 +105,7 @@ public class LazyFastBlobReader {
 
     private void readTypeStateObjects(StreamingByteData byteData,FastBlobSchema schema) throws IOException {
         FastBlobDeserializationRecord rec = new FastBlobDeserializationRecord(schema, byteData);
-        LazyTypeDeserializationState<?> typeDeserializationState = stateEngine.getTypeDeserializationState(schema.getName());
+        LazyTypeDataState<?> typeDataState = stateEngine.getTypeDataState(schema.getName());
 
         int numObjects = VarInt.readVInt(byteData);
 
@@ -124,12 +122,14 @@ public class LazyFastBlobReader {
 
             int objectSize = rec.position(byteData.currentStreamPosition());
 
-            if(typeDeserializationState != null) {
-                typeDeserializationState.add(currentOrdinal, byteData, byteData.currentStreamPosition(), objectSize);
+            if(typeDataState != null) {
+                typeDataState.add(currentOrdinal, byteData, byteData.currentStreamPosition(), objectSize);
             }
 
             byteData.incrementStreamPosition(objectSize);
         }
+
+        typeDataState.finalizePointers();
     }
 
 }

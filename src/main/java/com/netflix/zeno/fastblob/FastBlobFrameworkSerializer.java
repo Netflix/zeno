@@ -38,8 +38,8 @@ import com.netflix.zeno.serializer.FrameworkSerializer;
  */
 public class FastBlobFrameworkSerializer extends FrameworkSerializer<FastBlobSerializationRecord> {
 
-    static final int NULL_FLOAT_BITS = Float.floatToIntBits(Float.NaN) + 1;
-    static final long NULL_DOUBLE_BITS = Double.doubleToLongBits(Double.NaN) + 1;
+    public static final int NULL_FLOAT_BITS = Float.floatToIntBits(Float.NaN) + 1;
+    public static final long NULL_DOUBLE_BITS = Double.doubleToLongBits(Double.NaN) + 1;
 
     public FastBlobFrameworkSerializer(FastBlobStateEngine framework) {
         super(framework);

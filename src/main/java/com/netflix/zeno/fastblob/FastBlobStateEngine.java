@@ -23,8 +23,10 @@ import com.netflix.zeno.fastblob.state.FastBlobTypeDeserializationState;
 import com.netflix.zeno.fastblob.state.FastBlobTypeSerializationState;
 import com.netflix.zeno.fastblob.state.TypeDeserializationStateListener;
 import com.netflix.zeno.serializer.NFTypeSerializer;
+import com.netflix.zeno.serializer.SerializationFramework;
 import com.netflix.zeno.serializer.SerializerFactory;
 import com.netflix.zeno.util.SimultaneousExecutor;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -75,7 +77,7 @@ import java.util.concurrent.CountDownLatch;
  * @author dkoszewnik
  *
  */
-public class FastBlobStateEngine extends FastBlobSerializationFramework {
+public class FastBlobStateEngine extends SerializationFramework {
 
     /// all serialization and deserialization states, keyed by their unique names
     private final Map<String, FastBlobTypeSerializationState<?>> serializationTypeStates;
@@ -223,7 +225,6 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
         return (FastBlobTypeSerializationState<T>) serializationTypeStates.get(name);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public <T> FastBlobTypeDeserializationState<T> getTypeDeserializationState(String name) {
         return (FastBlobTypeDeserializationState<T>) deserializationTypeStates.get(name);
@@ -458,14 +459,14 @@ public class FastBlobStateEngine extends FastBlobSerializationFramework {
             }
         }
     }
-    
+
     public void fillSerializationStatesFromDeserializedData() {
         for(NFTypeSerializer<?> serializer : getTopLevelSerializers()) {
             FastBlobTypeDeserializationState<?> state = getTypeDeserializationState(serializer.getName());
-            
+
             state.fillSerializationState(this);
         }
-        
+
     }
 
     public void prepareForDoubleSnapshotRefresh() {

@@ -147,7 +147,7 @@ public class FastBlobReader {
      * Read the header and return the version
      */
     private FastBlobHeader readHeader(InputStream is) throws IOException {
-        FastBlobHeader header = headerReader.readHeader(is, stateEngine);
+        FastBlobHeader header = headerReader.readHeader(is);
         stateEngine.addHeaderTags(header.getHeaderTags());
         return header;
     }
