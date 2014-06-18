@@ -128,6 +128,20 @@ public class HollowObject {
         return lazyStateEngine.getHollowObject(subType, ordinal);
     }
 
+    public boolean positionObject(String fieldName, HollowObject objectToPosition) {
+        int fieldIndex = schema.getPosition(fieldName);
+        long position = positionFor(fieldIndex);
+
+        if(VarInt.readVNull(data, position))
+            return false;
+
+        TypedFieldDefinition fieldDef = (TypedFieldDefinition) schema.getFieldDefinition(fieldIndex);
+        String subType = fieldDef.getSubType();
+        int ordinal = VarInt.readVInt(data, position);
+
+        return lazyStateEngine.positionHollowObject(subType, ordinal, objectToPosition);
+    }
+
     public HollowList getList(String fieldName) {
         HollowList list = new HollowList();
 
