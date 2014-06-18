@@ -1,8 +1,21 @@
 package com.netflix.zeno.fastblob.lazy.hollow;
 
+import com.netflix.zeno.fastblob.lazy.LazyStateEngine;
+import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.VarInt;
 
 public class HollowMap extends HollowContainer {
+
+    protected String keyType;
+    protected String valueType;
+
+    protected void position(LazyStateEngine stateEngine, String keyType, String valueType, ByteData data, long position) {
+        this.stateEngine = stateEngine;
+        this.keyType = keyType;
+        this.valueType = valueType;
+        this.data = data;
+        this.position = position;
+    }
 
     public int getOrdinal(int keyOrdinal) {
         int numBytes = VarInt.readVInt(data, position);
@@ -40,6 +53,10 @@ public class HollowMap extends HollowContainer {
         long position = this.position + VarInt.sizeOfVInt(numBytes);
 
         return VarInt.countVarIntsInRange(data, position, numBytes) / 2;
+    }
+
+    public HollowMapEntryOrdinalIterator hollowEntryOrdinalIterator() {
+        return new HollowMapEntryOrdinalIterator(data, position);
     }
 
 }

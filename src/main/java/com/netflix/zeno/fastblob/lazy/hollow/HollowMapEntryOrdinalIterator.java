@@ -3,7 +3,7 @@ package com.netflix.zeno.fastblob.lazy.hollow;
 import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.VarInt;
 
-public class HollowMapEntryIterator {
+public class HollowMapEntryOrdinalIterator {
 
     private final ByteData data;
     private long position;
@@ -14,7 +14,7 @@ public class HollowMapEntryIterator {
 
     private int previousValueOrdinal = 0;
 
-    public HollowMapEntryIterator(ByteData data, long position) {
+    public HollowMapEntryOrdinalIterator(ByteData data, long position) {
         this.data = data;
         int totalBytes = VarInt.readVInt(data, position);
         this.position = position + VarInt.sizeOfVInt(totalBytes);

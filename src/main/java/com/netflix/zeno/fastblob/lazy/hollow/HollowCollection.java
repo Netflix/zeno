@@ -1,8 +1,19 @@
 package com.netflix.zeno.fastblob.lazy.hollow;
 
+import com.netflix.zeno.fastblob.lazy.LazyStateEngine;
+import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.VarInt;
 
 public abstract class HollowCollection extends HollowContainer {
+
+    protected String elementType;
+
+    protected void position(LazyStateEngine stateEngine, String elementType, ByteData data, long position) {
+        this.stateEngine = stateEngine;
+        this.elementType = elementType;
+        this.data = data;
+        this.position = position;
+    }
 
     public boolean contains(int ordinal) {
         HollowOrdinalIterator iter = ordinalIterator();

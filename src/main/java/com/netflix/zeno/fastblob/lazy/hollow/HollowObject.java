@@ -8,6 +8,7 @@ import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
+import com.netflix.zeno.fastblob.record.schema.MapFieldDefinition;
 import com.netflix.zeno.fastblob.record.schema.TypedFieldDefinition;
 
 public class HollowObject {
@@ -98,6 +99,21 @@ public class HollowObject {
         return readString(data, position, length);
     }
 
+    public boolean isStringFieldEqual(String fieldName, String testValue) {
+        int fieldIndex = schema.getPosition(fieldName);
+        long position = positionFor(fieldIndex);
+
+        if(VarInt.readVNull(data, position))
+            return testValue == null;
+        else if(testValue == null)
+            return false;
+
+        int length = VarInt.readVInt(data, position);
+        position += VarInt.sizeOfVInt(length);
+
+        return testStringEquality(data, position, length, testValue);
+    }
+
     public HollowObject getObject(String fieldName) {
         int fieldIndex = schema.getPosition(fieldName);
         long position = positionFor(fieldIndex);
@@ -115,7 +131,7 @@ public class HollowObject {
     public HollowList getList(String fieldName) {
         HollowList list = new HollowList();
 
-        if(positionContainer(fieldName, list))
+        if(positionCollection(fieldName, list))
             return list;
 
         return null;
@@ -124,22 +140,13 @@ public class HollowObject {
     public HollowSet getSet(String fieldName) {
         HollowSet set = new HollowSet();
 
-        if(positionContainer(fieldName, set))
+        if(positionCollection(fieldName, set))
             return set;
 
         return null;
     }
 
-    public HollowMap getContainer(String fieldName) {
-        HollowMap map = new HollowMap();
-
-        if(positionContainer(fieldName, map))
-            return map;
-
-        return null;
-    }
-
-    public boolean positionContainer(String fieldName, HollowContainer containerToPosition) {
+    public boolean positionCollection(String fieldName, HollowCollection collectionToPosition) {
         int fieldIndex = schema.getPosition(fieldName);
         long position = positionFor(fieldIndex);
 
@@ -148,7 +155,30 @@ public class HollowObject {
 
         TypedFieldDefinition fieldDef = (TypedFieldDefinition) schema.getFieldDefinition(fieldIndex);
 
-        containerToPosition.position(lazyStateEngine, fieldDef.getSubType(), data, position);
+        collectionToPosition.position(lazyStateEngine, fieldDef.getSubType(), data, position);
+
+        return true;
+    }
+
+    public HollowMap getMap(String fieldName) {
+        HollowMap map = new HollowMap();
+
+        if(positionMap(fieldName, map))
+            return map;
+
+        return null;
+    }
+
+    public boolean positionMap(String fieldName, HollowMap map) {
+        int fieldIndex = schema.getPosition(fieldName);
+        long position = positionFor(fieldIndex);
+
+        if(VarInt.readVNull(data, position))
+            return false;
+
+        MapFieldDefinition fieldDef = (MapFieldDefinition) schema.getFieldDefinition(fieldIndex);
+
+        map.position(lazyStateEngine, fieldDef.getKeyType(), fieldDef.getValueType(), data, position);
 
         return true;
     }
@@ -243,6 +273,25 @@ public class HollowObject {
         return new String(chararr, 0, count);
     }
 
+    private boolean testStringEquality(ByteData data, long position, int length, String testValue) {
+        if(length < testValue.length()) // can't check exact length here; the length argument is in bytes, which is equal to or greater than the number of characters.
+            return false;
+
+        long endPosition = position + length;
+
+        int count = 0;
+
+        while(position < endPosition) {
+            int c = VarInt.readVInt(data, position);
+            if(testValue.charAt(count++) != (char)c)
+                return false;
+            position += VarInt.sizeOfVInt(c);
+        }
+
+        // The number of chars may be fewer than the number of bytes in the serialized data
+        return count == testValue.length();
+    }
+
     private char[] getCharArray() {
         char ch[] = chararr.get();
         if(ch == null) {
@@ -250,6 +299,25 @@ public class HollowObject {
             chararr.set(ch);
         }
         return ch;
+    }
+
+    @Override
+    public int hashCode() {
+        return ordinal;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof HollowObject) {
+            HollowObject hollowObj = (HollowObject)obj;
+            return ordinal == hollowObj.getOrdinal();
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Hollow Object: " + schema.getName() + " (" + ordinal + ")";
     }
 
 }
