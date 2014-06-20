@@ -13,14 +13,14 @@ import com.netflix.zeno.fastblob.record.schema.TypedFieldDefinition;
 
 public class HollowObject {
 
-    private LazyStateEngine lazyStateEngine;
-    private FastBlobSchema schema;
-    private ByteData data;
-    private int ordinal;
-    private long position;
+    protected LazyStateEngine stateEngine;
+    protected FastBlobSchema schema;
+    protected ByteData data;
+    protected int ordinal;
+    protected long position;
 
     public void position(LazyStateEngine lazyStateEngine, FastBlobSchema schema, ByteData data, int ordinal, long position) {
-        this.lazyStateEngine = lazyStateEngine;
+        this.stateEngine = lazyStateEngine;
         this.schema = schema;
         this.data = data;
         this.ordinal = ordinal;
@@ -50,6 +50,12 @@ public class HollowObject {
         throw new NullPointerException("Attempting to read a null boolean value");
     }
 
+    public int getOrdinal(String fieldName) {
+        int fieldIndex = schema.getPosition(fieldName);
+        long position = positionFor(fieldIndex);
+        return VarInt.readVInt(data, position);
+    }
+
     public int getInt(String fieldName) {
         int fieldIndex = schema.getPosition(fieldName);
         long position = positionFor(fieldIndex);
@@ -60,7 +66,7 @@ public class HollowObject {
     public long getLong(String fieldName) {
         int fieldIndex = schema.getPosition(fieldName);
         long position = positionFor(fieldIndex);
-        long rawValue = VarInt.readVInt(data, position);
+        long rawValue = VarInt.readVLong(data, position);
         return (rawValue >>> 1) ^ ((rawValue << 63) >> 63);  // zig-zag encoded.
     }
 
@@ -125,7 +131,7 @@ public class HollowObject {
         String subType = fieldDef.getSubType();
         int ordinal = VarInt.readVInt(data, position);
 
-        return lazyStateEngine.getHollowObject(subType, ordinal);
+        return stateEngine.getHollowObject(subType, ordinal);
     }
 
     public boolean positionObject(String fieldName, HollowObject objectToPosition) {
@@ -139,7 +145,7 @@ public class HollowObject {
         String subType = fieldDef.getSubType();
         int ordinal = VarInt.readVInt(data, position);
 
-        return lazyStateEngine.positionHollowObject(subType, ordinal, objectToPosition);
+        return stateEngine.positionHollowObject(subType, ordinal, objectToPosition);
     }
 
     public HollowList getList(String fieldName) {
@@ -169,7 +175,7 @@ public class HollowObject {
 
         TypedFieldDefinition fieldDef = (TypedFieldDefinition) schema.getFieldDefinition(fieldIndex);
 
-        collectionToPosition.position(lazyStateEngine, fieldDef.getSubType(), data, position);
+        collectionToPosition.position(stateEngine, fieldDef.getSubType(), data, position);
 
         return true;
     }
@@ -192,7 +198,7 @@ public class HollowObject {
 
         MapFieldDefinition fieldDef = (MapFieldDefinition) schema.getFieldDefinition(fieldIndex);
 
-        map.position(lazyStateEngine, fieldDef.getKeyType(), fieldDef.getValueType(), data, position);
+        map.position(stateEngine, fieldDef.getKeyType(), fieldDef.getValueType(), data, position);
 
         return true;
     }
