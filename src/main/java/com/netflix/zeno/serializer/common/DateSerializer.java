@@ -47,7 +47,7 @@ public class DateSerializer extends NFTypeSerializer<Date>{
 
     @Override
     protected Date doDeserialize(NFDeserializationRecord rec) {
-        return new Date(((Long)deserializeLong(rec, "val")));
+        return new Date(deserializePrimitiveLong(rec, "val"));
     }
 
     @Override
