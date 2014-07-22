@@ -63,6 +63,8 @@ public class FastBlobTypeDeserializationState<T> implements Iterable<T> {
     }
 
     public T get(int ordinal) {
+        if(ordinal >= objects.size())
+            return null;
         return objects.get(ordinal);
     }
 
