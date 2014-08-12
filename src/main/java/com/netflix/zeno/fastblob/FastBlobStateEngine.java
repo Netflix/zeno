@@ -39,7 +39,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -345,22 +344,50 @@ public class FastBlobStateEngine extends SerializationFramework {
     }
 
     /**
-     * Copy the serialization states into the provided State Engine.<p/>
+     * Copy all serialization states (except those specified) into the provided State Engine.<p>
      *
      * This is used during FastBlobStateEngine combination.<p/>
      *
-     * Thread safety:  This cannot be safely called concurrently with add() operations to *this* state engine.<p/>
+     * The "ignoreSerializers" parameter is used for types which must be combined using business logic, instead
+     * of a pass-through copy<p>
+     *
+     * Thread safety:  This cannot be safely called concurrently with add() operations to *this* state engine.<p>
      *
      * @param otherStateEngine
      * @param ignoreSerializers
+     *
+     * @return the OrdinalMapping between this FastBlobStateEngine and the state engine to which this was copied.
      */
-    public void copySerializationStatesTo(FastBlobStateEngine otherStateEngine, Collection<String> ignoreSerializers) {
-        ConcurrentHashMap<String, Map<Integer, Integer>> stateOrdinalMappers = new ConcurrentHashMap<String, Map<Integer, Integer>>();
+    public OrdinalMapping copyAllSerializationStatesTo(FastBlobStateEngine otherStateEngine, Collection<String> ignoreSerializers) {
+        OrdinalMapping ordinalMapping = new OrdinalMapping();
         for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
             String serializerName = serializationState.serializer.getName();
             if(!ignoreSerializers.contains(serializerName)) {
-                serializationState.copyTo(otherStateEngine.getTypeSerializationState(serializerName), stateOrdinalMappers);
+                serializationState.copyTo(otherStateEngine.getTypeSerializationState(serializerName), ordinalMapping);
             }
+        }
+        return ordinalMapping;
+    }
+
+    /**
+     * Copy only the specified serialization states, in the specified order, into the provided State Engine.<p>
+     *
+     * For those types which are referenced by the specified serializers, but not combined
+     * in this operation, use the provided OrdinalMapping.<p>
+     *
+     * The provided ordinal mapping will be updated with the new mappings created by this operation<p>
+     *
+     * This is used during FastBlobStateEngine combination, for those types which reference states that
+     * must be combined using business logic (instead of a pass-through copy).<p>
+     *
+     * @param otherStateEngine
+     * @param whichSerializers
+     * @param ordinalMapping
+     */
+    public void copySpecificSerializationStatesTo(FastBlobStateEngine otherStateEngine, List<String> whichSerializers, OrdinalMapping ordinalMapping) {
+        for(String serializerName : whichSerializers) {
+            FastBlobTypeSerializationState<?> serializationState = getTypeSerializationState(serializerName);
+            serializationState.copyTo(otherStateEngine.getTypeSerializationState(serializerName), ordinalMapping);
         }
     }
 

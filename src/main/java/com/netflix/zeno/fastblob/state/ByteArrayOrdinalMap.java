@@ -18,18 +18,19 @@
 package com.netflix.zeno.fastblob.state;
 
 import com.netflix.zeno.fastblob.FastBlobImageUtils;
+import com.netflix.zeno.fastblob.OrdinalMapping;
+import com.netflix.zeno.fastblob.StateOrdinalMapping;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.SegmentedByteArray;
 import com.netflix.zeno.fastblob.record.SegmentedByteArrayHasher;
 import com.netflix.zeno.fastblob.record.VarInt;
 import com.netflix.zeno.util.SimultaneousExecutor;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 /**
@@ -397,8 +398,10 @@ public class ByteArrayOrdinalMap {
      * @param stateOrdinalMappers
      */
     void copySerializedObjectData(final FastBlobTypeSerializationState<?> destState, final ThreadSafeBitSet imageMemberships[],
-            final ConcurrentHashMap<String, Map<Integer, Integer>> stateOrdinalMappers) {
-        stateOrdinalMappers.putIfAbsent(destState.getSchema().getName(), new ConcurrentHashMap<Integer, Integer>());
+            final OrdinalMapping ordinalMapping) {
+
+        final StateOrdinalMapping stateOrdinalMapping = ordinalMapping.createStateOrdinalMapping(destState.getName(), maxOrdinal());
+
         SimultaneousExecutor executor = new SimultaneousExecutor(8);
         final int numThreads = executor.getMaximumPoolSize();
 
@@ -410,7 +413,7 @@ public class ByteArrayOrdinalMap {
                     final ByteDataBuffer mappedBuffer = new ByteDataBuffer();
                     final FastBlobDeserializationRecord rec = new FastBlobDeserializationRecord(destState.getSchema(), byteData.getUnderlyingArray());
                     final boolean imageMembershipsFlags[] = new boolean[imageMemberships.length];
-                    final OrdinalRemapper remapper = new OrdinalRemapper(stateOrdinalMappers);
+                    final OrdinalRemapper remapper = new OrdinalRemapper(ordinalMapping);
 
                     for(int j = threadNumber;j < pointersAndOrdinals.length();j += numThreads) {
                         long pointerAndOrdinal = pointersAndOrdinals.get(j);
@@ -429,7 +432,7 @@ public class ByteArrayOrdinalMap {
                             remapper.remapOrdinals(rec, mappedBuffer);
 
                             int newOrdinal = destState.addData(mappedBuffer, FastBlobImageUtils.toLong(imageMembershipsFlags));
-                            stateOrdinalMappers.get(destState.getSchema().getName()).put(ordinal, newOrdinal);
+                            stateOrdinalMapping.setMappedOrdinal(ordinal, newOrdinal);
 
                             mappedBuffer.reset();
                         }

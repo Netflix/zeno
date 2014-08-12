@@ -7,6 +7,7 @@ import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializerFactory;
 import com.netflix.zeno.serializer.common.IntegerSerializer;
 import com.netflix.zeno.serializer.common.StringSerializer;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -16,6 +17,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,11 +66,27 @@ public class FastBlobEngineTest {
         addStringData(srcEngine1, "Two", true, false);
         addData(srcEngine1, 3, false, true);
 
-        srcEngine1.copySerializationStatesTo(destEngine, Arrays.asList("Strings"));
+        srcEngine1.copyAllSerializationStatesTo(destEngine, Arrays.asList("Strings"));
 
         /// assert data was copied
         assertData(destEngine, 1, true, true);
         assertNoStringData(destEngine, "Two", true, true);
+        assertData(destEngine, 3, false, true);
+    }
+
+    @Test
+    public void copiesPartialDataFromOneStateEngineToAnotherInMultiplePhases() throws Exception {
+        /// initialize data in "from" state
+        addData(srcEngine1, 1, true, true);
+        addStringData(srcEngine1, "Two", true, false);
+        addData(srcEngine1, 3, false, true);
+
+        OrdinalMapping mapping = srcEngine1.copyAllSerializationStatesTo(destEngine, Arrays.asList("Strings"));
+        srcEngine1.copySpecificSerializationStatesTo(destEngine, Arrays.asList("Strings"), mapping);
+
+        /// assert data was copied
+        assertData(destEngine, 1, true, true);
+        assertStringData(destEngine, "Two", true, false);
         assertData(destEngine, 3, false, true);
     }
 
@@ -78,7 +97,7 @@ public class FastBlobEngineTest {
         addStringData(srcEngine1, "Two", true, false);
         addData(srcEngine1, 3, false, true);
 
-        srcEngine1.copySerializationStatesTo(destEngine, Arrays.asList("Strings", "Foo"));
+        srcEngine1.copyAllSerializationStatesTo(destEngine, Arrays.asList("Strings", "Foo"));
 
         /// assert data was copied
         assertData(destEngine, 1, true, true);
@@ -142,7 +161,7 @@ public class FastBlobEngineTest {
     }
 
     private void copyEngine(FastBlobStateEngine srcStateEngine, FastBlobStateEngine destStateEngine) {
-        srcStateEngine.copySerializationStatesTo(destStateEngine, Collections.<String> emptyList());
+        srcStateEngine.copyAllSerializationStatesTo(destStateEngine, Collections.<String> emptyList());
     }
 
     private void addData(FastBlobStateEngine stateEngine, Integer data, boolean... images) {
@@ -179,9 +198,22 @@ public class FastBlobEngineTest {
         }
     }
 
+    private void assertStringData(FastBlobStateEngine stateEngine, String data, boolean... images) throws Exception {
+        stateEngine.prepareForWrite();
+
+        for(int i=0;i<images.length;i++) {
+            if(images[i]) {
+                FastBlobStateEngine testStateEngine = new FastBlobStateEngine(factory);
+                fillDeserializationWithImage(stateEngine, testStateEngine, i);
+
+                Assert.assertTrue(containsData(testStateEngine, data, "Strings"));
+            }
+        }
+    }
+
     private <T> boolean containsData(FastBlobStateEngine stateEngine, T value, String serializerName) {
-        FastBlobTypeDeserializationState<Integer> typeState = stateEngine.getTypeDeserializationState(serializerName);
-        for(Integer i : typeState) {
+        FastBlobTypeDeserializationState<T> typeState = stateEngine.getTypeDeserializationState(serializerName);
+        for(T i : typeState) {
             if(i.equals(value))
                 return true;
         }

@@ -17,20 +17,19 @@
  */
 package com.netflix.zeno.fastblob.state;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.netflix.zeno.fastblob.FastBlobImageUtils;
 import com.netflix.zeno.fastblob.FastBlobStateEngine;
+import com.netflix.zeno.fastblob.OrdinalMapping;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.state.WeakObjectOrdinalMap.Entry;
 import com.netflix.zeno.serializer.NFTypeSerializer;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * This class represents the "serialization state" for a single type at some level of the object
@@ -226,8 +225,8 @@ public class FastBlobTypeSerializationState<T> {
      * @param otherState
      * @param stateOrdinalMappers
      */
-    public void copyTo(FastBlobTypeSerializationState<?> otherState, ConcurrentHashMap<String, Map<Integer, Integer>> stateOrdinalMappers) {
-        ordinalMap.copySerializedObjectData(otherState, imageMemberships, stateOrdinalMappers);
+    public void copyTo(FastBlobTypeSerializationState<?> otherState, OrdinalMapping ordinalMapping) {
+        ordinalMap.copySerializedObjectData(otherState, imageMemberships, ordinalMapping);
     }
 
 
@@ -405,7 +404,7 @@ public class FastBlobTypeSerializationState<T> {
     public static void discardSerializedTypeSerializationState(DataInputStream is, int numConfigs) throws IOException {
         FastBlobSchema.readFrom(is);
         ByteArrayOrdinalMap.deserializeFrom(is);
-        for(int i=0;i<numConfigs*2;i++)
+        for(int i=0;i<numConfigs;i++)
             ThreadSafeBitSet.deserializeFrom(is);
     }
 }

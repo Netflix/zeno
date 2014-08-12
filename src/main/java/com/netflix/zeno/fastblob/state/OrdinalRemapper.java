@@ -1,8 +1,6 @@
 package com.netflix.zeno.fastblob.state;
 
-import java.util.Arrays;
-import java.util.Map;
-
+import com.netflix.zeno.fastblob.OrdinalMapping;
 import com.netflix.zeno.fastblob.record.ByteData;
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
@@ -13,13 +11,15 @@ import com.netflix.zeno.fastblob.record.schema.FieldDefinition;
 import com.netflix.zeno.fastblob.record.schema.MapFieldDefinition;
 import com.netflix.zeno.fastblob.record.schema.TypedFieldDefinition;
 
+import java.util.Arrays;
+
 public class OrdinalRemapper {
 
     private final ByteDataBuffer scratch;
-    private final Map<String, Map<Integer, Integer>> stateMaps;
+    private final OrdinalMapping ordinalMapping;
 
-    public OrdinalRemapper(Map<String, Map<Integer, Integer>> stateMaps) {
-        this.stateMaps = stateMaps;
+    public OrdinalRemapper(OrdinalMapping ordinalMapping) {
+        this.ordinalMapping = ordinalMapping;
         this.scratch = new ByteDataBuffer();
     }
 
@@ -73,7 +73,7 @@ public class OrdinalRemapper {
                     toBuffer.copyFrom(((SegmentedByteArray)fromSpace), currentPointerPosition, length);
                 else
                     toBuffer.copyFrom(fromSpace, currentPointerPosition, length);
-                    
+
                 currentPointerPosition += length;
             }
         }
@@ -219,6 +219,6 @@ public class OrdinalRemapper {
     }
 
     private int getMappedOrdinal(String type, int fromOrdinal) {
-        return stateMaps.get(type).get(fromOrdinal);
+        return ordinalMapping.getStateOrdinalMapping(type).getMappedOrdinal(fromOrdinal);
     }
 }

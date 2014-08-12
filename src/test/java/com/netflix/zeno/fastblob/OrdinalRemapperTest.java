@@ -83,22 +83,18 @@ public class OrdinalRemapperTest {
         stateEngine.getTypeSerializationState("TypeA").fillDeserializationState(stateEngine.getTypeDeserializationState("TypeA"));
 
 
-        ByteDataBuffer buf = new ByteDataBuffer();
+        OrdinalMapping ordinalMapping = new OrdinalMapping();
 
-        Map<String, Map<Integer, Integer>> stateOrdinalMappers = new HashMap<String, Map<Integer, Integer>>();
-        HashMap<Integer, Integer> hashMap = new HashMap<Integer, Integer>();
-        stateOrdinalMappers.put("TypeA", hashMap);
-        hashMap.put(0, 4);
-        hashMap.put(1, 3);
-        hashMap.put(2, 2);
-        hashMap.put(3, 1);
-        hashMap.put(4, 0);
-        hashMap.put(5, 6);
-        hashMap.put(6, 5);
+        StateOrdinalMapping stateOrdinalMapping = ordinalMapping.createStateOrdinalMapping("TypeA", 6);
+        stateOrdinalMapping.setMappedOrdinal(0, 4);
+        stateOrdinalMapping.setMappedOrdinal(1, 3);
+        stateOrdinalMapping.setMappedOrdinal(2, 2);
+        stateOrdinalMapping.setMappedOrdinal(3, 1);
+        stateOrdinalMapping.setMappedOrdinal(4, 0);
+        stateOrdinalMapping.setMappedOrdinal(5, 6);
+        stateOrdinalMapping.setMappedOrdinal(6, 5);
 
-
-
-        ordinalRemapper = new OrdinalRemapper(stateOrdinalMappers);
+        ordinalRemapper = new OrdinalRemapper(ordinalMapping);
     }
 
 
@@ -146,13 +142,14 @@ public class OrdinalRemapperTest {
 
             ByteDataBuffer buf = new ByteDataBuffer();
 
-            Map<Integer, Integer> elementOrdinalMap = new HashMap<Integer, Integer>();
+            OrdinalMapping ordinalMapping = new OrdinalMapping();
+            StateOrdinalMapping stateOrdinalMap = ordinalMapping.createStateOrdinalMapping("ElementType", numElements);
             for(int j=0;j<numElements;j++) {
-                elementOrdinalMap.put(j, rand.nextInt(10000));
+                stateOrdinalMap.setMappedOrdinal(j, rand.nextInt(10000));
                 VarInt.writeVInt(buf, j);
             }
 
-            ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, elementOrdinalMap);
+            ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, ordinalMapping);
 
             Assert.assertEquals(100, VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 0));
 
@@ -166,7 +163,7 @@ public class OrdinalRemapperTest {
             while(position < endPosition) {
                 int encoded = VarInt.readVInt(toDataBuffer.getUnderlyingArray(), position);
                 position += VarInt.sizeOfVInt(encoded);
-                Assert.assertEquals(encoded, elementOrdinalMap.get(counter).intValue());
+                Assert.assertEquals(encoded, stateOrdinalMap.getMappedOrdinal(counter));
                 counter++;
             }
         }
@@ -190,19 +187,20 @@ public class OrdinalRemapperTest {
 
             Map<Integer, Integer> expectedMap = new HashMap<Integer, Integer>();
 
-            Map<Integer, Integer> elementOrdinalMap = new HashMap<Integer, Integer>();
+            OrdinalMapping ordinalMapping = new OrdinalMapping();
+            StateOrdinalMapping stateOrdinalMap = ordinalMapping.createStateOrdinalMapping("ElementType", numElements);
             for(int j=0;j<numElements;j++) {
 
                 int mapping = getRandomMapping(rand, usedMappings);
 
-                elementOrdinalMap.put(j, mapping);
+                stateOrdinalMap.setMappedOrdinal(j, mapping);
                 VarInt.writeVInt(buf, j);
                 VarInt.writeVInt(buf, j == 0 ? 0 : 1);
 
                 expectedMap.put(mapping, mapping);
             }
 
-            ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, elementOrdinalMap);
+            ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, ordinalMapping);
 
             Assert.assertEquals(100, VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 0));
 
@@ -246,15 +244,16 @@ public class OrdinalRemapperTest {
             Set<Integer> expectedSet = new HashSet<Integer>();
             BitSet usedMappings = new BitSet();
 
-            Map<Integer, Integer> elementOrdinalMap = new HashMap<Integer, Integer>();
+            OrdinalMapping ordinalMapping = new OrdinalMapping();
+            StateOrdinalMapping stateOrdinalMap = ordinalMapping.createStateOrdinalMapping("ElementType", numElements);
             for(int j=0;j<numElements;j++) {
                 int mapping = getRandomMapping(rand, usedMappings);
-                elementOrdinalMap.put(j, mapping);
+                stateOrdinalMap.setMappedOrdinal(j, mapping);
                 VarInt.writeVInt(buf, j == 0 ? 0 : 1);
                 expectedSet.add(mapping);
             }
 
-            ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, elementOrdinalMap);
+            ByteDataBuffer toDataBuffer = copyToBufferAndRemapOrdinals(schema, buf, ordinalMapping);
 
             Assert.assertEquals(100, VarInt.readVInt(toDataBuffer.getUnderlyingArray(), 0));
 
@@ -278,9 +277,7 @@ public class OrdinalRemapperTest {
 
 
     private ByteDataBuffer copyToBufferAndRemapOrdinals(FastBlobSchema schema,
-            ByteDataBuffer buf, Map<Integer, Integer> elementOrdinalMap) {
-        Map<String, Map<Integer, Integer>> ordinalMapping = new HashMap<String, Map<Integer, Integer>>();
-        ordinalMapping.put("ElementType", elementOrdinalMap);
+            ByteDataBuffer buf, OrdinalMapping ordinalMapping) {
 
         ByteDataBuffer fromDataBuffer = new ByteDataBuffer();
         VarInt.writeVInt(fromDataBuffer, 100);
