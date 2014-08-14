@@ -17,7 +17,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -66,7 +65,7 @@ public class FastBlobEngineTest {
         addStringData(srcEngine1, "Two", true, false);
         addData(srcEngine1, 3, false, true);
 
-        srcEngine1.copyAllSerializationStatesTo(destEngine, Arrays.asList("Strings"));
+        srcEngine1.copySerializationStatesTo(destEngine, Arrays.asList("Strings"));
 
         /// assert data was copied
         assertData(destEngine, 1, true, true);
@@ -81,7 +80,7 @@ public class FastBlobEngineTest {
         addStringData(srcEngine1, "Two", true, false);
         addData(srcEngine1, 3, false, true);
 
-        OrdinalMapping mapping = srcEngine1.copyAllSerializationStatesTo(destEngine, Arrays.asList("Strings"));
+        OrdinalMapping mapping = srcEngine1.copySerializationStatesTo(destEngine, Arrays.asList("Strings"));
         srcEngine1.copySpecificSerializationStatesTo(destEngine, Arrays.asList("Strings"), mapping);
 
         /// assert data was copied
@@ -97,7 +96,7 @@ public class FastBlobEngineTest {
         addStringData(srcEngine1, "Two", true, false);
         addData(srcEngine1, 3, false, true);
 
-        srcEngine1.copyAllSerializationStatesTo(destEngine, Arrays.asList("Strings", "Foo"));
+        srcEngine1.copySerializationStatesTo(destEngine, Arrays.asList("Strings", "Foo"));
 
         /// assert data was copied
         assertData(destEngine, 1, true, true);
@@ -161,7 +160,7 @@ public class FastBlobEngineTest {
     }
 
     private void copyEngine(FastBlobStateEngine srcStateEngine, FastBlobStateEngine destStateEngine) {
-        srcStateEngine.copyAllSerializationStatesTo(destStateEngine, Collections.<String> emptyList());
+        srcStateEngine.copySerializationStatesTo(destStateEngine, Collections.<String> emptyList());
     }
 
     private void addData(FastBlobStateEngine stateEngine, Integer data, boolean... images) {

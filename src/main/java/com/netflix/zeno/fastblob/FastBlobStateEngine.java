@@ -358,7 +358,7 @@ public class FastBlobStateEngine extends SerializationFramework {
      *
      * @return the OrdinalMapping between this FastBlobStateEngine and the state engine to which this was copied.
      */
-    public OrdinalMapping copyAllSerializationStatesTo(FastBlobStateEngine otherStateEngine, Collection<String> ignoreSerializers) {
+    public OrdinalMapping copySerializationStatesTo(FastBlobStateEngine otherStateEngine, Collection<String> ignoreSerializers) {
         OrdinalMapping ordinalMapping = new OrdinalMapping();
         for(FastBlobTypeSerializationState<?> serializationState : getOrderedSerializationStates()) {
             String serializerName = serializationState.serializer.getName();
