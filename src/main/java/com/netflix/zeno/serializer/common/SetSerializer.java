@@ -36,6 +36,10 @@ public class SetSerializer<E> extends CollectionSerializer<E, Set<E>> {
         super(schemaName, elementSerializer);
     }
 
+    public SetSerializer(NFTypeSerializer<E> elementSerializer) {
+        this("SetOf" + elementSerializer.getName(), elementSerializer);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public void doSerialize(Set<E> list, NFSerializationRecord rec) {

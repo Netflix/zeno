@@ -42,6 +42,10 @@ public class MapSerializer<K, V> extends NFTypeSerializer<Map<K, V>> {
         this.valueSerializer = valueSerializer;
     }
 
+    public MapSerializer(NFTypeSerializer<K> keySerializer, NFTypeSerializer<V> valueSerializer) {
+        this("MapOf" + keySerializer.getName() + "To" + valueSerializer.getName(), keySerializer, valueSerializer);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public void doSerialize(Map<K, V> map, NFSerializationRecord rec) {

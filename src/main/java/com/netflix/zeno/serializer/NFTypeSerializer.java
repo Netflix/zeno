@@ -69,6 +69,16 @@ public abstract class NFTypeSerializer<T> {
 
     public abstract Collection<NFTypeSerializer<?>> requiredSubSerializers();
 
+    public Collection<NFTypeSerializer<?>> requiredSubSerializers(FastBlobSchemaField[] fields) {
+        Collection<NFTypeSerializer<?>> requiredSubSerializers = new ArrayList<NFTypeSerializer<?>>();
+        for(FastBlobSchemaField field : fields) {
+            if(field.typeSerializer != null) {
+                requiredSubSerializers.add(field.typeSerializer);
+            }
+        }
+        return requiredSubSerializers;
+    }
+
     @SuppressWarnings("unchecked")
     protected void serializePrimitive(NFSerializationRecord rec, String fieldName, Object value) {
         serializationFramework.getFrameworkSerializer().serializePrimitive(rec, fieldName, value);
@@ -132,10 +142,18 @@ public abstract class NFTypeSerializer<T> {
         return field(name, FieldType.OBJECT);
     }
 
-    protected FastBlobSchemaField field(String name, String objectType) {
+//    protected FastBlobSchemaField field(String name, String objectType) {
+//        FastBlobSchemaField field = new FastBlobSchemaField();
+//        field.name = name;
+//        field.type = new TypedFieldDefinition(FieldType.OBJECT, objectType);
+//        return field;
+//    }
+
+    protected FastBlobSchemaField field(String name, NFTypeSerializer<?> typeSerializer) {
         FastBlobSchemaField field = new FastBlobSchemaField();
         field.name = name;
-        field.type = new TypedFieldDefinition(FieldType.OBJECT, objectType);
+        field.type = new TypedFieldDefinition(FieldType.OBJECT, typeSerializer.getName());
+        field.typeSerializer = typeSerializer;
         return field;
     }
 
@@ -254,6 +272,7 @@ public abstract class NFTypeSerializer<T> {
     public static class FastBlobSchemaField {
         public String name;
         public FieldDefinition type;
+        public NFTypeSerializer<?> typeSerializer;
     }
 
 }

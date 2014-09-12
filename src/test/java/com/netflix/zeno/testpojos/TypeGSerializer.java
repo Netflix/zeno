@@ -1,18 +1,21 @@
 package com.netflix.zeno.testpojos;
 
+import java.util.Collection;
+
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 
-import java.util.Collection;
-
 public class TypeGSerializer extends NFTypeSerializer<TypeG>{
+
+    private final FastBlobSchemaField[] fields = new FastBlobSchemaField[] {
+            field("typeD", new TypeDSerializer())
+    };
 
     public TypeGSerializer() {
         super("TypeG");
     }
-
 
     @Override
     protected void doSerialize(TypeG value, NFSerializationRecord rec) {
@@ -27,15 +30,11 @@ public class TypeGSerializer extends NFTypeSerializer<TypeG>{
 
     @Override
     protected FastBlobSchema createSchema() {
-        return schema(
-                field("typeD", "TypeD")
-        );
+        return schema(fields);
     }
 
     @Override
     public Collection<NFTypeSerializer<?>> requiredSubSerializers() {
-        return serializers(
-                new TypeDSerializer()
-        );
+        return requiredSubSerializers(fields);
     }
 }

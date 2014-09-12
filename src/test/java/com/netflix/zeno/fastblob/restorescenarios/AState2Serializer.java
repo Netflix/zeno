@@ -17,15 +17,20 @@
  */
 package com.netflix.zeno.fastblob.restorescenarios;
 
+import java.util.Collection;
+
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 
-import java.util.Collection;
-
 public class AState2Serializer extends NFTypeSerializer<TypeAState2>{
+
+    private final FastBlobSchemaField[] fields = new FastBlobSchemaField[] {
+            field("a1", FieldType.INT),
+            field("c", new TypeCSerializer())
+    };
 
     public AState2Serializer() {
         super("TypeA");
@@ -47,15 +52,11 @@ public class AState2Serializer extends NFTypeSerializer<TypeAState2>{
 
     @Override
     protected FastBlobSchema createSchema() {
-        return schema(
-                field("a1", FieldType.INT),
-                field("c", "TypeC")
-        );
+        return schema(fields);
     }
 
     @Override
     public Collection<NFTypeSerializer<?>> requiredSubSerializers() {
-        return serializers(new TypeCSerializer());
+        return requiredSubSerializers(fields);
     }
-
 }

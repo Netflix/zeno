@@ -28,6 +28,10 @@ import com.netflix.zeno.serializer.common.SetSerializer;
 
 public class ASerializer extends NFTypeSerializer<TypeA>{
 
+    private final FastBlobSchemaField[] fields = new FastBlobSchemaField[] {
+            field("typeBs", new SetSerializer<TypeB>(new BSerializer()))
+    };
+
     public ASerializer() {
         super("TypeA");
     }
@@ -45,17 +49,11 @@ public class ASerializer extends NFTypeSerializer<TypeA>{
 
     @Override
     protected FastBlobSchema createSchema() {
-        return schema(
-                field("typeBs", "SetOfTypeBs")
-        );
+        return schema(fields);
     }
 
     @Override
     public Collection<NFTypeSerializer<?>> requiredSubSerializers() {
-        return serializers(
-                new SetSerializer<TypeB>("SetOfTypeBs", new BSerializer())
-        );
-
+        return requiredSubSerializers(fields);
     }
-
 }

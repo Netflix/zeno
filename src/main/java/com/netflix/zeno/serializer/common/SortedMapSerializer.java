@@ -42,6 +42,10 @@ public class SortedMapSerializer<K, V> extends NFTypeSerializer<SortedMap<K, V>>
         this.valueSerializer = valueSerializer;
     }
 
+    public SortedMapSerializer(NFTypeSerializer<K> keySerializer, NFTypeSerializer<V> valueSerializer) {
+        this("SortedMapOf" + keySerializer.getName() + "To" + valueSerializer.getName(), keySerializer, valueSerializer);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public void doSerialize(SortedMap<K, V> map, NFSerializationRecord rec) {

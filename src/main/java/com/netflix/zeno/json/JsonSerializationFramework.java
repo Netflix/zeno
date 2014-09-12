@@ -17,16 +17,16 @@
  */
 package com.netflix.zeno.json;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Map;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 import com.netflix.zeno.serializer.SerializationFramework;
 import com.netflix.zeno.serializer.SerializerFactory;
 import com.netflix.zeno.serializer.common.MapSerializer;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Map;
 
 /**
  *
@@ -69,7 +69,7 @@ public class JsonSerializationFramework extends SerializationFramework {
         NFTypeSerializer<K> keySerializer = getSerializer(keyType);
         NFTypeSerializer<V> valueSerializer = getSerializer(valueType);
 
-        MapSerializer<K, V> mapSerializer = new MapSerializer<K, V>(keyType + "To" + valueType + "Map", keySerializer, valueSerializer);
+        MapSerializer<K, V> mapSerializer = new MapSerializer<K, V>(keySerializer, valueSerializer);
         mapSerializer.setSerializationFramework(this);
 
         StringWriter writer = new StringWriter();
@@ -97,7 +97,7 @@ public class JsonSerializationFramework extends SerializationFramework {
         NFTypeSerializer<K> keySerializer = getSerializer(keyType);
         NFTypeSerializer<V> valueSerializer = getSerializer(valueType);
 
-        MapSerializer<K, V> mapSerializer = new MapSerializer<K, V>(keyType + "To" + valueType + "Map", keySerializer, valueSerializer);
+        MapSerializer<K, V> mapSerializer = new MapSerializer<K, V>(keySerializer, valueSerializer);
         mapSerializer.setSerializationFramework(this);
 
         JsonNode node = new ObjectMapper().readTree(json);

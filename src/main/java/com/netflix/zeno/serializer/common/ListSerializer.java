@@ -36,6 +36,10 @@ public class ListSerializer<E> extends CollectionSerializer<E, List<E>> {
         super(name, elementSerializer);
     }
 
+    public ListSerializer(NFTypeSerializer<E> elementSerializer) {
+        this("ListOf" + elementSerializer.getName(), elementSerializer);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     protected List<E> doDeserialize(NFDeserializationRecord rec) {

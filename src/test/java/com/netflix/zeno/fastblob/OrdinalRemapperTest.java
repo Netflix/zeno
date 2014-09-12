@@ -1,5 +1,18 @@
 package com.netflix.zeno.fastblob;
 
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.netflix.zeno.fastblob.record.ByteDataBuffer;
 import com.netflix.zeno.fastblob.record.FastBlobDeserializationRecord;
 import com.netflix.zeno.fastblob.record.FastBlobSerializationRecord;
@@ -19,17 +32,6 @@ import com.netflix.zeno.testpojos.TypeA;
 import com.netflix.zeno.testpojos.TypeASerializer;
 import com.netflix.zeno.testpojos.TypeD;
 import com.netflix.zeno.testpojos.TypeDSerializer;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 /*
  * This test validates only the ordinal remapping functionality.
@@ -54,6 +56,9 @@ import org.junit.Test;
  */
 public class OrdinalRemapperTest {
 
+    private static final MapSerializer<TypeA, TypeA> MAP_SERIALIZER = new MapSerializer<TypeA, TypeA>(new TypeASerializer(), new TypeASerializer());
+    private static final SetSerializer<TypeA> SET_SERIALIZER = new SetSerializer<TypeA>(new TypeASerializer());
+    private static final ListSerializer<TypeA> LIST_SERIALIZER = new ListSerializer<TypeA>(new TypeASerializer());
     private FastBlobStateEngine stateEngine;
     private OrdinalRemapper ordinalRemapper;
 
@@ -63,9 +68,9 @@ public class OrdinalRemapperTest {
             @Override
             public NFTypeSerializer<?>[] createSerializers() {
                 return new NFTypeSerializer<?> [] {
-                        new ListSerializer<TypeA>("ListOfTypeA", new TypeASerializer()),
-                        new SetSerializer<TypeA>("SetOfTypeA", new TypeASerializer()),
-                        new MapSerializer<TypeA, TypeA>("MapOfTypeA", new TypeASerializer(), new TypeASerializer()),
+                        new MapSerializer<TypeA, TypeA>(new TypeASerializer(), new TypeASerializer()),
+                        new SetSerializer<TypeA>(new TypeASerializer()),
+                        new ListSerializer<TypeA>(new TypeASerializer()),
                         new TypeDSerializer()
                 };
             }
@@ -100,7 +105,7 @@ public class OrdinalRemapperTest {
 
     @Test
     public void remapsListOrdinals() {
-        NFTypeSerializer<List<TypeA>> listSerializer = stateEngine.getSerializer("ListOfTypeA");
+        NFTypeSerializer<List<TypeA>> listSerializer = stateEngine.getSerializer(LIST_SERIALIZER.getName());
         FastBlobSchema listSchema = listSerializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(listSchema);
         rec.setImageMembershipsFlags(FastBlobImageUtils.ONE_TRUE);
@@ -304,7 +309,7 @@ public class OrdinalRemapperTest {
 
     @Test
     public void remapsSetOrdinals() {
-        NFTypeSerializer<Set<TypeA>> setSerializer = stateEngine.getSerializer("SetOfTypeA");
+        NFTypeSerializer<Set<TypeA>> setSerializer = stateEngine.getSerializer(SET_SERIALIZER.getName());
         FastBlobSchema setSchema = setSerializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(setSchema);
         rec.setImageMembershipsFlags(FastBlobImageUtils.ONE_TRUE);
@@ -330,7 +335,7 @@ public class OrdinalRemapperTest {
 
     @Test
     public void remapsMapOrdinals() {
-        NFTypeSerializer<Map<TypeA, TypeA>> mapSerializer = stateEngine.getSerializer("MapOfTypeA");
+        NFTypeSerializer<Map<TypeA, TypeA>> mapSerializer = stateEngine.getSerializer(MAP_SERIALIZER.getName());
         FastBlobSchema mapSchema = mapSerializer.getFastBlobSchema();
         FastBlobSerializationRecord rec = new FastBlobSerializationRecord(mapSchema);
         rec.setImageMembershipsFlags(FastBlobImageUtils.ONE_TRUE);

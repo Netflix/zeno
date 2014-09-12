@@ -17,12 +17,6 @@
  */
 package com.netflix.zeno.fastblob;
 
-import com.netflix.zeno.fastblob.FastBlobStateEngine;
-import com.netflix.zeno.testpojos.TypeA;
-import com.netflix.zeno.testpojos.TypeB;
-import com.netflix.zeno.testpojos.TypeC;
-import com.netflix.zeno.testpojos.TypeD;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +25,12 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.netflix.zeno.testpojos.TypeA;
+import com.netflix.zeno.testpojos.TypeB;
+import com.netflix.zeno.testpojos.TypeC;
+import com.netflix.zeno.testpojos.TypeCSerializer;
+import com.netflix.zeno.testpojos.TypeD;
 
 public class SerializerSnapshotTest extends BlobSerializationGenericFrameworkAbstract {
 
@@ -165,8 +165,8 @@ public class SerializerSnapshotTest extends BlobSerializationGenericFrameworkAbs
         Assert.assertEquals(5, deserializedC.getTypeBs().get(1).getVal1());
         Assert.assertEquals("six", deserializedC.getTypeBs().get(1).getVal2());
 
-        Assert.assertSame(deserializedC.getTypeAMap(), getAll("TypeAMap").get(0));
-        Assert.assertSame(deserializedC.getTypeBs(), getAll("TypeBList").get(0));
+        Assert.assertSame(deserializedC.getTypeAMap(), getAll(TypeCSerializer.MAP_SERIALIZER.getName()).get(0));
+        Assert.assertSame(deserializedC.getTypeBs(), getAll(TypeCSerializer.LIST_SERIALIZER.getName()).get(0));
         Assert.assertTrue(getAll("TypeB").contains(deserializedC.getTypeBs().get(0)));
         Assert.assertTrue(getAll("TypeB").contains(deserializedC.getTypeBs().get(1)));
     }

@@ -17,17 +17,20 @@
  */
 package com.netflix.zeno.testpojos;
 
+import java.util.Collection;
+
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema.FieldType;
 import com.netflix.zeno.serializer.NFDeserializationRecord;
 import com.netflix.zeno.serializer.NFSerializationRecord;
 import com.netflix.zeno.serializer.NFTypeSerializer;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 public class TypeDSerializer extends NFTypeSerializer<TypeD> {
+
+    private final FastBlobSchemaField[] fields = new FastBlobSchemaField[] {
+            field("val", FieldType.INT),
+            field("a", new TypeASerializer())
+    };
 
     public TypeDSerializer() {
         super("TypeD");
@@ -49,17 +52,11 @@ public class TypeDSerializer extends NFTypeSerializer<TypeD> {
 
     @Override
     protected FastBlobSchema createSchema() {
-        return schema(
-                field("val", FieldType.INT),
-                field("a", "TypeA")
-        );
+        return schema(fields);
     }
 
     @Override
     public Collection<NFTypeSerializer<?>> requiredSubSerializers() {
-        List<NFTypeSerializer<?>>serializers = new ArrayList<NFTypeSerializer<?>>();
-        serializers.add(new TypeASerializer());
-        return serializers;
+        return requiredSubSerializers(fields);
     }
-
 }

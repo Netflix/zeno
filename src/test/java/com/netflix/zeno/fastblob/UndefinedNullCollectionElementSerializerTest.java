@@ -17,6 +17,21 @@
  */
 package com.netflix.zeno.fastblob;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import com.netflix.zeno.fastblob.io.FastBlobReader;
 import com.netflix.zeno.fastblob.io.FastBlobWriter;
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
@@ -29,40 +44,29 @@ import com.netflix.zeno.serializer.SerializerFactory;
 import com.netflix.zeno.serializer.common.ListSerializer;
 import com.netflix.zeno.serializer.common.MapSerializer;
 import com.netflix.zeno.serializer.common.SetSerializer;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import org.junit.Assert;
-import org.junit.Test;
 
 
 public class UndefinedNullCollectionElementSerializerTest {
 
     @Test
     public void includesLegitimatelyNullElementsButNotUndefinedElementsInList() throws IOException {
+        final ListSerializer<Integer> listSerializer = new ListSerializer<Integer>(new FakeIntSerializer());
+
         FastBlobStateEngine stateEngine = new FastBlobStateEngine(new SerializerFactory() {
             @Override
             public NFTypeSerializer<?>[] createSerializers() {
                 return new NFTypeSerializer<?>[] {
-                        new ListSerializer<Integer>("FakeIntList", new FakeIntSerializer())
+                        listSerializer
                 };
             }
         });
 
         List<Integer> inList = Arrays.asList(1, 2, 3, null, 4);
-        stateEngine.add("FakeIntList", inList, FastBlobImageUtils.ONE_TRUE);
+        stateEngine.add(listSerializer.getName(), inList, FastBlobImageUtils.ONE_TRUE);
 
         serializeAndDeserialize(stateEngine);
 
-        FastBlobTypeDeserializationState<List<Integer>> typeDeserializationState = stateEngine.getTypeDeserializationState("FakeIntList");
+        FastBlobTypeDeserializationState<List<Integer>> typeDeserializationState = stateEngine.getTypeDeserializationState(listSerializer.getName());
         List<Integer> outList = typeDeserializationState.get(0);
 
         Assert.assertEquals(4, outList.size());
@@ -75,11 +79,12 @@ public class UndefinedNullCollectionElementSerializerTest {
 
     @Test
     public void includesLegitimatelyNullElementsButNotUndefinedElementsInSet() throws IOException {
+        final SetSerializer<Integer> setSerializer = new SetSerializer<Integer>(new FakeIntSerializer());
         FastBlobStateEngine stateEngine = new FastBlobStateEngine(new SerializerFactory() {
             @Override
             public NFTypeSerializer<?>[] createSerializers() {
                 return new NFTypeSerializer<?>[] {
-                        new SetSerializer<Integer>("FakeIntSet", new FakeIntSerializer())
+                        setSerializer
                 };
             }
         });
@@ -89,14 +94,14 @@ public class UndefinedNullCollectionElementSerializerTest {
         Set<Integer> inSet3 = new HashSet<Integer>(Arrays.asList(1, 2, 3, null, 4));
 
 
-        stateEngine.add("FakeIntSet", inSet, FastBlobImageUtils.ONE_TRUE);
-        stateEngine.add("FakeIntSet", inSet2, FastBlobImageUtils.ONE_TRUE);
-        stateEngine.add("FakeIntSet", inSet3, FastBlobImageUtils.ONE_TRUE);
+        stateEngine.add(setSerializer.getName(), inSet, FastBlobImageUtils.ONE_TRUE);
+        stateEngine.add(setSerializer.getName(), inSet2, FastBlobImageUtils.ONE_TRUE);
+        stateEngine.add(setSerializer.getName(), inSet3, FastBlobImageUtils.ONE_TRUE);
 
 
         serializeAndDeserialize(stateEngine);
 
-        FastBlobTypeDeserializationState<Set<Integer>> typeDeserializationState = stateEngine.getTypeDeserializationState("FakeIntSet");
+        FastBlobTypeDeserializationState<Set<Integer>> typeDeserializationState = stateEngine.getTypeDeserializationState(setSerializer.getName());
 
         Set<Integer> outSet = typeDeserializationState.get(0);
         Assert.assertEquals(3, outSet.size());
@@ -122,11 +127,13 @@ public class UndefinedNullCollectionElementSerializerTest {
 
     @Test
     public void doesNotIncludeEntriesWithUndefinedKeysOrValuesInMap() throws IOException {
+        final MapSerializer<Integer, Integer> mapSerializer =
+                new MapSerializer<Integer, Integer>(new FakeIntSerializer(), new FakeIntSerializer());
         FastBlobStateEngine stateEngine = new FastBlobStateEngine(new SerializerFactory() {
             @Override
             public NFTypeSerializer<?>[] createSerializers() {
                 return new NFTypeSerializer<?>[] {
-                        new MapSerializer<Integer, Integer>("FakeIntMap", new FakeIntSerializer(), new FakeIntSerializer())
+                        mapSerializer
                 };
             }
         });
@@ -138,11 +145,12 @@ public class UndefinedNullCollectionElementSerializerTest {
         inMap.put(2, 3);
         inMap.put(3, 4);
 
-        stateEngine.add("FakeIntMap", inMap, FastBlobImageUtils.ONE_TRUE);
+        stateEngine.add(mapSerializer.getName(), inMap, FastBlobImageUtils.ONE_TRUE);
 
         serializeAndDeserialize(stateEngine);
 
-        FastBlobTypeDeserializationState<Map<Integer, Integer>> typeDeserializationState = stateEngine.getTypeDeserializationState("FakeIntMap");
+        FastBlobTypeDeserializationState<Map<Integer, Integer>> typeDeserializationState =
+                stateEngine.getTypeDeserializationState(mapSerializer.getName());
 
         Map<Integer, Integer> outMap = typeDeserializationState.get(0);
         Assert.assertEquals(2, outMap.size());
