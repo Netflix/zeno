@@ -142,12 +142,12 @@ public abstract class NFTypeSerializer<T> {
         return field(name, FieldType.OBJECT);
     }
 
-//    protected FastBlobSchemaField field(String name, String objectType) {
-//        FastBlobSchemaField field = new FastBlobSchemaField();
-//        field.name = name;
-//        field.type = new TypedFieldDefinition(FieldType.OBJECT, objectType);
-//        return field;
-//    }
+    protected FastBlobSchemaField field(String name, String objectType) {
+        FastBlobSchemaField field = new FastBlobSchemaField();
+        field.name = name;
+        field.type = new TypedFieldDefinition(FieldType.OBJECT, objectType);
+        return field;
+    }
 
     protected FastBlobSchemaField field(String name, NFTypeSerializer<?> typeSerializer) {
         FastBlobSchemaField field = new FastBlobSchemaField();
