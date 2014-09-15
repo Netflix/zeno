@@ -19,6 +19,7 @@ package com.netflix.zeno.serializer;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import com.netflix.zeno.fastblob.record.schema.FastBlobSchema;
@@ -70,7 +71,7 @@ public abstract class NFTypeSerializer<T> {
     public abstract Collection<NFTypeSerializer<?>> requiredSubSerializers();
 
     public Collection<NFTypeSerializer<?>> requiredSubSerializers(FastBlobSchemaField[] fields) {
-        Collection<NFTypeSerializer<?>> requiredSubSerializers = new ArrayList<NFTypeSerializer<?>>();
+        Collection<NFTypeSerializer<?>> requiredSubSerializers = new HashSet<NFTypeSerializer<?>>();
         for(FastBlobSchemaField field : fields) {
             if(field.typeSerializer != null) {
                 requiredSubSerializers.add(field.typeSerializer);
