@@ -17,14 +17,18 @@
  */
 package com.netflix.zeno.diff;
 
+import com.netflix.zeno.diff.TypeDiff.FieldDiffScore;
 import com.netflix.zeno.serializer.NFTypeSerializer;
-
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import org.apache.commons.lang.mutable.MutableInt;
 
 /**
@@ -43,142 +47,236 @@ public class TypeDiffOperation<T> {
 
     @SuppressWarnings("unchecked")
     public TypeDiff<T> performDiff(DiffSerializationFramework framework, Iterable<T> fromState, Iterable<T> toState) {
-        TypeDiff<T> diff = new TypeDiff<T>(instruction.getTypeIdentifier());
-        NFTypeSerializer<T> typeSerializer = (NFTypeSerializer<T>) framework.getSerializer(instruction.getSerializerName());
+        return performDiff(framework, fromState, toState, Runtime.getRuntime().availableProcessors());
+    }
 
-        DiffRecord fromRec = new DiffRecord();
-        fromRec.setSchema(typeSerializer.getFastBlobSchema());
-        DiffRecord toRec = new DiffRecord();
-        toRec.setSchema(typeSerializer.getFastBlobSchema());
-        fromRec.setTopLevelSerializerName(instruction.getSerializerName());
-        toRec.setTopLevelSerializerName(instruction.getSerializerName());
-
+    @SuppressWarnings("unchecked")
+    public TypeDiff<T> performDiff(DiffSerializationFramework framework, Iterable<T> fromState, Iterable<T> toState, int numThreads) {
         Map<Object, T> fromStateObjects = new HashMap<Object, T>();
 
         for(T obj : fromState) {
-            diff.incrementFrom();
             fromStateObjects.put(instruction.getKey(obj), obj);
         }
 
-        Set<Object> toStateKeys = new HashSet<Object>();
+        ArrayList<List<T>> perProcessorWorkList = new ArrayList<List<T>>(numThreads); // each entry is a job
+        for (int i =0; i < numThreads; ++i) {
+            perProcessorWorkList.add(new ArrayList<T>());
+        }
 
+        Map<Object, Object> toStateKeys = new ConcurrentHashMap<Object, Object>();
+
+        int toIncrCount = 0;
         for(T toObject : toState) {
-            diff.incrementTo();
-            Object toStateKey = instruction.getKey(toObject);
-            toStateKeys.add(toStateKey);
-            T fromObject = fromStateObjects.get(toStateKey);
+            perProcessorWorkList.get(toIncrCount % numThreads).add(toObject);
+            toIncrCount++;
+        }
 
-            if(fromObject == null) {
-                diff.addExtraInTo(toObject);
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                final Thread thread = new Thread(r, "TypeDiff_" + instruction.getTypeIdentifier());
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
+
+        try {
+            ArrayList<Future<TypeDiff<T>>> workResultList = new ArrayList<Future<TypeDiff<T>>>(perProcessorWorkList.size());
+            for (final List<T> workList : perProcessorWorkList) {
+                if (workList != null && !workList.isEmpty()) {
+                    workResultList.add(executor.submit(new TypeDiffCallable<T>(framework, instruction, fromStateObjects, toStateKeys, workList)));
+                }
+            }
+
+            TypeDiff<T> mergedDiff = new TypeDiff<T>(instruction.getTypeIdentifier());
+            for (final Future<TypeDiff<T>> future : workResultList) {
+                try {
+                    TypeDiff<T> typeDiff = future.get();
+                    mergeTypeDiff(mergedDiff, typeDiff);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            for(Map.Entry<Object, T> entry : fromStateObjects.entrySet()) {
+                if(!toStateKeys.containsKey(entry.getKey()))
+                    mergedDiff.addExtraInFrom(entry.getValue());
+            }
+
+            return mergedDiff;
+
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    private void mergeTypeDiff(TypeDiff<T> mergedDiff, TypeDiff<T> typeDiff) {
+
+        mergedDiff.getExtraInFrom().addAll(typeDiff.getExtraInFrom());
+        mergedDiff.getExtraInTo().addAll(typeDiff.getExtraInTo());
+        mergedDiff.getDiffObjects().addAll(typeDiff.getDiffObjects());
+        mergedDiff.incrementFrom(typeDiff.getItemCountFrom());
+        mergedDiff.incrementTo(typeDiff.getItemCountTo());
+
+        Map<DiffPropertyPath, FieldDiffScore<T>> mergedFieldDifferences = mergedDiff.getFieldDifferences();
+        Map<DiffPropertyPath, FieldDiffScore<T>> fieldDifferences = typeDiff.getFieldDifferences();
+        for (final DiffPropertyPath path : fieldDifferences.keySet()) {
+            FieldDiffScore<T> fieldDiffScore = fieldDifferences.get(path);
+
+            FieldDiffScore<T> mergedFieldDiffScore = mergedFieldDifferences.get(path);
+            if (mergedFieldDiffScore != null) {
+                mergedFieldDiffScore.incrementDiffCountBy(fieldDiffScore.getDiffCount());
+                mergedFieldDiffScore.incrementTotalCountBy(fieldDiffScore.getTotalCount());
+                mergedFieldDiffScore.getDiffScores().addAll(fieldDiffScore.getDiffScores());
             } else {
-                int diffScore = diffFields(diff, fromRec, toRec, typeSerializer, toObject, fromObject);
-                if(diffScore > 0)
-                    diff.addDiffObject(fromObject, toObject, diffScore);
+                mergedFieldDifferences.put(path, fieldDiffScore);
             }
         }
+    }
 
-        for(Map.Entry<Object, T> entry : fromStateObjects.entrySet()) {
-            if(!toStateKeys.contains(entry.getKey()))
-                diff.addExtraInFrom(entry.getValue());
+    class TypeDiffCallable<Z> implements Callable<TypeDiff<Z>> {
+
+        private final TypeDiffInstruction<Z> instruction;
+        private final List<Z> workList;
+        private final Map<Object, Object> toStateKeys;
+        private final Map<Object, Z> fromStateObjects;
+        private final DiffSerializationFramework framework;
+
+        public TypeDiffCallable(DiffSerializationFramework framework, TypeDiffInstruction<Z> instruction, Map<Object, Z> fromStateObjects, Map<Object, Object> toStateKeys, List<Z> workList) {
+            this.framework = framework;
+            this.instruction = instruction;
+            this.fromStateObjects = fromStateObjects;
+            this.toStateKeys = toStateKeys;
+            this.workList = workList;
         }
 
-        return diff;
-    }
+        @Override
+        public TypeDiff<Z> call() throws Exception {
+            TypeDiff<Z> diff = new TypeDiff<Z>(instruction.getTypeIdentifier());
+            NFTypeSerializer<Z> typeSerializer = (NFTypeSerializer<Z>) framework.getSerializer(instruction.getSerializerName());
 
-    private int diffFields(TypeDiff<T> diff, DiffRecord fromRec, DiffRecord toRec, NFTypeSerializer<T> typeSerializer, T toObject, T fromObject) {
-        typeSerializer.serialize(toObject, toRec);
-        typeSerializer.serialize(fromObject, fromRec);
+            DiffRecord fromRec = new DiffRecord();
+            fromRec.setSchema(typeSerializer.getFastBlobSchema());
+            DiffRecord toRec = new DiffRecord();
+            toRec.setSchema(typeSerializer.getFastBlobSchema());
+            fromRec.setTopLevelSerializerName(instruction.getSerializerName());
+            toRec.setTopLevelSerializerName(instruction.getSerializerName());
 
-        int diffScore = incrementDiffFields(diff, toRec, fromRec, toObject, fromObject);
+            for(Z toObject : workList) {
+                diff.incrementTo();
+                Object toStateKey = instruction.getKey(toObject);
+                toStateKeys.put(toStateKey, Boolean.TRUE);
+                Z fromObject = fromStateObjects.get(toStateKey);
 
-        toRec.clear();
-        fromRec.clear();
-
-        return diffScore;
-    }
-
-    private int incrementDiffFields(TypeDiff<T> diff, DiffRecord toRecord, DiffRecord fromRecord, T toObject, T fromObject) {
-        int objectDiffScore = 0;
-
-        for(DiffPropertyPath key : toRecord.getFieldValues().keySet()) {
-            List<Object> toObjects = toRecord.getFieldValues().getList(key);
-            List<Object> fromObjects = fromRecord.getFieldValues().getList(key);
-            int objectFieldDiffScore;
-
-            if(fromObjects == null) {
-                diff.incrementFieldScores(key, toObjects.size(), toObjects.size());
-                objectFieldDiffScore = toObjects.size();
-            } else {
-                objectFieldDiffScore = incrementDiffFields(diff, key, toObjects, fromObjects);
+                if(fromObject == null) {
+                    diff.addExtraInTo(toObject);
+                } else {
+                    int diffScore = diffFields(diff, fromRec, toRec, typeSerializer, toObject, fromObject);
+                    if(diffScore > 0)
+                        diff.addDiffObject(fromObject, toObject, diffScore);
+                }
             }
 
-            objectDiffScore += objectFieldDiffScore;
-
-            diff.addFieldObjectDiffScore(key, toObject, fromObject, objectFieldDiffScore);
+            return diff;
         }
 
-        for(DiffPropertyPath key : fromRecord.getFieldValues().keySet()) {
-            if(toRecord.getFieldValues().getList(key) == null) {
-                int diffSize = fromRecord.getFieldValues().getList(key).size();
-                diff.incrementFieldScores(key, diffSize, diffSize);
-                objectDiffScore += diffSize;
+        private int diffFields(TypeDiff<Z> diff, DiffRecord fromRec, DiffRecord toRec, NFTypeSerializer<Z> typeSerializer, Z toObject, Z fromObject) {
+            typeSerializer.serialize(toObject, toRec);
+            typeSerializer.serialize(fromObject, fromRec);
 
-                diff.addFieldObjectDiffScore(key, toObject, fromObject, diffSize);
+            int diffScore = incrementDiffFields(diff, toRec, fromRec, toObject, fromObject);
+
+            toRec.clear();
+            fromRec.clear();
+
+            return diffScore;
+        }
+
+        private int incrementDiffFields(TypeDiff<Z> diff, DiffRecord toRecord, DiffRecord fromRecord, Z toObject, Z fromObject) {
+            int objectDiffScore = 0;
+
+            for(DiffPropertyPath key : toRecord.getFieldValues().keySet()) {
+                List<Object> toObjects = toRecord.getFieldValues().getList(key);
+                List<Object> fromObjects = fromRecord.getFieldValues().getList(key);
+                int objectFieldDiffScore;
+
+                if(fromObjects == null) {
+                    diff.incrementFieldScores(key, toObjects.size(), toObjects.size());
+                    objectFieldDiffScore = toObjects.size();
+                } else {
+                    objectFieldDiffScore = incrementDiffFields(diff, key, toObjects, fromObjects);
+                }
+
+                objectDiffScore += objectFieldDiffScore;
+
+                diff.addFieldObjectDiffScore(key, toObject, fromObject, objectFieldDiffScore);
             }
-        }
 
-        return objectDiffScore;
-    }
+            for(DiffPropertyPath key : fromRecord.getFieldValues().keySet()) {
+                if(toRecord.getFieldValues().getList(key) == null) {
+                    int diffSize = fromRecord.getFieldValues().getList(key).size();
+                    diff.incrementFieldScores(key, diffSize, diffSize);
+                    objectDiffScore += diffSize;
 
-    private int incrementDiffFields(TypeDiff<?> diff, DiffPropertyPath breadcrumbs, List<Object> toObjects, List<Object> fromObjects) {
-        int objectFieldDiffScore = 0;
-
-        Map<Object, MutableInt> objectSet = getObjectMap();
-
-        for(Object obj : toObjects) {
-            increment(objectSet, obj);
-        }
-
-        for(Object obj : fromObjects) {
-            if(!decrement(objectSet, obj)) {
-                objectFieldDiffScore++;
+                    diff.addFieldObjectDiffScore(key, toObject, fromObject, diffSize);
+                }
             }
+
+            return objectDiffScore;
         }
 
-        if(!objectSet.isEmpty()) {
-            for(Map.Entry<Object, MutableInt>entry : objectSet.entrySet()) {
-                objectFieldDiffScore += entry.getValue().intValue();
+        private int incrementDiffFields(TypeDiff<?> diff, DiffPropertyPath breadcrumbs, List<Object> toObjects, List<Object> fromObjects) {
+            int objectFieldDiffScore = 0;
+
+            Map<Object, MutableInt> objectSet = getObjectMap();
+
+            for(Object obj : toObjects) {
+                increment(objectSet, obj);
             }
+
+            for(Object obj : fromObjects) {
+                if(!decrement(objectSet, obj)) {
+                    objectFieldDiffScore++;
+                }
+            }
+
+            if(!objectSet.isEmpty()) {
+                for(Map.Entry<Object, MutableInt>entry : objectSet.entrySet()) {
+                    objectFieldDiffScore += entry.getValue().intValue();
+                }
+            }
+
+            objectSet.clear();
+
+            diff.incrementFieldScores(breadcrumbs, objectFieldDiffScore, toObjects.size() + fromObjects.size());
+            return objectFieldDiffScore;
         }
 
-        objectSet.clear();
 
-        diff.incrementFieldScores(breadcrumbs, objectFieldDiffScore, toObjects.size() + fromObjects.size());
-        return objectFieldDiffScore;
-    }
-
-    private void increment(Map<Object, MutableInt> map, Object obj) {
-        MutableInt i = map.get(obj);
-        if(i == null) {
-            i = new MutableInt(0);
-            map.put(obj, i);
-        }
-        i.increment();
-    }
-
-    private boolean decrement(Map<Object, MutableInt> map, Object obj) {
-        MutableInt i = map.get(obj);
-        if(i == null) {
-            return false;
+        private void increment(Map<Object, MutableInt> map, Object obj) {
+            MutableInt i = map.get(obj);
+            if(i == null) {
+                i = new MutableInt(0);
+                map.put(obj, i);
+            }
+            i.increment();
         }
 
-        i.decrement();
+        private boolean decrement(Map<Object, MutableInt> map, Object obj) {
+            MutableInt i = map.get(obj);
+            if(i == null) {
+                return false;
+            }
 
-        if(i.intValue() == 0) {
-            map.remove(obj);
+            i.decrement();
+
+            if(i.intValue() == 0) {
+                map.remove(obj);
+            }
+
+            return true;
         }
 
-        return true;
     }
 
     private static final ThreadLocal<Map<Object, MutableInt>> objectSet = new ThreadLocal<Map<Object, MutableInt>>();
@@ -191,6 +289,4 @@ public class TypeDiffOperation<T> {
         }
         return objectSet;
     }
-
-
 }

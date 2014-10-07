@@ -18,7 +18,6 @@
 package com.netflix.zeno.diff;
 
 import com.netflix.zeno.serializer.NFTypeSerializer;
-
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -131,8 +130,16 @@ public class TypeDiff<T> {
         itemCountFrom++;
     }
 
+    public void incrementFrom(int byCount) {
+        itemCountFrom += byCount;
+    }
+
     public void incrementTo() {
         itemCountTo++;
+    }
+
+    public void incrementTo(int byCount) {
+        itemCountTo += byCount;
     }
 
     public String getTopNodeSerializer() {
@@ -173,6 +180,10 @@ public class TypeDiff<T> {
         Collections.sort(fieldDiffs);
 
         return fieldDiffs;
+    }
+
+    public Map<DiffPropertyPath, FieldDiffScore<T>> getFieldDifferences() {
+        return fieldDifferences;
     }
 
     public List<ObjectDiffScore<T>> getDiffObjects() {
