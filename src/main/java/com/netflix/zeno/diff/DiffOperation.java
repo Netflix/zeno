@@ -19,8 +19,6 @@ package com.netflix.zeno.diff;
 
 import com.netflix.zeno.fastblob.FastBlobStateEngine;
 import com.netflix.zeno.serializer.SerializerFactory;
-import com.netflix.zeno.util.EnsureSuccessSimultaneousExecutor;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +29,7 @@ public class DiffOperation {
 
     /**
      * Instantiate a DiffOperation, capable of performing a diff between two data states.
-     * 
+     *
      * @param dataModel - The SerializerFactory describing the data model to use.
      * @param instruction - the details about how to find top level objects in a data state
      */
@@ -43,9 +41,9 @@ public class DiffOperation {
 
     /**
      * Perform a diff between two data states.
-     * 
+     *
      * Note:  For now, this operation will ignore type instructions for non-unique keys.
-     * 
+     *
      * @param fromState - The "from" state engine, populated with one of the deserialized data states to compare
      * @param toState - the "to" state engine, populated with the other deserialized data state to compare.
      * @param factory - The SerializerFactory describing the data model to use.
@@ -62,28 +60,16 @@ public class DiffOperation {
 
             final DiffSerializationFramework framework = new DiffSerializationFramework(serializerFactory);
 
-            EnsureSuccessSimultaneousExecutor executor = new EnsureSuccessSimultaneousExecutor(2.0d, "zeno-diff");
-
             for (final TypeDiffInstruction<?> instruction : this.instruction.getTypeInstructions()) {
                 /// for now, the DiffOperation ignores non-unique keys.
                 if(instruction.isUniqueKey()) {
-                    executor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            Iterable<?> fromDeserializationState = fromState.getTypeDeserializationState(instruction.getSerializerName());
-                            Iterable<?> toDeserializationState = toState.getTypeDeserializationState(instruction.getSerializerName());
-    
-                            TypeDiff<Object> typeDiff = performDiff(framework, instruction, fromDeserializationState, toDeserializationState);
-    
-                            synchronized (diffs) {
-                                diffs.add(typeDiff);
-                            }
-                        }
-                    });
+                    Iterable<?> fromDeserializationState = fromState.getTypeDeserializationState(instruction.getSerializerName());
+                    Iterable<?> toDeserializationState = toState.getTypeDeserializationState(instruction.getSerializerName());
+
+                    TypeDiff<Object> typeDiff = performDiff(framework, instruction, fromDeserializationState, toDeserializationState);
+                    diffs.add(typeDiff);
                 }
             }
-
-            executor.awaitSuccessfulCompletion();
 
             return new DiffReport(diffHeader, diffs);
         } catch (Exception e) {
@@ -97,7 +83,7 @@ public class DiffOperation {
         Iterable<T> castFrom = (Iterable<T>) from;
         Iterable<T> castTo = (Iterable<T>) to;
 
-        return new TypeDiffOperation<T>(castDiff).performDiff(framework, castFrom, castTo);
+        return new TypeDiffOperation<T>(castDiff).performDiff(framework, castFrom, castTo, Runtime.getRuntime().availableProcessors());
     }
 
 }
