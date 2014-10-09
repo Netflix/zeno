@@ -24,7 +24,7 @@ apply from: file('gradle/release.gradle')
 
 dependencies {
     testCompile 'junit:junit:4.11'
-    compile 'commons-lang:commons-lang:2.4'
+    compile 'commons-lang:commons-lang:2.6'
     compile 'commons-io:commons-io:2.4'
     compile 'commons-codec:commons-codec:1.7'
     compile 'com.fasterxml.jackson.core:jackson-core:2.2.2'
