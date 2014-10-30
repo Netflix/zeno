@@ -99,6 +99,7 @@ public class TypeDiffOperation<T> {
             }
 
             for(Map.Entry<Object, T> entry : fromStateObjects.entrySet()) {
+                mergedDiff.incrementFrom();
                 if(!toStateKeys.containsKey(entry.getKey()))
                     mergedDiff.addExtraInFrom(entry.getValue());
             }
