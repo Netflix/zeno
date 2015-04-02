@@ -241,10 +241,6 @@ public class HeapFriendlyHashMap<K, V> extends AbstractHeapFriendlyMap<K, V> {
         releaseObjectArrays(values, recycler);
     }
 
-    public HeapFriendlyMapArrayRecycler getRecycler() {
-        return recycler;
-    }
-
     private static class Entry<K, V> extends AbstractHeapFriendlyMapEntry<K, V> {
         private final K key;
         private final V value;
