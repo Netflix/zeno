@@ -40,15 +40,21 @@ public class HeapFriendlyHashMap<K, V> extends AbstractHeapFriendlyMap<K, V> {
     private final Object[][] values;
     private final int numBuckets;
     private final int maxSize;
+    private final HeapFriendlyMapArrayRecycler recycler;
     private int size;
 
     public HeapFriendlyHashMap(int numEntries) {
+        this(numEntries, HeapFriendlyMapArrayRecycler.get());
+    }
+
+    public HeapFriendlyHashMap(int numEntries, HeapFriendlyMapArrayRecycler recycler) {
         int arraySize = numEntries * 10 / 7; // 70% load factor
         arraySize = 1 << (32 - Integer.numberOfLeadingZeros(arraySize)); // next power of 2
         arraySize = Math.max(arraySize, INDIVIDUAL_OBJECT_ARRAY_SIZE);
 
         this.numBuckets = arraySize;
         this.maxSize = numEntries;
+        this.recycler = recycler;
         this.keys = createSegmentedObjectArray(arraySize);
         this.values = createSegmentedObjectArray(arraySize);
     }
@@ -231,8 +237,8 @@ public class HeapFriendlyHashMap<K, V> extends AbstractHeapFriendlyMap<K, V> {
 
     @Override
     public void releaseObjectArrays() {
-        releaseObjectArrays(keys);
-        releaseObjectArrays(values);
+        releaseObjectArrays(keys, recycler);
+        releaseObjectArrays(values, recycler);
     }
 
     private static class Entry<K, V> extends AbstractHeapFriendlyMapEntry<K, V> {
