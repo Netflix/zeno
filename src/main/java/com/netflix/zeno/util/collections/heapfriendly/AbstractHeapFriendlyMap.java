@@ -57,8 +57,7 @@ public abstract class AbstractHeapFriendlyMap<K, V> extends AbstractMap<K, V> {
 
     public abstract void releaseObjectArrays();
 
-    protected void releaseObjectArrays(Object[][] segmentedArray) {
-        HeapFriendlyMapArrayRecycler recycler = HeapFriendlyMapArrayRecycler.get();
+    protected void releaseObjectArrays(Object[][] segmentedArray, HeapFriendlyMapArrayRecycler recycler) {
 
         for(int i=0;i<segmentedArray.length;i++) {
             recycler.returnObjectArray(segmentedArray[i]);

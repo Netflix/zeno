@@ -45,6 +45,8 @@ public abstract class HeapFriendlyDerivableKeyHashMap<K, V> extends AbstractHeap
     private final Object[][] values;
     private final int numBuckets;
     private final int maxSize;
+    private final HeapFriendlyMapArrayRecycler recycler;
+    
     private int size;
 
     protected HeapFriendlyDerivableKeyHashMap(int numEntries) {
@@ -54,13 +56,12 @@ public abstract class HeapFriendlyDerivableKeyHashMap<K, V> extends AbstractHeap
 
         this.numBuckets = arraySize;
         this.maxSize = numEntries;
+        this.recycler = HeapFriendlyMapArrayRecycler.get();
         values = createSegmentedObjectArray(arraySize);
     }
 
     private Object[][] createSegmentedObjectArray(int arraySize) {
         int numArrays = arraySize / INDIVIDUAL_OBJECT_ARRAY_SIZE;
-
-        HeapFriendlyMapArrayRecycler recycler = HeapFriendlyMapArrayRecycler.get();
 
         Object[][] segmentedArray = new Object[numArrays][];
 
@@ -147,7 +148,7 @@ public abstract class HeapFriendlyDerivableKeyHashMap<K, V> extends AbstractHeap
 
     @Override
     public void releaseObjectArrays() {
-        releaseObjectArrays(values);
+        releaseObjectArrays(values, recycler);
     }
 
     @Override
