@@ -46,10 +46,14 @@ public abstract class HeapFriendlyDerivableKeyHashMap<K, V> extends AbstractHeap
     private final int numBuckets;
     private final int maxSize;
     private final HeapFriendlyMapArrayRecycler recycler;
-    
+
     private int size;
 
     protected HeapFriendlyDerivableKeyHashMap(int numEntries) {
+        this(numEntries, HeapFriendlyMapArrayRecycler.get());
+    }
+
+    protected HeapFriendlyDerivableKeyHashMap(int numEntries, HeapFriendlyMapArrayRecycler recycler) {
         int arraySize = numEntries * 10 / 7; // 70% load factor
         arraySize = 1 << (32 - Integer.numberOfLeadingZeros(arraySize)); // next power of 2
         arraySize = Math.max(arraySize, INDIVIDUAL_OBJECT_ARRAY_SIZE);
