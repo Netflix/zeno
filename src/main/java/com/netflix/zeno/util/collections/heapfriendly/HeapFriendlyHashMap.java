@@ -62,8 +62,6 @@ public class HeapFriendlyHashMap<K, V> extends AbstractHeapFriendlyMap<K, V> {
     private Object[][] createSegmentedObjectArray(int arraySize) {
         int numArrays = arraySize / INDIVIDUAL_OBJECT_ARRAY_SIZE;
 
-        HeapFriendlyMapArrayRecycler recycler = HeapFriendlyMapArrayRecycler.get();
-
         Object[][] segmentedArray = new Object[numArrays][];
 
         for(int i=0;i<numArrays;i++) {
