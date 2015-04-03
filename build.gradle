@@ -1,26 +1,12 @@
-// Establish version and status
-apply plugin: 'eclipse'
-
-ext.githubProjectName = 'zeno'
-group = "com.netflix.zeno"
-
-buildscript {
-    repositories { mavenCentral() }
-    apply from: file('gradle/buildscript.gradle'), to: buildscript 
+plugins {
+  id 'nebula.netflixoss' version '2.2.5'
 }
-
-allprojects {
-    repositories { mavenCentral() }
+ 
+apply plugin: 'java'
+ 
+repositories {
+  jcenter()
 }
-
-apply from: file('gradle/convention.gradle')
-apply from: file('gradle/maven.gradle')
-apply from: file('gradle/check.gradle')
-apply from: file('gradle/license.gradle')
-apply from: file('gradle/release.gradle')
-
-//apply plugin: 'war'
-//apply plugin: 'jetty'
 
 dependencies {
     testCompile 'junit:junit:4.11'
