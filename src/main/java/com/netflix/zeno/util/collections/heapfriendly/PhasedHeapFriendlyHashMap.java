@@ -131,7 +131,7 @@ public class PhasedHeapFriendlyHashMap<K, V> implements Map<K, V> {
      * Ends the data swap phase<p />
      *
      * While out of the data swap phase, using {@link PhasedHeapFriendlyHashMap#put(Object, Object)}
-     * with throw an {@link IllegalStateException} <p />
+     * will throw an {@link IllegalStateException} <p />
      */
     public void endDataSwapPhase(){
 
