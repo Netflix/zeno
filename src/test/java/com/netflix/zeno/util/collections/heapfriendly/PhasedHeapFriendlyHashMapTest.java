@@ -28,7 +28,7 @@ import org.junit.Test;
 /**
  * JUnit tests for {@link PhasedHeapFriendlyHashMap}
  *
- * @author darrenbathgate
+ * @author drbathgate
  *
  */
 public class PhasedHeapFriendlyHashMapTest {
