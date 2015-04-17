@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright 2013 Netflix, Inc.
+ *  Copyright 2015 Netflix, Inc.
  *
  *     Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -25,6 +25,12 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * JUnit tests for {@link PhasedHeapFriendlyHashMap}
+ *
+ * @author darrenbathgate
+ *
+ */
 public class PhasedHeapFriendlyHashMapTest {
 
     @Test
