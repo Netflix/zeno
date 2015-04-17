@@ -122,6 +122,11 @@ public class PhasedHeapFriendlyHashMap<K, V> implements Map<K, V> {
      * @param numOfNewEntries Number of new entries expected to be added during the the data swap phase
      */
     public void beginDataSwapPhase(int numOfNewEntries){
+
+        if (nextMap != null) {
+            throw new IllegalStateException("Cannot call PhasedHeapFriendlyHashMap.beginDataSwapPhase(int), already in data swap phase");
+        }
+
         recycler.swapCycleObjectArrays();
 
         nextMap = new HeapFriendlyHashMap<K, V>(numOfNewEntries, recycler);
@@ -134,6 +139,10 @@ public class PhasedHeapFriendlyHashMap<K, V> implements Map<K, V> {
      * will throw an {@link IllegalStateException} <p />
      */
     public void endDataSwapPhase(){
+
+        if (nextMap == null) {
+            throw new IllegalStateException("Cannot call PhasedHeapFriendlyHashMap.endDataSwapPhase(), not currently in data swap phase");
+        }
 
         HeapFriendlyHashMap<K, V> temp = currentMap;
 
