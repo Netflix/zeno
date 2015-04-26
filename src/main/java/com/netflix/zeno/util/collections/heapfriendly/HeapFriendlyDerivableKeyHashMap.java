@@ -60,7 +60,7 @@ public abstract class HeapFriendlyDerivableKeyHashMap<K, V> extends AbstractHeap
 
         this.numBuckets = arraySize;
         this.maxSize = numEntries;
-        this.recycler = HeapFriendlyMapArrayRecycler.get();
+        this.recycler = recycler;
         values = createSegmentedObjectArray(arraySize);
     }
 
