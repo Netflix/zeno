@@ -3,6 +3,8 @@ plugins {
 }
  
 apply plugin: 'java'
+
+group = 'com.netflix.zeno'
  
 repositories {
   jcenter()
