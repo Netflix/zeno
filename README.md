@@ -1,5 +1,10 @@
 Netflix Zeno
 ============
+
+![NetflixOSS Lifecycle](https://img.shields.io/osslifecycle/Netflix/zeno.svg)
+
+_Zeno is now retired.  See [hollow](http://github.com/Netflix/hollow) for Netflix's replacement technology._
+
 Some applications have data sets with extremely low latency tolerance.  For Netflix, this applies to metadata about our movies and TV shows.  We store this data directly in RAM on the servers responsible for powering the Netflix experience.
 
 Netflix leans heavily on the Zeno framework to manage, transport, and keep updated these gigabytes of constantly-changing data replicated across thousands of servers.  Zeno: 
